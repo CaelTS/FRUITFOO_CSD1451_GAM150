@@ -1,0 +1,41 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\Admin\\OneDrive\\Documents\\GitHub\\FRUITFOO_CSD1451_GAM150\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\FruitFoo.vcxproj|C:\\Users\\Admin\\OneDrive\\Documents\\GitHub\\FRUITFOO_CSD1451_GAM150\\FruitFoo\\Main.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\FruitFoo.vcxproj|solutionrelative:FruitFoo\\Main.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 1,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:128:0:{13b12e3e-c1b4-4539-9371-4fe9a0d523fc}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Main.cpp",
+              "DocumentMoniker": "C:\\Users\\Admin\\OneDrive\\Documents\\GitHub\\FRUITFOO_CSD1451_GAM150\\FruitFoo\\Main.cpp",
+              "RelativeDocumentMoniker": "FruitFoo\\Main.cpp",
+              "ToolTip": "C:\\Users\\Admin\\OneDrive\\Documents\\GitHub\\FRUITFOO_CSD1451_GAM150\\FruitFoo\\Main.cpp",
+              "RelativeToolTip": "FruitFoo\\Main.cpp",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2026-01-21T09:06:06.164Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
