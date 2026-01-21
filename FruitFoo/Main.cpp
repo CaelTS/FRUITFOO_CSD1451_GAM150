@@ -5,6 +5,7 @@
 #include "AEEngine.h"
 #include <stdio.h>
 #include <vector>
+#include <fstream>  // For file I/O
 
 // ---------------------------------------------------------------------------
 // main
@@ -15,6 +16,44 @@ struct Fruit
 	float x, y;
 	bool active;
 };
+
+// Function to Save Game Data
+void SaveGame(int gold, int energy, int inventory[3])
+{
+	std::ofstream outFile("savegame.txt");
+	if (outFile.is_open())
+	{
+		outFile << gold << "\n";
+		outFile << energy << "\n";
+		outFile << inventory[0] << "\n";
+		outFile << inventory[1] << "\n";
+		outFile << inventory[2] << "\n";
+		outFile.close();
+		OutputDebugStringA("Game Saved Successfully.\n");
+	}
+	else
+	{
+		OutputDebugStringA("ERROR: Could not save game.\n");
+	}
+}
+
+// Function to Load Game Data
+bool LoadGame(int& gold, int& energy, int inventory[3])
+{
+	std::ifstream inFile("savegame.txt");
+	if (inFile.is_open())
+	{
+		inFile >> gold;
+		inFile >> energy;
+		inFile >> inventory[0];
+		inFile >> inventory[1];
+		inFile >> inventory[2];
+		inFile.close();
+		OutputDebugStringA("Game Loaded Successfully.\n");
+		return true;
+	}
+	return false;
+}
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	_In_opt_ HINSTANCE hPrevInstance,
@@ -33,7 +72,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	// ---------------------------------------------------------------------------
 
 	// Using custom window procedure
-	AESysInit(hInstance, nCmdShow, 800, 600, 1, 60, false, NULL);
+	// Window Size: 1600x900
+	AESysInit(hInstance, nCmdShow, 1600, 900, 1, 60, false, NULL);
 
 	// Changing the window title
 	AESysSetWindowTitle("Fruit Stall Game");
@@ -49,7 +89,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	int energy = 50;           // Changed to int for display, max 50
 	const int MAX_ENERGY = 50; // Capacity is 50
 	const int ENERGY_COST = 5; // Consumes 5 energy
-	const int APPLE_PRICE = 10;// Gives 10 gold
+	const int FRUIT_PRICE = 10;// Gives 10 gold per fruit
+
+	// Inventory System
+	int inventory[3] = { 0, 0, 0 }; // 0: Apple, 1: Pear, 2: Banana
+	const int MAX_INVENTORY = 30;   // Capacity for each fruit
+	int selectedFruit = 0;          // 0: Apple, 1: Pear, 2: Banana
 
 	// Energy Regeneration
 	float energyTimer = 0.0f;
@@ -70,23 +115,19 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	};
 	int maxFruits = sizeof(treePositions) / sizeof(Point);
 
+	// --- LOAD GAME ---
+	LoadGame(gold, energy, inventory);
+
 	// Load the font. MAKE SURE "Assets/liberation-mono.ttf" IS IN YOUR EXE FOLDER!
-	// Using AEGfxCreateFont as per your API definition
-	s8 fontId = AEGfxCreateFont("Assets/liberation-mono.ttf", 20);
+	s8 fontId = AEGfxCreateFont("Assets/liberation-mono.ttf", 26); // Increased font size slightly
 
 	// Error Checking for Font
 	bool fontLoaded = (fontId >= 0);
 	if (!fontLoaded)
 	{
-		// If we can't print to screen, at least print to debug console
 		OutputDebugStringA("ERROR: Failed to load 'Assets/liberation-mono.ttf'. Text will not be displayed.\n");
 	}
 
-<<<<<<< Updated upstream
-	// Mesh variables
-	AEGfxVertexList* pMeshStall = 0;
-	AEGfxVertexList* pMeshApple = 0;
-=======
 	// Load Textures
 	// MAKE SURE THESE FILES ARE IN YOUR EXE FOLDER!
 	AEGfxTexture* pTexStall = AEGfxTextureLoad("Assets/Stall_Empty_POT.png");
@@ -103,33 +144,22 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	AEGfxVertexList* pMeshStall = 0;
 	AEGfxVertexList* pMeshFruit = 0;
 	AEGfxVertexList* pMeshUIBorder = 0; // Shared mesh for UI borders
->>>>>>> Stashed changes
 
-	// 1. Create Stall Mesh (Brown Square)
+	// 1. Create Stall Mesh (Standard Unit Square for Sprites)
 	AEGfxMeshStart();
 	AEGfxTriAdd(
-		-50.0f, -50.0f, 0xFF8B4513, 0.0f, 1.0f,
-		50.0f, -50.0f, 0xFF8B4513, 1.0f, 1.0f,
-		-50.0f, 50.0f, 0xFF8B4513, 0.0f, 0.0f);
+		-0.5f, -0.5f, 0xFFFFFFFF, 0.0f, 1.0f,
+		0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f,
+		-0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
 	AEGfxTriAdd(
-		50.0f, -50.0f, 0xFF8B4513, 1.0f, 1.0f,
-		50.0f, 50.0f, 0xFF8B4513, 1.0f, 0.0f,
-		-50.0f, 50.0f, 0xFF8B4513, 0.0f, 0.0f);
+		0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f,
+		0.5f, 0.5f, 0xFFFFFFFF, 1.0f, 0.0f,
+		-0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
 	pMeshStall = AEGfxMeshEnd();
 
 	// 2. Create Fruit Mesh (Standard Unit Square)
 	AEGfxMeshStart();
 	AEGfxTriAdd(
-<<<<<<< Updated upstream
-		-15.0f, -15.0f, 0xFFFF0000, 0.0f, 1.0f,
-		15.0f, -15.0f, 0xFFFF0000, 1.0f, 1.0f,
-		-15.0f, 15.0f, 0xFFFF0000, 0.0f, 0.0f);
-	AEGfxTriAdd(
-		15.0f, -15.0f, 0xFFFF0000, 1.0f, 1.0f,
-		15.0f, 15.0f, 0xFFFF0000, 1.0f, 0.0f,
-		-15.0f, 15.0f, 0xFFFF0000, 0.0f, 0.0f);
-	pMeshApple = AEGfxMeshEnd();
-=======
 		-0.5f, -0.5f, 0xFFFFFFFF, 0.0f, 1.0f,
 		0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f,
 		-0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
@@ -138,7 +168,18 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		0.5f, 0.5f, 0xFFFFFFFF, 1.0f, 0.0f,
 		-0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
 	pMeshFruit = AEGfxMeshEnd();
->>>>>>> Stashed changes
+
+	// 3. Create UI Border Mesh (White Unit Square, we will color it per instance)
+	AEGfxMeshStart();
+	AEGfxTriAdd(
+		-0.5f, -0.5f, 0xFFFFFFFF, 0.0f, 1.0f,
+		0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f,
+		-0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
+	AEGfxTriAdd(
+		0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f,
+		0.5f, 0.5f, 0xFFFFFFFF, 1.0f, 0.0f,
+		-0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
+	pMeshUIBorder = AEGfxMeshEnd();
 
 	// String buffer for text
 	char strBuffer[100];
@@ -183,8 +224,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 				fruitGrowthTimer = 0.0f;
 
 				// Find an empty spot
-				// Simple logic: just pick the next available spot in the array
-				// In a real game, you might want to randomize this or check for overlap
 				if (fruits.size() < maxFruits)
 				{
 					Fruit newFruit;
@@ -197,15 +236,61 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			}
 		}
 
-		// Check for "Activity" (Selling Apple)
-		// For now, SPACE sells a "virtual" apple from stock if energy permits
-		// Later you might want to click on fruits to harvest them
+		// Input Logic: Mouse Click to Pluck Fruits
+		if (AEInputCheckTriggered(AEVK_LBUTTON))
+		{
+			s32 mouseX, mouseY;
+			AEInputGetCursorPosition(&mouseX, &mouseY);
+
+			// Convert screen coordinates to world coordinates
+			// Screen: (0,0) top-left to (1600,900) bottom-right
+			// World: (-800, 450) top-left to (800, -450) bottom-right
+			float worldX = (float)mouseX - 800.0f;
+			float worldY = 450.0f - (float)mouseY;
+
+			// Check collision with fruits
+			for (auto it = fruits.begin(); it != fruits.end(); )
+			{
+				if (it->active)
+				{
+					// Simple AABB collision (Fruit size is approx 64x64)
+					float halfSize = 32.0f;
+					if (worldX >= it->x - halfSize && worldX <= it->x + halfSize &&
+						worldY >= it->y - halfSize && worldY <= it->y + halfSize)
+					{
+						// Check inventory capacity
+						if (inventory[it->type] < MAX_INVENTORY)
+						{
+							// Add to inventory
+							inventory[it->type]++;
+
+							// Remove fruit from tree
+							it = fruits.erase(it);
+							continue; // Skip incrementing iterator since we erased
+						}
+					}
+				}
+				++it;
+			}
+		}
+
+		// Input Logic: Select Fruit to Sell
+		if (AEInputCheckTriggered(AEVK_1)) selectedFruit = 0; // Apple
+		if (AEInputCheckTriggered(AEVK_2)) selectedFruit = 1; // Pear
+		if (AEInputCheckTriggered(AEVK_3)) selectedFruit = 2; // Banana
+
+		// Check for "Activity" (Selling Selected Fruit)
 		if (AEInputCheckTriggered(AEVK_SPACE))
 		{
-			if (energy >= ENERGY_COST)
+			// Check if we have the selected fruit to sell
+			if (inventory[selectedFruit] > 0)
 			{
-				energy -= ENERGY_COST;
-				gold += APPLE_PRICE;
+				if (energy >= ENERGY_COST)
+				{
+					energy -= ENERGY_COST;
+					inventory[selectedFruit]--; // Remove 1 fruit
+					gold += FRUIT_PRICE;
+				}
 			}
 		}
 
@@ -214,26 +299,34 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		// ---------------------------------------------------------------------------
 
 		// Clear screen
-		AEGfxSetBackgroundColor(0.0f, 0.0f, 0.0f);
-		AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+		AEGfxSetBackgroundColor(0.2f, 0.2f, 0.2f); // Dark Gray
 
 		// Transformation Matrices
 		AEMtx33 scale, trans, transform;
 
 		// --- Draw Stall (Center) ---
-		AEMtx33Identity(&scale);
+		if (pTexStall)
+		{
+			AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+			AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
+			AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
+			AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+			AEGfxSetTransparency(1.0f);
+			AEGfxTextureSet(pTexStall, 0, 0);
+		}
+		else
+		{
+			AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+		}
+
+		// Scale: 1600x900 pixels (Full Screen)
+		AEMtx33Scale(&scale, 1600.0f, 900.0f);
 		AEMtx33Trans(&trans, 0.0f, 0.0f);
 		AEMtx33Concat(&transform, &trans, &scale);
 
 		AEGfxSetTransform(transform.m);
 		AEGfxMeshDraw(pMeshStall, AE_GFX_MDM_TRIANGLES);
 
-<<<<<<< Updated upstream
-		// --- Draw Apple (On Stall) ---
-		AEMtx33Identity(&scale);
-		AEMtx33Trans(&trans, 0.0f, 20.0f);
-		AEMtx33Concat(&transform, &trans, &scale);
-=======
 		// --- Draw Fruits ---
 		AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
 		AEGfxSetBlendMode(AE_GFX_BM_BLEND);
@@ -242,7 +335,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		for (const auto& fruit : fruits)
 		{
 			if (!fruit.active) continue;
->>>>>>> Stashed changes
 
 			AEGfxTexture* pCurrentTex = 0;
 			if (fruit.type == 0) pCurrentTex = pTexApple;
@@ -263,30 +355,111 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			}
 		}
 
-		// --- Draw Resources (Top Left) ---
-		// Screen coordinates: Center (0,0). Top Left approx (-400, 300).
-		// We use AEGfxPrint for text.
+		// --- Draw UI Borders ---
+		// Screen Dimensions: 1600x900
+		// Top Left is roughly (-800, 450) in world coordinates
 
+		float uiX = -700.0f; // 100px padding from left edge
+		float uiY_Gold = 400.0f; // 50px padding from top edge
+		float uiY_Energy = 340.0f; // 60px below Gold
+		float uiWidth = 250.0f;
+		float uiHeight = 50.0f;
+		float borderSize = 4.0f;
+
+		// 1. Gold Border (Yellow)
+		AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+		AEGfxSetColorToMultiply(1.0f, 1.0f, 0.0f, 1.0f); // Yellow Tint
+
+		AEMtx33Scale(&scale, uiWidth, uiHeight);
+		AEMtx33Trans(&trans, uiX, uiY_Gold);
+		AEMtx33Concat(&transform, &trans, &scale);
+		AEGfxSetTransform(transform.m);
+		AEGfxMeshDraw(pMeshUIBorder, AE_GFX_MDM_TRIANGLES);
+
+		// 1b. Gold Background (Black)
+		AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 1.0f); // Black Tint
+		AEMtx33Scale(&scale, uiWidth - (borderSize * 2), uiHeight - (borderSize * 2));
+		AEMtx33Trans(&trans, uiX, uiY_Gold);
+		AEMtx33Concat(&transform, &trans, &scale);
+		AEGfxSetTransform(transform.m);
+		AEGfxMeshDraw(pMeshUIBorder, AE_GFX_MDM_TRIANGLES);
+
+
+		// 2. Energy Border (Green)
+		AEGfxSetColorToMultiply(0.0f, 1.0f, 0.0f, 1.0f); // Green Tint
+
+		AEMtx33Scale(&scale, uiWidth, uiHeight);
+		AEMtx33Trans(&trans, uiX, uiY_Energy);
+		AEMtx33Concat(&transform, &trans, &scale);
+		AEGfxSetTransform(transform.m);
+		AEGfxMeshDraw(pMeshUIBorder, AE_GFX_MDM_TRIANGLES);
+
+		// 2b. Energy Background (Black)
+		AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 1.0f); // Black Tint
+		AEMtx33Scale(&scale, uiWidth - (borderSize * 2), uiHeight - (borderSize * 2));
+		AEMtx33Trans(&trans, uiX, uiY_Energy);
+		AEMtx33Concat(&transform, &trans, &scale);
+		AEGfxSetTransform(transform.m);
+		AEGfxMeshDraw(pMeshUIBorder, AE_GFX_MDM_TRIANGLES);
+
+		// 3. Inventory UI (Right Side)
+		float invX = 650.0f; // Right side
+		float invY = 400.0f; // Top aligned with Gold
+		float invHeight = 160.0f; // Taller box for 3 items
+
+		// Inventory Border (Blue)
+		AEGfxSetColorToMultiply(0.0f, 0.5f, 1.0f, 1.0f); // Blue Tint
+		AEMtx33Scale(&scale, uiWidth, invHeight);
+		AEMtx33Trans(&trans, invX, invY - 50.0f); // Shift down slightly to center
+		AEMtx33Concat(&transform, &trans, &scale);
+		AEGfxSetTransform(transform.m);
+		AEGfxMeshDraw(pMeshUIBorder, AE_GFX_MDM_TRIANGLES);
+
+		// Inventory Background (Black)
+		AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 1.0f); // Black Tint
+		AEMtx33Scale(&scale, uiWidth - (borderSize * 2), invHeight - (borderSize * 2));
+		AEMtx33Trans(&trans, invX, invY - 50.0f);
+		AEMtx33Concat(&transform, &trans, &scale);
+		AEGfxSetTransform(transform.m);
+		AEGfxMeshDraw(pMeshUIBorder, AE_GFX_MDM_TRIANGLES);
+
+		// Reset Color Multiplier for other things
+		AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
+
+		// --- Draw Text (Top Left) ---
 		if (fontLoaded)
 		{
 			// 1. Gold Display
 			sprintf_s(strBuffer, "Gold: %d", gold);
-<<<<<<< Updated upstream
-			// x: -0.95, y: 0.90, scale: 1.0, r: 1, g: 1, b: 0 (Yellow), a: 1
-			AEGfxPrint(fontId, strBuffer, -0.95f, 0.90f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f);
-
-			// 2. Energy Display
-			sprintf_s(strBuffer, "Energy: %d/%d", energy, MAX_ENERGY);
-			// x: -0.95, y: 0.80, scale: 1.0, r: 0, g: 1, b: 0 (Green), a: 1
-			AEGfxPrint(fontId, strBuffer, -0.95f, 0.80f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f);
-=======
 			// Offset X slightly left to center text in box (-0.95 start)
 			AEGfxPrint(fontId, strBuffer, -0.99f, 0.87f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f);
 
 			// 2. Energy Display
 			sprintf_s(strBuffer, "Energy: %d/%d", energy, MAX_ENERGY);
 			AEGfxPrint(fontId, strBuffer, -0.99f, 0.74f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f);
->>>>>>> Stashed changes
+
+			// 3. Inventory Display (Right Side)
+			float textX = 0.67f;
+			float textY = 0.87f;
+			float lineSpacing = 0.12f;
+
+			// Helper to draw selection marker
+			const char* marker0 = (selectedFruit == 0) ? "> " : "  ";
+			const char* marker1 = (selectedFruit == 1) ? "> " : "  ";
+			const char* marker2 = (selectedFruit == 2) ? "> " : "  ";
+
+			sprintf_s(strBuffer, "%sApples: %d/%d", marker0, inventory[0], MAX_INVENTORY);
+			// Highlight selected text with Yellow, others White
+			if (selectedFruit == 0) AEGfxPrint(fontId, strBuffer, textX, textY, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f);
+			else AEGfxPrint(fontId, strBuffer, textX, textY, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
+
+			sprintf_s(strBuffer, "%sPears:  %d/%d", marker1, inventory[1], MAX_INVENTORY);
+			if (selectedFruit == 1) AEGfxPrint(fontId, strBuffer, textX, textY - lineSpacing, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f);
+			else AEGfxPrint(fontId, strBuffer, textX, textY - lineSpacing, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
+
+			sprintf_s(strBuffer, "%sBananas:%d/%d", marker2, inventory[2], MAX_INVENTORY);
+			if (selectedFruit == 2) AEGfxPrint(fontId, strBuffer, textX, textY - (lineSpacing * 2), 1.0f, 1.0f, 0.0f, 1.0f, 1.0f);
+			else AEGfxPrint(fontId, strBuffer, textX, textY - (lineSpacing * 2), 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
 		}
 
 		// Informing the system about the loop's end
@@ -297,17 +470,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	// Cleanup
 	// ---------------------------------------------------------------------------
 
+	// --- SAVE GAME ---
+	SaveGame(gold, energy, inventory);
+
 	AEGfxMeshFree(pMeshStall);
-<<<<<<< Updated upstream
-	AEGfxMeshFree(pMeshApple);
-
-	// FIX: Do NOT manually destroy the font or shutdown the font system here.
-	// AESysExit() likely handles the entire graphics subsystem teardown.
-	// Manually calling these might be causing a double-free crash.
-
-	// AEGfxDestroyFont(fontId);  // <-- Commented out to prevent crash
-	// AEGfxFontSystemEnd();      // <-- Commented out to prevent crash
-=======
 	AEGfxMeshFree(pMeshFruit);
 	AEGfxMeshFree(pMeshUIBorder);
 
@@ -315,14 +481,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	if (pTexApple) AEGfxTextureUnload(pTexApple);
 	if (pTexPear) AEGfxTextureUnload(pTexPear);
 	if (pTexBanana) AEGfxTextureUnload(pTexBanana);
->>>>>>> Stashed changes
 
 	// free the system
 	AESysExit();
 }
-<<<<<<< Updated upstream
 
-
-
-=======
->>>>>>> Stashed changes
