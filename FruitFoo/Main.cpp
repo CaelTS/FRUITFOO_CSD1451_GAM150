@@ -25,7 +25,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	// ---------------------------------------------------------------------------
 
 	// Using custom window procedure
-	AESysInit(hInstance, nCmdShow, 800, 600, 1, 60, false, NULL);
+	// Window Size: 1600x900
+	AESysInit(hInstance, nCmdShow, 1600, 900, 1, 60, false, NULL);
 
 	// Changing the window title
 	AESysSetWindowTitle("Fruit Stall Game");
@@ -48,44 +49,63 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	const float REGEN_TIME = 10.0f; // 10 seconds
 
 	// Load the font. MAKE SURE "Assets/liberation-mono.ttf" IS IN YOUR EXE FOLDER!
-	// Using AEGfxCreateFont as per your API definition
-	s8 fontId = AEGfxCreateFont("Assets/liberation-mono.ttf", 20);
+	s8 fontId = AEGfxCreateFont("Assets/liberation-mono.ttf", 26); // Increased font size slightly
 
 	// Error Checking for Font
 	bool fontLoaded = (fontId >= 0);
 	if (!fontLoaded)
 	{
-		// If we can't print to screen, at least print to debug console
 		OutputDebugStringA("ERROR: Failed to load 'Assets/liberation-mono.ttf'. Text will not be displayed.\n");
+	}
+
+	// Load Textures
+	// MAKE SURE "Assets/Stall_POT.png" IS IN YOUR EXE FOLDER!
+	AEGfxTexture* pTexStall = AEGfxTextureLoad("Assets/Stall_POT.png");
+	if (!pTexStall)
+	{
+		OutputDebugStringA("ERROR: Failed to load 'Assets/Stall_POT.png'. Stall will be untextured.\n");
 	}
 
 	// Mesh variables
 	AEGfxVertexList* pMeshStall = 0;
 	AEGfxVertexList* pMeshApple = 0;
+	AEGfxVertexList* pMeshUIBorder = 0; // Shared mesh for UI borders
 
-	// 1. Create Stall Mesh (Brown Square)
+	// 1. Create Stall Mesh (Standard Unit Square for Sprites)
 	AEGfxMeshStart();
 	AEGfxTriAdd(
-		-50.0f, -50.0f, 0xFF8B4513, 0.0f, 1.0f,
-		50.0f, -50.0f, 0xFF8B4513, 1.0f, 1.0f,
-		-50.0f, 50.0f, 0xFF8B4513, 0.0f, 0.0f);
+		-0.5f, -0.5f, 0xFFFFFFFF, 0.0f, 1.0f,
+		0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f,
+		-0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
 	AEGfxTriAdd(
-		50.0f, -50.0f, 0xFF8B4513, 1.0f, 1.0f,
-		50.0f, 50.0f, 0xFF8B4513, 1.0f, 0.0f,
-		-50.0f, 50.0f, 0xFF8B4513, 0.0f, 0.0f);
+		0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f,
+		0.5f, 0.5f, 0xFFFFFFFF, 1.0f, 0.0f,
+		-0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
 	pMeshStall = AEGfxMeshEnd();
 
 	// 2. Create Apple Mesh (Red Diamond/Circle approximation)
 	AEGfxMeshStart();
 	AEGfxTriAdd(
-		-15.0f, -15.0f, 0xFFFF0000, 0.0f, 1.0f,
-		15.0f, -15.0f, 0xFFFF0000, 1.0f, 1.0f,
-		-15.0f, 15.0f, 0xFFFF0000, 0.0f, 0.0f);
+		-0.5f, -0.5f, 0xFFFF0000, 0.0f, 1.0f,
+		0.5f, -0.5f, 0xFFFF0000, 1.0f, 1.0f,
+		-0.5f, 0.5f, 0xFFFF0000, 0.0f, 0.0f);
 	AEGfxTriAdd(
-		15.0f, -15.0f, 0xFFFF0000, 1.0f, 1.0f,
-		15.0f, 15.0f, 0xFFFF0000, 1.0f, 0.0f,
-		-15.0f, 15.0f, 0xFFFF0000, 0.0f, 0.0f);
+		0.5f, -0.5f, 0xFFFF0000, 1.0f, 1.0f,
+		0.5f, 0.5f, 0xFFFF0000, 1.0f, 0.0f,
+		-0.5f, 0.5f, 0xFFFF0000, 0.0f, 0.0f);
 	pMeshApple = AEGfxMeshEnd();
+
+	// 3. Create UI Border Mesh (White Unit Square, we will color it per instance)
+	AEGfxMeshStart();
+	AEGfxTriAdd(
+		-0.5f, -0.5f, 0xFFFFFFFF, 0.0f, 1.0f,
+		0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f,
+		-0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
+	AEGfxTriAdd(
+		0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f,
+		0.5f, 0.5f, 0xFFFFFFFF, 1.0f, 0.0f,
+		-0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
+	pMeshUIBorder = AEGfxMeshEnd();
 
 	// String buffer for text
 	char strBuffer[100];
@@ -136,14 +156,28 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		// ---------------------------------------------------------------------------
 
 		// Clear screen
-		AEGfxSetBackgroundColor(0.0f, 0.0f, 0.0f);
-		AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+		AEGfxSetBackgroundColor(0.2f, 0.2f, 0.2f); // Dark Gray
 
 		// Transformation Matrices
 		AEMtx33 scale, trans, transform;
 
 		// --- Draw Stall (Center) ---
-		AEMtx33Identity(&scale);
+		if (pTexStall)
+		{
+			AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+			AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
+			AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
+			AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+			AEGfxSetTransparency(1.0f);
+			AEGfxTextureSet(pTexStall, 0, 0);
+		}
+		else
+		{
+			AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+		}
+
+		// Scale: 1600x900 pixels (Full Screen)
+		AEMtx33Scale(&scale, 1600.0f, 900.0f);
 		AEMtx33Trans(&trans, 0.0f, 0.0f);
 		AEMtx33Concat(&transform, &trans, &scale);
 
@@ -151,28 +185,83 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		AEGfxMeshDraw(pMeshStall, AE_GFX_MDM_TRIANGLES);
 
 		// --- Draw Apple (On Stall) ---
-		AEMtx33Identity(&scale);
+		AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+		AEGfxSetBlendMode(AE_GFX_BM_NONE);
+
+		// Scale: 30x30 pixels
+		AEMtx33Scale(&scale, 30.0f, 30.0f);
 		AEMtx33Trans(&trans, 0.0f, 20.0f);
 		AEMtx33Concat(&transform, &trans, &scale);
 
 		AEGfxSetTransform(transform.m);
 		AEGfxMeshDraw(pMeshApple, AE_GFX_MDM_TRIANGLES);
 
-		// --- Draw Resources (Top Left) ---
-		// Screen coordinates: Center (0,0). Top Left approx (-400, 300).
-		// We use AEGfxPrint for text.
+		// --- Draw UI Borders ---
+		// Screen Dimensions: 1600x900
+		// Top Left is roughly (-800, 450) in world coordinates
 
+		float uiX = -700.0f; // 100px padding from left edge
+		float uiY_Gold = 400.0f; // 50px padding from top edge
+		float uiY_Energy = 340.0f; // 60px below Gold
+		float uiWidth = 250.0f;
+		float uiHeight = 50.0f;
+		float borderSize = 4.0f;
+
+		// 1. Gold Border (Yellow)
+		AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+		AEGfxSetColorToMultiply(1.0f, 1.0f, 0.0f, 1.0f); // Yellow Tint
+
+		AEMtx33Scale(&scale, uiWidth, uiHeight);
+		AEMtx33Trans(&trans, uiX, uiY_Gold);
+		AEMtx33Concat(&transform, &trans, &scale);
+		AEGfxSetTransform(transform.m);
+		AEGfxMeshDraw(pMeshUIBorder, AE_GFX_MDM_TRIANGLES);
+
+		// 1b. Gold Background (Black)
+		AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 1.0f); // Black Tint
+		AEMtx33Scale(&scale, uiWidth - (borderSize * 2), uiHeight - (borderSize * 2));
+		AEMtx33Trans(&trans, uiX, uiY_Gold);
+		AEMtx33Concat(&transform, &trans, &scale);
+		AEGfxSetTransform(transform.m);
+		AEGfxMeshDraw(pMeshUIBorder, AE_GFX_MDM_TRIANGLES);
+
+
+		// 2. Energy Border (Green)
+		AEGfxSetColorToMultiply(0.0f, 1.0f, 0.0f, 1.0f); // Green Tint
+
+		AEMtx33Scale(&scale, uiWidth, uiHeight);
+		AEMtx33Trans(&trans, uiX, uiY_Energy);
+		AEMtx33Concat(&transform, &trans, &scale);
+		AEGfxSetTransform(transform.m);
+		AEGfxMeshDraw(pMeshUIBorder, AE_GFX_MDM_TRIANGLES);
+
+		// 2b. Energy Background (Black)
+		AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 1.0f); // Black Tint
+		AEMtx33Scale(&scale, uiWidth - (borderSize * 2), uiHeight - (borderSize * 2));
+		AEMtx33Trans(&trans, uiX, uiY_Energy);
+		AEMtx33Concat(&transform, &trans, &scale);
+		AEGfxSetTransform(transform.m);
+		AEGfxMeshDraw(pMeshUIBorder, AE_GFX_MDM_TRIANGLES);
+
+		// Reset Color Multiplier for other things
+		AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
+
+		// --- Draw Text (Top Left) ---
 		if (fontLoaded)
 		{
+			// Normalized Coordinates for Text (-1.0 to 1.0)
+			// X: -700 / 800 = -0.875
+			// Y Gold: 400 / 450 = 0.88
+			// Y Energy: 340 / 450 = 0.75
+
 			// 1. Gold Display
 			sprintf_s(strBuffer, "Gold: %d", gold);
-			// x: -0.95, y: 0.90, scale: 1.0, r: 1, g: 1, b: 0 (Yellow), a: 1
-			AEGfxPrint(fontId, strBuffer, -0.95f, 0.90f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f);
+			// Offset X slightly left to center text in box (-0.95 start)
+			AEGfxPrint(fontId, strBuffer, -1.0f, 0.87f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f);
 
 			// 2. Energy Display
 			sprintf_s(strBuffer, "Energy: %d/%d", energy, MAX_ENERGY);
-			// x: -0.95, y: 0.80, scale: 1.0, r: 0, g: 1, b: 0 (Green), a: 1
-			AEGfxPrint(fontId, strBuffer, -0.95f, 0.80f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f);
+			AEGfxPrint(fontId, strBuffer, -1.0f, 0.74f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f);
 		}
 
 		// Informing the system about the loop's end
@@ -185,17 +274,18 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	AEGfxMeshFree(pMeshStall);
 	AEGfxMeshFree(pMeshApple);
+	AEGfxMeshFree(pMeshUIBorder);
+
+	if (pTexStall)
+	{
+		AEGfxTextureUnload(pTexStall);
+	}
 
 	// FIX: Do NOT manually destroy the font or shutdown the font system here.
 	// AESysExit() likely handles the entire graphics subsystem teardown.
-	// Manually calling these might be causing a double-free crash.
-
-	// AEGfxDestroyFont(fontId);  // <-- Commented out to prevent crash
-	// AEGfxFontSystemEnd();      // <-- Commented out to prevent crash
 
 	// free the system
 	AESysExit();
 }
-
 
 
