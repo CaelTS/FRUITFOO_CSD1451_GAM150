@@ -2,12 +2,15 @@
   Generating code
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
   Previous IPDB not found, fall back to full compilation.
   All 5 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
   Finished generating code
   FruitFoo.vcxproj -> C:\Users\Admin\source\repos\FruitFoo\bin\Release-x64\FruitFoo.exe
   8 File(s) copied
 =======
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
   1 of 229 functions ( 0.4%) were compiled, the rest were copied from previous compilation.
@@ -17,6 +20,9 @@
   FruitFoo.vcxproj -> C:\Users\Admin\source\repos\FruitFoo\bin\Release-x64\FruitFoo.exe
   14 File(s) copied
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
