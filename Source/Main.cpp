@@ -107,6 +107,56 @@ float GetEnergyTimer() { return energyTimer; }
 float GetFruitGrowthTimer() { return fruitGrowthTimer; }
 const std::vector<Fruit>& GetFruits() { return fruits; }
 
+void MainScreen_Load()
+{
+	// Load Textures
+	pTexStall = AEGfxTextureLoad("Assets/Stall_Empty_POT.png");
+	pTexApple = AEGfxTextureLoad("Assets/Apple.png");
+	pTexPear = AEGfxTextureLoad("Assets/Pear.png");
+	pTexBanana = AEGfxTextureLoad("Assets/Banana.png");
+
+	if (!pTexStall) OutputDebugStringA("ERROR: Failed to load 'Assets/Stall_Empty_POT.png'.\n");
+	if (!pTexApple) OutputDebugStringA("ERROR: Failed to load 'Assets/Apple.png'.\n");
+	if (!pTexPear) OutputDebugStringA("ERROR: Failed to load 'Assets/Pear.png'.\n");
+	if (!pTexBanana) OutputDebugStringA("ERROR: Failed to load 'Assets/Banana.png'.\n");
+}
+
+void MainScreen_Initialize()
+{
+	// Reset game state
+	gold = 0;
+	energy = 50;
+	energyTimer = 0.0f;
+	fruitGrowthTimer = 0.0f;
+	selectedFruit = 0;
+	fruits.clear();
+	inventory[0] = inventory[1] = inventory[2] = 0;
+
+	// Load saved game
+	LoadGame(gold, energy, inventory);
+
+	// Load font
+	fontId = AEGfxCreateFont("Assets/liberation-mono.ttf", 26);
+	if (fontId < 0)
+		OutputDebugStringA("ERROR: Failed to load 'Assets/liberation-mono.ttf'.\n");
+
+	// Create meshes
+	AEGfxMeshStart();
+	AEGfxTriAdd(-0.5f, -0.5f, 0xFFFFFFFF, 0.0f, 1.0f, 0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f, -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
+	AEGfxTriAdd(0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f, 0.5f, 0.5f, 0xFFFFFFFF, 1.0f, 0.0f, -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
+	pMeshStall = AEGfxMeshEnd();
+
+	AEGfxMeshStart();
+	AEGfxTriAdd(-0.5f, -0.5f, 0xFFFFFFFF, 0.0f, 1.0f, 0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f, -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
+	AEGfxTriAdd(0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f, 0.5f, 0.5f, 0xFFFFFFFF, 1.0f, 0.0f, -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
+	pMeshFruit = AEGfxMeshEnd();
+
+	AEGfxMeshStart();
+	AEGfxTriAdd(-0.5f, -0.5f, 0xFFFFFFFF, 0.0f, 1.0f, 0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f, -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
+	AEGfxTriAdd(0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f, 0.5f, 0.5f, 0xFFFFFFFF, 1.0f, 0.0f, -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
+	pMeshUIBorder = AEGfxMeshEnd();
+}
+
 void MainScreen_Update()
 {
 	// Get Delta Time
@@ -366,56 +416,6 @@ void MainScreen_Render()
 		if (selectedFruit == 2) AEGfxPrint(fontId, strBuffer, textX, textY - (lineSpacing * 2), 1.0f, 1.0f, 0.0f, 1.0f, 1.0f);
 		else AEGfxPrint(fontId, strBuffer, textX, textY - (lineSpacing * 2), 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
 	}
-}
-
-void MainScreen_Load()
-{
-	// Load Textures
-	pTexStall = AEGfxTextureLoad("Assets/Stall_Empty_POT.png");
-	pTexApple = AEGfxTextureLoad("Assets/Apple.png");
-	pTexPear = AEGfxTextureLoad("Assets/Pear.png");
-	pTexBanana = AEGfxTextureLoad("Assets/Banana.png");
-
-	if (!pTexStall) OutputDebugStringA("ERROR: Failed to load 'Assets/Stall_Empty_POT.png'.\n");
-	if (!pTexApple) OutputDebugStringA("ERROR: Failed to load 'Assets/Apple.png'.\n");
-	if (!pTexPear) OutputDebugStringA("ERROR: Failed to load 'Assets/Pear.png'.\n");
-	if (!pTexBanana) OutputDebugStringA("ERROR: Failed to load 'Assets/Banana.png'.\n");
-}
-
-void MainScreen_Initialize()
-{
-	// Reset game state
-	gold = 0;
-	energy = 50;
-	energyTimer = 0.0f;
-	fruitGrowthTimer = 0.0f;
-	selectedFruit = 0;
-	fruits.clear();
-	inventory[0] = inventory[1] = inventory[2] = 0;
-
-	// Load saved game
-	LoadGame(gold, energy, inventory);
-
-	// Load font
-	fontId = AEGfxCreateFont("Assets/liberation-mono.ttf", 26);
-	if (fontId < 0)
-		OutputDebugStringA("ERROR: Failed to load 'Assets/liberation-mono.ttf'.\n");
-
-	// Create meshes
-	AEGfxMeshStart();
-	AEGfxTriAdd(-0.5f, -0.5f, 0xFFFFFFFF, 0.0f, 1.0f, 0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f, -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
-	AEGfxTriAdd(0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f, 0.5f, 0.5f, 0xFFFFFFFF, 1.0f, 0.0f, -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
-	pMeshStall = AEGfxMeshEnd();
-
-	AEGfxMeshStart();
-	AEGfxTriAdd(-0.5f, -0.5f, 0xFFFFFFFF, 0.0f, 1.0f, 0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f, -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
-	AEGfxTriAdd(0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f, 0.5f, 0.5f, 0xFFFFFFFF, 1.0f, 0.0f, -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
-	pMeshFruit = AEGfxMeshEnd();
-
-	AEGfxMeshStart();
-	AEGfxTriAdd(-0.5f, -0.5f, 0xFFFFFFFF, 0.0f, 1.0f, 0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f, -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
-	AEGfxTriAdd(0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f, 0.5f, 0.5f, 0xFFFFFFFF, 1.0f, 0.0f, -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
-	pMeshUIBorder = AEGfxMeshEnd();
 }
 
 void MainScreen_Free()
