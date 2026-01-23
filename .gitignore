@@ -13,6 +13,7 @@
 *.exp
 *.iobj
 *.ipdb
+*.user
 bin
 Debug
 Release
