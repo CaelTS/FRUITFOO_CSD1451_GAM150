@@ -63,16 +63,16 @@ AEGfxVertexList* pMeshUIBorder = NULL;
 std::random_device rd;
 std::mt19937 gen(rd());
 
-void SaveGame(int gold, int energy, int inventory[3])
+void SaveGame(int goldParam, int energyParam, int inventoryParam[3])
 {
 	std::ofstream outFile("savegame.txt");
 	if (outFile.is_open())
 	{
-		outFile << gold << "\n";
-		outFile << energy << "\n";
-		outFile << inventory[0] << "\n";
-		outFile << inventory[1] << "\n";
-		outFile << inventory[2] << "\n";
+		outFile << goldParam << "\n";
+		outFile << energyParam << "\n";
+		outFile << inventoryParam[0] << "\n";
+		outFile << inventoryParam[1] << "\n";
+		outFile << inventoryParam[2] << "\n";
 		outFile.close();
 		OutputDebugStringA("Game Saved Successfully.\n");
 	}
@@ -82,16 +82,16 @@ void SaveGame(int gold, int energy, int inventory[3])
 	}
 }
 
-bool LoadGame(int& gold, int& energy, int inventory[3])
+bool LoadGame(int goldParam, int energyParam, int inventoryParam[3])
 {
 	std::ifstream inFile("savegame.txt");
 	if (inFile.is_open())
 	{
-		inFile >> gold;
-		inFile >> energy;
-		inFile >> inventory[0];
-		inFile >> inventory[1];
-		inFile >> inventory[2];
+		inFile >> goldParam;
+		inFile >> energyParam;
+		inFile >> inventoryParam[0];
+		inFile >> inventoryParam[1];
+		inFile >> inventoryParam[2];
 		inFile.close();
 		OutputDebugStringA("Game Loaded Successfully.\n");
 		return true;
