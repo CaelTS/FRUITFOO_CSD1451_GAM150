@@ -4,10 +4,11 @@
 #include <crtdbg.h> // To check for memory leaks
 #include "AEEngine.h"
 #include "Main.h"
-#include "GameStateManager.h"  // Add this include
+#include "GameStateManager.h"
+#include "Transition.h"
 #include <stdio.h>
 #include <vector>
-#include <fstream>  // For file I/O
+#include <fstream>
 #include <random>
 
 // ---------------------------------------------------------------------------
@@ -26,6 +27,7 @@ int energy = 50;
 const int MAX_ENERGY = 50;
 const int ENERGY_COST = 5;
 const int FRUIT_PRICE = 10;
+
 
 // Inventory System
 int inventory[3] = { 0, 0, 0 }; // 0: Apple, 1: Pear, 2: Banana
@@ -57,22 +59,22 @@ AEGfxTexture* pTexPear = NULL;
 AEGfxTexture* pTexBanana = NULL;
 AEGfxVertexList* pMeshStall = NULL;
 AEGfxVertexList* pMeshFruit = NULL;
-AEGfxVertexList* pMeshUIBorder = NULL;
+AEGfxVertexList* g_pMeshFullScreen = NULL;
 
 // Random number generator
 std::random_device rd;
 std::mt19937 gen(rd());
 
-void SaveGame(int goldParam, int energyParam, int inventoryParam[3])
+void SaveGame(int goldParam, int energyParam, int inventoryparam[3])
 {
 	std::ofstream outFile("savegame.txt");
 	if (outFile.is_open())
 	{
 		outFile << goldParam << "\n";
 		outFile << energyParam << "\n";
-		outFile << inventoryParam[0] << "\n";
-		outFile << inventoryParam[1] << "\n";
-		outFile << inventoryParam[2] << "\n";
+		outFile << inventoryparam[0] << "\n";
+		outFile << inventoryparam[1] << "\n";
+		outFile << inventoryparam[2] << "\n";
 		outFile.close();
 		OutputDebugStringA("Game Saved Successfully.\n");
 	}
@@ -82,16 +84,16 @@ void SaveGame(int goldParam, int energyParam, int inventoryParam[3])
 	}
 }
 
-bool LoadGame(int goldParam, int energyParam, int inventoryParam[3])
+bool LoadGame(int goldParam, int energyParam, int inventoryparam[3])
 {
 	std::ifstream inFile("savegame.txt");
 	if (inFile.is_open())
 	{
 		inFile >> goldParam;
 		inFile >> energyParam;
-		inFile >> inventoryParam[0];
-		inFile >> inventoryParam[1];
-		inFile >> inventoryParam[2];
+		inFile >> inventoryparam[0];
+		inFile >> inventoryparam[1];
+		inFile >> inventoryparam[2];
 		inFile.close();
 		OutputDebugStringA("Game Loaded Successfully.\n");
 		return true;
@@ -150,11 +152,6 @@ void MainScreen_Initialize()
 	AEGfxTriAdd(-0.5f, -0.5f, 0xFFFFFFFF, 0.0f, 1.0f, 0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f, -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
 	AEGfxTriAdd(0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f, 0.5f, 0.5f, 0xFFFFFFFF, 1.0f, 0.0f, -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
 	pMeshFruit = AEGfxMeshEnd();
-
-	AEGfxMeshStart();
-	AEGfxTriAdd(-0.5f, -0.5f, 0xFFFFFFFF, 0.0f, 1.0f, 0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f, -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
-	AEGfxTriAdd(0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f, 0.5f, 0.5f, 0xFFFFFFFF, 1.0f, 0.0f, -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
-	pMeshUIBorder = AEGfxMeshEnd();
 }
 
 void MainScreen_Update()
@@ -332,7 +329,7 @@ void MainScreen_Render()
 	AEMtx33Trans(&trans, uiX, uiY_Gold);
 	AEMtx33Concat(&transform, &trans, &scale);
 	AEGfxSetTransform(transform.m);
-	AEGfxMeshDraw(pMeshUIBorder, AE_GFX_MDM_TRIANGLES);
+	AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
 
 	// 1b. Gold Background (Black)
 	AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 1.0f);
@@ -340,7 +337,7 @@ void MainScreen_Render()
 	AEMtx33Trans(&trans, uiX, uiY_Gold);
 	AEMtx33Concat(&transform, &trans, &scale);
 	AEGfxSetTransform(transform.m);
-	AEGfxMeshDraw(pMeshUIBorder, AE_GFX_MDM_TRIANGLES);
+	AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
 
 	// 2. Energy Border (Green)
 	AEGfxSetColorToMultiply(0.0f, 1.0f, 0.0f, 1.0f);
@@ -349,7 +346,7 @@ void MainScreen_Render()
 	AEMtx33Trans(&trans, uiX, uiY_Energy);
 	AEMtx33Concat(&transform, &trans, &scale);
 	AEGfxSetTransform(transform.m);
-	AEGfxMeshDraw(pMeshUIBorder, AE_GFX_MDM_TRIANGLES);
+	AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
 
 	// 2b. Energy Background (Black)
 	AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 1.0f);
@@ -357,7 +354,7 @@ void MainScreen_Render()
 	AEMtx33Trans(&trans, uiX, uiY_Energy);
 	AEMtx33Concat(&transform, &trans, &scale);
 	AEGfxSetTransform(transform.m);
-	AEGfxMeshDraw(pMeshUIBorder, AE_GFX_MDM_TRIANGLES);
+	AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
 
 	// 3. Inventory UI (Right Side)
 	float invX = 650.0f;
@@ -370,7 +367,7 @@ void MainScreen_Render()
 	AEMtx33Trans(&trans, invX, invY - 50.0f);
 	AEMtx33Concat(&transform, &trans, &scale);
 	AEGfxSetTransform(transform.m);
-	AEGfxMeshDraw(pMeshUIBorder, AE_GFX_MDM_TRIANGLES);
+	AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
 
 	// Inventory Background (Black)
 	AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 1.0f);
@@ -378,7 +375,7 @@ void MainScreen_Render()
 	AEMtx33Trans(&trans, invX, invY - 50.0f);
 	AEMtx33Concat(&transform, &trans, &scale);
 	AEGfxSetTransform(transform.m);
-	AEGfxMeshDraw(pMeshUIBorder, AE_GFX_MDM_TRIANGLES);
+	AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
 
 	// Reset Color Multiplier
 	AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
@@ -416,6 +413,19 @@ void MainScreen_Render()
 		if (selectedFruit == 2) AEGfxPrint(fontId, strBuffer, textX, textY - (lineSpacing * 2), 1.0f, 1.0f, 0.0f, 1.0f, 1.0f);
 		else AEGfxPrint(fontId, strBuffer, textX, textY - (lineSpacing * 2), 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
 	}
+
+	if (TR_IsActive())
+	{
+		float alpha = TR_GetAlpha();
+		AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+		AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+		AEGfxSetColorToMultiply(0, 0, 0, alpha);
+		AEMtx33Scale(&scale, 1600, 900);
+		AEMtx33Trans(&trans, 0, 0);
+		AEMtx33Concat(&transform, &trans, &scale);
+		AEGfxSetTransform(transform.m);
+		AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+	}
 }
 
 void MainScreen_Free()
@@ -423,7 +433,6 @@ void MainScreen_Free()
 	// Free meshes
 	if (pMeshStall) AEGfxMeshFree(pMeshStall);
 	if (pMeshFruit) AEGfxMeshFree(pMeshFruit);
-	if (pMeshUIBorder) AEGfxMeshFree(pMeshUIBorder);
 
 	// Free textures
 	if (pTexStall) AEGfxTextureUnload(pTexStall);
@@ -432,7 +441,7 @@ void MainScreen_Free()
 	if (pTexBanana) AEGfxTextureUnload(pTexBanana);
 
 	// Reset pointers
-	pMeshStall = pMeshFruit = pMeshUIBorder = NULL;
+	pMeshStall = pMeshFruit =  NULL;
 	pTexStall = pTexApple = pTexPear = pTexBanana = NULL;
 	//fontId = -1;
 }
@@ -471,6 +480,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	// Initialize Font System
 	AEGfxFontSystemStart();
 
+	// create shared full-screen quad once
+	AEGfxMeshStart();
+	AEGfxTriAdd(-0.5f, -0.5f, 0xFFFFFFFF, 0, 1, 0.5f, -0.5f, 0xFFFFFFFF, 1, 1, -0.5f, 0.5f, 0xFFFFFFFF, 0, 0);
+	AEGfxTriAdd(0.5f, -0.5f, 0xFFFFFFFF, 1, 1, 0.5f, 0.5f, 0xFFFFFFFF, 1, 0, -0.5f, 0.5f, 0xFFFFFFFF, 0, 0);
+	g_pMeshFullScreen = AEGfxMeshEnd();
+
 	// Initialize Game State Manager
 	GSM_Initialize(GS_MAIN_SCREEN);
 
@@ -492,23 +507,23 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		}
 
 		// Check for state transition
-		if (next != current) {
-			// Free current state resources
-			if (fpFree) fpFree();
+		if (next != current && !TR_IsActive())
+		{
+			TR_Start(current, next);
+		}
 
-			// Unload current state (except when exiting)
+		if (TR_Update())
+		{
+			if (fpFree)   fpFree();
 			if (current != GS_EXIT && fpUnload) fpUnload();
 
-			// Update states
 			previous = current;
 			current = next;
-
-			// Update function pointers for new state
 			GSM_Update();
 
-			// Load and initialize new state (if not exiting)
-			if (current != GS_EXIT) {
-				if (fpLoad) fpLoad();
+			if (current != GS_EXIT)
+			{
+				if (fpLoad)       fpLoad();
 				if (fpInitialize) fpInitialize();
 			}
 		}

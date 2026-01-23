@@ -2,8 +2,8 @@
 #include <vector>
 
 // Save/Load functions
-void SaveGame(int goldParam, int energyParam, int inventoryParam[3]);
-bool LoadGame(int goldparam, int energyParam, int inventoryParam[3]);
+void SaveGame(int goldParam, int energyParam, int inventoryparam[3]);
+bool LoadGame(int goldParam, int energyParam, int inventoryparam[3]);
 
 // MainScreen lifecycle functions
 void MainScreen_Update();
