@@ -100,12 +100,28 @@ xcopy "$(SolutionDir)Extern\AlphaEngine\lib\fmod.dll" "$(OutDir)" /s /r /y /q</C
     <ClCompile Include="..\Source\Main.cpp" />
     <ClCompile Include="..\Source\Next.cpp" />
     <ClCompile Include="..\Source\Transition.cpp" />
+    <ClCompile Include="Economy.cpp" />
+    <ClCompile Include="Farm.cpp" />
+    <ClCompile Include="Inventory.cpp" />
+    <ClCompile Include="Rhythm.cpp" />
+    <ClCompile Include="SaveLoad.cpp" />
+    <ClCompile Include="ShopUpgrade.cpp" />
+    <ClCompile Include="UI.cpp" />
+    <ClCompile Include="Utilities.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Source\GameStateManager.h" />
     <ClInclude Include="..\Source\Main.h" />
     <ClInclude Include="..\Source\Next.h" />
     <ClInclude Include="..\Source\Transition.h" />
+    <ClInclude Include="Economy.h" />
+    <ClInclude Include="Farm.h" />
+    <ClInclude Include="Inventory.h" />
+    <ClInclude Include="Rhythm.h" />
+    <ClInclude Include="SaveLoad.h" />
+    <ClInclude Include="ShopUpgrade.h" />
+    <ClInclude Include="UI.h" />
+    <ClInclude Include="Utilities.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
