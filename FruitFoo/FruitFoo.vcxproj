@@ -100,12 +100,34 @@ xcopy "$(SolutionDir)Extern\AlphaEngine\lib\fmod.dll" "$(OutDir)" /s /r /y /q</C
     <ClCompile Include="..\Source\Main.cpp" />
     <ClCompile Include="..\Source\Next.cpp" />
     <ClCompile Include="..\Source\Transition.cpp" />
+<<<<<<< HEAD
+=======
+    <ClCompile Include="Economy.cpp" />
+    <ClCompile Include="Farming.cpp" />
+    <ClCompile Include="GameConfig.cpp" />
+    <ClCompile Include="Inventory.cpp" />
+    <ClCompile Include="Rhythm.cpp" />
+    <ClCompile Include="ShopUpgrade.cpp" />
+    <ClCompile Include="UI.cpp" />
+    <ClCompile Include="Utilities.cpp" />
+>>>>>>> Putra
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Source\GameStateManager.h" />
     <ClInclude Include="..\Source\Main.h" />
     <ClInclude Include="..\Source\Next.h" />
     <ClInclude Include="..\Source\Transition.h" />
+<<<<<<< HEAD
+=======
+    <ClInclude Include="Economy.h" />
+    <ClInclude Include="Farming.h" />
+    <ClInclude Include="GameConfig.h" />
+    <ClInclude Include="Inventory.h" />
+    <ClInclude Include="Rhythm.h" />
+    <ClInclude Include="ShopUpgrade.h" />
+    <ClInclude Include="UI.h" />
+    <ClInclude Include="Utilities.h" />
+>>>>>>> Putra
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
