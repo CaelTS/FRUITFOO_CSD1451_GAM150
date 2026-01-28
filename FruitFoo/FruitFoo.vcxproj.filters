@@ -27,28 +27,28 @@
     <ClCompile Include="..\Source\Transition.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Economy.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Rhythm.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GameConfig.cpp">
+    <ClCompile Include="Economy.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Inventory.cpp">
+    <ClCompile Include="Farm.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="UI.cpp">
+    <ClCompile Include="SaveLoad.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ShopUpgrade.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Farming.cpp">
+    <ClCompile Include="UI.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Utilities.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Inventory.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -65,25 +65,25 @@
     <ClInclude Include="..\Source\Transition.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="UI.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ShopUpgrade.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Economy.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Farming.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GameConfig.h">
+    <ClInclude Include="Farm.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Inventory.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Rhythm.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SaveLoad.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ShopUpgrade.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="UI.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Utilities.h">

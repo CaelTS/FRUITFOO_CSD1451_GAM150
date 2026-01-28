@@ -1,0 +1,1665 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+      
+      
+      <link rel="icon" href="assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.12">
+    
+    
+      
+        <title>Print Site - Alpha Engine Tutorial</title>
+      
+    
+    
+      <link rel="stylesheet" href="assets/stylesheets/main.2afb09e1.min.css">
+      
+        
+        <link rel="stylesheet" href="assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+        <script src="https://unpkg.com/iframe-worker/shim"></script>
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="css/print-site.css">
+    
+      <link rel="stylesheet" href="css/print-site-material.css">
+    
+    <script>__md_scope=new URL("/",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  
+        <script type="text/javascript">
+        document.addEventListener('DOMContentLoaded', function () {
+            remove_material_navigation();remove_mkdocs_theme_navigation();generate_toc();
+        })
+        </script>
+        </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#index" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="index.html" title="Alpha Engine Tutorial" class="md-header__button md-logo" aria-label="Alpha Engine Tutorial" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Alpha Engine Tutorial
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Print Site
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="index.html" title="Alpha Engine Tutorial" class="md-nav__button md-logo" aria-label="Alpha Engine Tutorial" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Alpha Engine Tutorial
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Introduction
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="project_setup.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Project Setup
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="primitive_types.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Primitive Types
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="coordinate_systems.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Coordinate Systems
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="rendering_sprites.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Rendering A Sprite
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="rendering_text.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Rendering Text
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="spritesheets.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Using Spritesheets
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="input.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Input Handling
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="playing_audio.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Playing Audio
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="camera_system.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Camera System
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#index" class="md-nav__link">
+    <span class="md-ellipsis">
+      1 Introduction
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#project_setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      2 Project Setup
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#primitive_types" class="md-nav__link">
+    <span class="md-ellipsis">
+      3 Primitive Types
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#coordinate_systems" class="md-nav__link">
+    <span class="md-ellipsis">
+      4 Coordinate Systems
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rendering_sprites" class="md-nav__link">
+    <span class="md-ellipsis">
+      5 Rendering A Sprite
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rendering_text" class="md-nav__link">
+    <span class="md-ellipsis">
+      6 Rendering Text
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#spritesheets" class="md-nav__link">
+    <span class="md-ellipsis">
+      7 Using Spritesheets
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#input" class="md-nav__link">
+    <span class="md-ellipsis">
+      8 Input Handling
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#playing_audio" class="md-nav__link">
+    <span class="md-ellipsis">
+      9 Playing Audio
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#camera_system" class="md-nav__link">
+    <span class="md-ellipsis">
+      10 Camera System
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<div id="print-site-page" class="print-site-enumerate-headings print-site-enumerate-figures">
+        <section class="print-page">
+            <div id="print-page-toc" data-toc-depth="3">
+                <nav role='navigation' class='print-page-toc-nav'>
+                <h1 class='print-page-toc-title'>Table of Contents</h1>
+                </nav>
+            </div>
+        </section>
+        <section class="print-page" id="index" heading-number="1"><h1 id="index-introduction">Introduction</h1>
+<p>Alpha Engine is a C library that facilitates creating an application on Windows.<br />
+It provides functions for input, graphics rendering, window management and audio. </p>
+<p>This document contains step-by-step guides to get users started and use Alpha Engine.</p>
+<h2 id="index-prerequisites">Prerequisites</h2>
+<p>This document assume that the students that familiar with the following concepts and tools:</p>
+<ul>
+<li>Transformation matrices and column-major matrix concatenation (multiplication).</li>
+<li>Programming in C.</li>
+<li>Using Visual Studios 2022 to build and run an application in Windows.</li>
+<li>Basic understanding of game loops, sprite animations, global/local spaces, input handling, and rendering.</li>
+</ul>
+<p>To follow along with the tutorial, you need to download <a href="res/Assets.zip">the assets we will use</a> and <a href="res/snippets.zip">code snippets</a> for further references.</p></section><section class="print-page" id="project_setup" heading-number="2"><h1 id="project_setup-project-setup">Project Setup</h1>
+<p>In this section, we will cover how to create a new Visual Studios 2022 project in Alpha Engine. </p>
+<p>Be sure to <a href="res/Assets.zip">download Assets here</a> and the Alpha Engine library on Moodle before continuing.</p>
+<h2 id="project_setup-project-creation">Project Creation</h2>
+<p>First, we will create the Visual Studios Solution and Project files that will be used to run our first application.</p>
+<ul>
+<li>Open Visual Studios. You should see a window that looks like this:</li>
+</ul>
+<p><img alt="" src="res/vs2022_create.png" /></p>
+<ul>
+<li>Under the <code>Visual Studio 2022</code> window:<ul>
+<li>Click on <code>Create a new project</code></li>
+</ul>
+</li>
+<li>Under the <code>Create a new project</code> window:<ul>
+<li>Click on <code>Empty Project</code>. Make sure that it's the C++ version. </li>
+<li>Click on <code>Next</code>.</li>
+</ul>
+</li>
+<li>Under the <code>Configure your new project</code> page:<ul>
+<li>(Optional) Change the <code>Project Name</code> to one of your liking.</li>
+<li>(Optional) Change the <strong>Location</strong>.</li>
+<li>Uncheck <code>Place solution and project in the same directory</code>.</li>
+<li>Note the <strong>Location</strong> as we need to navigate to it later.</li>
+<li>Click on <code>Create</code>.</li>
+</ul>
+</li>
+</ul>
+<p>You should see Visual Studios appear on your screen, like so:</p>
+<p><img alt="" src="res/vs2022_empty.png" /></p>
+<p>This means that it has successfully created and opened.</p>
+<p>In this project, we will not be building for 32-bit systems, so to avoid confusion, we need to remove 32-bit system-related configurations from the project.</p>
+<ul>
+<li>Under <code>Build</code> &gt; <code>Configuration Manager</code> <ul>
+<li>Click on <code>Active Solution Platform</code> &gt; <code>Edit…</code> &gt; Click on <code>x86</code> &gt; <code>Remove</code></li>
+<li>Click on <code>Platform</code> &gt; <code>Edit…</code> &gt; Click on <code>Win32</code> &gt; <code>Remove</code></li>
+</ul>
+</li>
+</ul>
+<h2 id="project_setup-adding-a-folder-for-alpha-engine-and-assets">Adding a folder for Alpha Engine and assets</h2>
+<p>Next, we will add the Alpha Engine library to a location within the project folder. 
+This is so that our project can easily locate Alpha Engine’s header and library files, and subsequently use its code.</p>
+<ul>
+<li>Go to the project’s Solution File (.sln) using Windows Explorer. It should be at the <strong>Location</strong> that you set earlier.</li>
+<li>Create a folder named <code>Extern</code> at that location.</li>
+<li>Create a folder named <code>Assets</code> at that location.</li>
+<li>Copy the AlphaEngine folder in the given AlphaEngine.zip file into the <code>Extern</code> folder.</li>
+<li>Copy the contents in the given <code>Assets.zip</code> file into the <code>Assets</code> folder.</li>
+</ul>
+<h2 id="project_setup-project-configuration">Project Configuration</h2>
+<p>Next, we configure the project properties. Right-click on the project in the Solution Explorer:</p>
+<p><img alt="" src="res/vs2022_project_properties.png" /></p>
+<p>Then click on <code>Properties</code>. 
+It should open a window that looks something like this:</p>
+<p><img alt="" src="res/vs2022_project_config.png" /></p>
+<p>This window contains all configurations of the project. By default, all projects in VS2022 come with two configurations to compile the app: <code>Debug</code> and <code>Release</code>.</p>
+<p>In general, <code>Debug</code> builds are easier to debug but slower. <code>Release</code> builds are most optimized but are harder to debug.</p>
+<p>Set the <code>Configuration</code> drop down bar to <code>All Configurations</code>. This will cause our settings to affect both <code>Debug</code> and <code>Release</code> versions of our application. </p>
+<p><img alt="" src="res/vs2022_debug_release_config_change.png" /></p>
+<p>Add the additional directories the compiler needs to look for when compiling and linking:</p>
+<ul>
+<li>Under <code>Configuration Properties</code> &gt; <code>VC++ Directories</code><ul>
+<li>Add <code>$(SolutionDir)Extern\AlphaEngine\include</code> to <code>General</code> &gt; <code>Include Directories</code></li>
+<li>Add <code>$(SolutionDir)Extern\AlphaEngine\lib</code> to <code>General</code> &gt; <code>Library Directories</code></li>
+</ul>
+</li>
+</ul>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>When you add an entry into a section, you have to seperate each entry with ';'. For example, if the entry for <code>Include Directories</code> is: <code>$(VC_IncludePath);$(WindowsSDK_IncludePath)</code>, to add <code>$(SolutionDir)Extern\CProcessing\include</code>, you will have to do: <code>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)Extern\CProcessing\include</code></p>
+</div>
+<p>Configure the character set the project is using.</p>
+<ul>
+<li>Under <code>Configuration Properties</code> &gt; <code>Advanced</code> &gt; <code>Character Set</code><ul>
+<li>Set to <code>Use Multibyte Set</code></li>
+</ul>
+</li>
+</ul>
+<p>Configure the subsystem the project is using.</p>
+<ul>
+<li>Under <code>Configuration Properties</code> &gt; <code>Linker</code> &gt; <code>System</code> &gt; <code>Subsystem</code><ul>
+<li>Set to <code>Windows (/SUBSYSTEM:WINDOWS)</code></li>
+</ul>
+</li>
+</ul>
+<p>Set the output directory of the compiler where the executable will be created. 
+We will set this to a folder named <code>bin</code> at the directory the Solution file is in:</p>
+<ul>
+<li>Under <code>Configuration Properties</code> &gt; <code>General</code> &gt; <code>Output Directory</code><ul>
+<li>Set to <code>$(SolutionDir)bin\$(Configuration)-$(Platform)\</code></li>
+</ul>
+</li>
+</ul>
+<p>Set the intermediate directory of the compiler. 
+This is where all the 'rubbish' files that the compiler generates will go to.<br />
+We will set this to a folder named ".tmp" at the directory the Solution file is in:</p>
+<ul>
+<li>Under <code>Configuration Properties</code> &gt; <code>General</code> &gt; <code>Intermediate Directory</code><ul>
+<li>Set to <code>$(SolutionDir).tmp\$(Configuration)-$(Platform)\</code></li>
+</ul>
+</li>
+</ul>
+<p>Set the working directory of the debugger to be in the same directory as the executables output by the compiler:</p>
+<ul>
+<li>Under <code>Configuration Properties</code> &gt; <code>Debugging</code>  &gt; <code>Working Directory</code><ul>
+<li>Set to <code>$(SolutionDir)bin\$(Configuration)-$(Platform)\</code></li>
+</ul>
+</li>
+</ul>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>For the next few steps, you might need to change the <code>Configuration</code> drop down to either <code>Debug</code> to <code>Release</code>. Follow the steps carefully!</p>
+</div>
+<p>Configure the linker to link to the appropriate Alpha Engine depending on whether we are on Debug or Release configurations:</p>
+<ul>
+<li>Click on <code>Configuration Properties</code> &gt; <code>Linker</code> &gt; <code>Input</code> &gt; <code>Additional Dependencies</code><ul>
+<li>With <code>Configuration</code> set to <code>Debug</code>:<ul>
+<li>Click on the <code>v</code> arrow at the right side of the text field to toggle a dropdown menu</li>
+<li>Click on <code>&lt;Edit...&gt;</code>. A window should appear.</li>
+<li>Add <code>Alpha_EngineD.lib</code>. </li>
+<li>Click on <code>OK</code> to close the window.</li>
+<li>Click on <code>Apply</code></li>
+</ul>
+</li>
+<li>With <code>Configuration</code> set to <code>Release</code><ul>
+<li>Click on the <code>v</code> arrow at the right side of the text field to toggle a dropdown menu</li>
+<li>Click on <code>&lt;Edit...&gt;</code>. A window should appear.</li>
+<li>Add <code>Alpha_Engine.lib</code></li>
+<li>Click on <code>OK</code> to close the window.</li>
+<li>Click on <code>Apply</code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<video width="100%" controls>
+    <source src = "res/vs2022_additional_dependencies.mp4">
+</video>
+
+<p>Tell Visual Studios to copy the appropriate .dll and assets to where the executable is after it's built:</p>
+<ul>
+<li>Under <code>Configuration Properties</code> &gt; <code>Build Events</code> &gt; <code>Post-Build Event</code> &gt; <code>Command Line</code> &gt; <code>Edit…</code><ul>
+<li>With <code>Configuration</code> set to <code>Debug</code>:<ul>
+<li>Click on the <code>v</code> arrow at the right side of the text field to toggle a dropdown menu</li>
+<li>Click on <code>&lt;Edit...&gt;</code>. A window should appear.</li>
+<li>Add <code>xcopy "$(SolutionDir)Assets\</code>" "$(OutDir)Assets\" /s /r /y /q`</li>
+<li>Add <code>xcopy "$(SolutionDir)Extern\AlphaEngine\lib\freetype.dll" "$(OutDir)" /s /r /y /q</code></li>
+<li>Add <code>xcopy "$(SolutionDir)Extern\AlphaEngine\lib\Alpha_EngineD.dll" "$(OutDir)" /s /r /y /q</code></li>
+<li>Add <code>xcopy "$(SolutionDir)Extern\AlphaEngine\lib\fmodL.dll" "$(OutDir)" /s /r /y /q</code></li>
+<li>Click on <code>OK</code> to close the window.</li>
+<li>Click on <code>Apply</code></li>
+</ul>
+</li>
+<li>With <code>Configuration</code> set to <code>Release</code>:<ul>
+<li>Click on the <code>v</code> arrow at the right side of the text field to toggle a dropdown menu</li>
+<li>Click on <code>&lt;Edit...&gt;</code>. A window should appear.</li>
+<li>Add <code>xcopy "$(SolutionDir)Assets\</code>" "$(OutDir)Assets\" /s /r /y /q`</li>
+<li>Add <code>xcopy "$(SolutionDir)Extern\AlphaEngine\lib\freetype.dll" "$(OutDir)" /s /r /y /q</code></li>
+<li>Add <code>xcopy "$(SolutionDir)Extern\AlphaEngine\lib\Alpha_Engine.dll" "$(OutDir)" /s /r /y /q</code></li>
+<li>Add <code>xcopy "$(SolutionDir)Extern\AlphaEngine\lib\fmod.dll" "$(OutDir)" /s /r /y /q</code></li>
+<li>Click on <code>OK</code> to close the window.</li>
+<li>Click on <code>Apply</code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<video width="100%" controls>
+    <source src = "res/vs2022_post_build.mp4">
+</video>
+
+<h2 id="project_setup-running-our-first-application">Running our first application</h2>
+<p>Create a fresh CPP file with the entry point function and name it <code>Main.cpp</code>.</p>
+<ul>
+<li>Open File Explorer and navigate to the project's directory.</li>
+<li>Create a folder there to hold all our code. For this example, we will name the folder <code>Source</code></li>
+<li>Go into the <code>Source</code> folder and create a file named <code>Main.cpp</code>. This will contain the code with the entry point to our application.</li>
+<li>Drag and drop <code>Main.cpp</code> from the File Explorer into the Source File filter in Visual Studios 2022.</li>
+</ul>
+<p><img alt="" src="res/vs2022_main_drag_drop.jpg" /></p>
+<ul>
+<li>Copy the code from the given <code>snippets\barebones.cpp</code> into the <code>Main.cpp</code> file that you just created.</li>
+<li>Build and run the project.</li>
+<li>You should see a blank window with the title "My New Demo" pop up with a console window at the back. The problem should close upon pressing the escape key.</li>
+</ul>
+<p>If you got here, congratulations! You have set up Alpha Engine!</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you are new to Visual Studios, it is recommended to follow these steps to add a new source file into Visual Studios. This will at least keep our source files organized into a folder, rather than all over the project. If you have a better idea on how you want to organize your source files, feel free to do so!</p>
+</div></section><section class="print-page" id="primitive_types" heading-number="3"><h1 id="primitive_types-primitive-types">Primitive Types</h1>
+<p>In Alpha Engine, some primitivate types have been renamed to contain more information about the amount of bits and bytes we want our variables to occupy.</p>
+<div class="language-c highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#primitive_types-__codelineno-0-1"></a><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;cstdint&gt;</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#primitive_types-__codelineno-0-2"></a><span class="k">typedef</span><span class="w"> </span><span class="kt">int8_t</span><span class="w">    </span><span class="n">s8</span><span class="p">;</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#primitive_types-__codelineno-0-3"></a><span class="k">typedef</span><span class="w"> </span><span class="kt">uint8_t</span><span class="w">   </span><span class="n">u8</span><span class="p">;</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#primitive_types-__codelineno-0-4"></a><span class="k">typedef</span><span class="w"> </span><span class="kt">int16_t</span><span class="w">   </span><span class="n">s16</span><span class="p">;</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#primitive_types-__codelineno-0-5"></a><span class="k">typedef</span><span class="w"> </span><span class="kt">uint16_t</span><span class="w">  </span><span class="n">u16</span><span class="p">;</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#primitive_types-__codelineno-0-6"></a><span class="k">typedef</span><span class="w"> </span><span class="kt">int32_t</span><span class="w">   </span><span class="n">s32</span><span class="p">;</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#primitive_types-__codelineno-0-7"></a><span class="k">typedef</span><span class="w"> </span><span class="kt">uint32_t</span><span class="w">  </span><span class="n">u32</span><span class="p">;</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#primitive_types-__codelineno-0-8"></a><span class="k">typedef</span><span class="w"> </span><span class="kt">int64_t</span><span class="w">   </span><span class="n">s64</span><span class="p">;</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#primitive_types-__codelineno-0-9"></a><span class="k">typedef</span><span class="w"> </span><span class="kt">uint64_t</span><span class="w">  </span><span class="n">u64</span><span class="p">;</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#primitive_types-__codelineno-0-10"></a><span class="k">typedef</span><span class="w"> </span><span class="kt">float</span><span class="w">     </span><span class="n">f32</span><span class="p">;</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#primitive_types-__codelineno-0-11"></a><span class="k">typedef</span><span class="w"> </span><span class="kt">double</span><span class="w">    </span><span class="n">f64</span><span class="p">;</span>
+</span></code></pre></div>
+<p><code>u8</code> stands for 'unsigned 8 bits'. <code>s8</code> stands for 'signed 8 bits'. 
+<code>u16</code> then obviously stands for 'unsigned 16 bits', so on and so forth.
+<code>f32</code> stands for '32-bit floating point' and <code>f64</code> stands for '64-bit floating point'. </p>
+<p>This technique is common in modern programming. </p>
+<p>You might ask, why not use the primitive types as is? Like <code>int</code> or <code>short</code>?</p>
+<p>Doing it this way is not only clearer, but it also eliminates the need to change your primitive types based on different computer achitectures.</p>
+<p>Consider that we declare a simple <code>int</code> like so:</p>
+<div class="language-c highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#primitive_types-__codelineno-1-1"></a><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">// How many bytes is i?</span>
+</span></code></pre></div>
+<p>We might assume that an <code>int</code> is 4 bytes.
+However, the reality is that this might not always be true.
+Notice that in your programming class, quizzes always allow you to <strong>assume</strong> that <code>int</code> is 4 bytes!</p>
+<p>The reality is that what <code>int</code> is depends on the compiler, which in turn depends on your computer architecture. This is stated in C++'s specifications:</p>
+<blockquote>
+<p>int - basic integer type. The keyword int may be omitted if any of the modifiers listed below are used. If no length modifiers are present, it's guaranteed to have a width of at least 16 bits. However, on 32/64 bit systems it is almost exclusively guaranteed to have width of at least 32 bits (see below). 
+- <a href="https://en.cppreference.com/w/cpp/language/types">cppreference</a></p>
+</blockquote>
+<p>Thankfully since C99, compilers need to implement the header file <cstdint> which provides typedefs that allows programmers to specify exactly how many bytes they want their variable to occupy (amongst other things).
+Alpha Engine simply takes the typedefs it needs from that header file and shortened them.</p></section><section class="print-page" id="coordinate_systems" heading-number="4"><h1 id="coordinate_systems-coordinate-systems">Coordinate Systems</h1>
+<p>When programming an application, we work with multiple coordinate systems.
+For example, when we render 2D images on the screen, we might use pixel coordinates to describe the sizes and positions of the images. 
+However, when we create a user interface (UI), we may use percentages to describe a UI element's size and position on the screen in order to cater for multiple screen sizes.</p>
+<p>Therefore, it is important to be aware of the difference spaces you have to work and, when needed, convert between them.</p>
+<p>Depending on the complexity of your application, you can have as few as 1 coordinate system to as many as you need.
+In Alpha Engine, there are 3 coordinate systems used.
+They are: World Coordinates, Screen Coordinates, Normalized Screen Coordinates.</p>
+<h2 id="coordinate_systems-world-coordinates">World Coordinates</h2>
+<p>Alpha Engine uses the World Coordinates to render the instances of your meshes.
+It has the following attributes:</p>
+<ul>
+<li>The origin is in the middle.</li>
+<li>The x-axis goes horizontally towards the right.</li>
+<li>The y-axis goes vertically upwards. </li>
+<li>For both axes, each unit is 1 pixel wide. </li>
+</ul>
+<p>Assuming a 1600x900 resolution, it follows the diagram below:</p>
+<p><img alt="" src="res/world_coords.jpg" /></p>
+<p>For more information on how to render a mesh in World Coordinates, check out the <a href="#rendering_sprites">sprite rendering section</a>. </p>
+<h2 id="coordinate_systems-screen-coordinates">Screen Coordinates</h2>
+<p>Alpha Engine uses Screen Coordinates for elements that that live on the monitor, in terms of monitor pixels.
+A function that uses Screen Coordiniates is <code>AEInputGetCursorPosition()</code>, which gets the mouse cursor's position on the monitor.
+It has the following attributes:</p>
+<ul>
+<li>The origin is in the top left hand corner of the renderable area of your application window. </li>
+<li>The x-axis goes horizontally towards the right.</li>
+<li>The y-axis goes vertically downwards.</li>
+<li>For both axes, each unit is 1 pixel wide. </li>
+</ul>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Since a monitor is made up of concrete pixels, there is no such thing as a half-pixel position. For example, there is no such thing as a mouse position at x = 1.5.</p>
+</div>
+<p>Assuming a 1600x900 resolution, it follows the diagram below:</p>
+<p><img alt="" src="res/screen_coords.jpg" /></p>
+<h2 id="coordinate_systems-normalized-coordinates">Normalized Coordinates</h2>
+<p>Alpha Engine uses Normalized Coordinates for <a href="#rendering_text">rendering text</a>.
+The Normalized Coordinates describes the application window in terms of percentage.
+It has the following attributes:</p>
+<ul>
+<li>The origin is at the middle of the screen.</li>
+<li>The x-axis goes horizontally towards the right, with 1.0 being the rightmost side of the window and -1.0 being the leftmost side of the window.</li>
+<li>The y-axis goes vertically upwards, with 1.0 being the top of the screen and -1.0 being the bottom of the screen.</li>
+</ul>
+<p><img alt="" src="res/normalized_coords.jpg" /></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Normalized coordinates can be useful for describing position and size of an element because its values are not dependant on the screen resolution. This means that x = 1.0 always describes that right side of the window, whether the window is in 800x600, 1600x900 or 1920x1080 resolution.</p>
+</div></section><section class="print-page" id="rendering_sprites" heading-number="5"><h1 id="rendering_sprites-rendering-a-sprite">Rendering A Sprite</h1>
+<p>In this section, we will cover the basics of rendering something on the screen with Alpha Engine. 
+In Alpha Engine, rendering something on the screen goes through similar steps as rendering something using a graphics API like OpenGL, DirectX and Vulkan. 
+Alpha Engine simplifies the steps so that you don’t have to manage the underlying details.</p>
+<p>The steps are generally as follows:</p>
+<ul>
+<li>Create a Mesh (sometimes called a Model) on initialization. A Mesh is just a collection of triangles, which are a collection of 3 vertices. 
+You can of a Mesh as a blueprint, which we can create clones of to draw on the screen. </li>
+<li>In the game loop:<ul>
+<li>Set various settings in Alpha Engine to tell it how you want to draw the Mesh. For example:<ul>
+<li>What transform to apply to all vertices of the mesh.</li>
+<li>What texture to apply onto the mesh.</li>
+<li>...and more!</li>
+</ul>
+</li>
+<li>Inform Alpha Engine to draw a mesh based on the settings provided in the previous step.</li>
+</ul>
+</li>
+</ul>
+<p>In the following sections, we detail the steps to render a few simple sprites. 
+A sprite in computer graphics is a 2 dimensional image that is rendered somewhere within our window. </p>
+<h2 id="rendering_sprites-creating-a-1x1-mesh">Creating a 1x1 mesh</h2>
+<p>For most implementation of sprites, you can get away with a single 1x1 white square mesh that is centered around the origin.</p>
+<p><img alt="" src="res/1_pixel_mesh.png" /></p>
+<p>In modern graphics implementations, our meshes are made up of triangles. 
+A square mesh can be made out of 2 triangles.
+A triangle is made up of 3 vertices.
+There are a few ways to arrange two triangles to form a square but we will use these values for this example:</p>
+<div class="arithmatex">\[
+\triangle A = \begin{bmatrix} -0.5 \\ -0.5 \end{bmatrix}, \begin{bmatrix} -0.5 \\ 0.5 \end{bmatrix}, \begin{bmatrix} 0.5 \\ -0.5 \end{bmatrix}
+\]</div>
+<div class="arithmatex">\[
+\triangle B = \begin{bmatrix} 0.5 \\ -0.5 \end{bmatrix}, \begin{bmatrix} 0.5 \\ 0.5 \end{bmatrix}, \begin{bmatrix} -0.5 \\ 0.5 \end{bmatrix}
+\]</div>
+<p><img alt="" src="res/2_triangle_mesh.png" /></p>
+<p>XY coordinates are not the only things that a vertex can store.
+In theory, a vertex store as many addiional information you want!
+In Alpha Engine, a vertex can store the following information:</p>
+<ul>
+<li>XY Coordinates </li>
+<li>Color</li>
+<li>UV Coordinates</li>
+</ul>
+<p>Color is irrelevant for this section, so we will ignore it for now.
+It will be covered in <a href="#rendering_sprites-colors-and-color-modification">a later section</a>.</p>
+<p>The next thing we need to talk about is UV Coordinates.</p>
+<p>UV coordinates are coordinates of an image, which are rectangular in nature. 
+In Alpha Engine, U represents the X-axis of an image going from left to right, while V represents the Y axis of an image going from top to bottom. 
+The origin is at the top-left hand portion of the image.
+Both U and V values range from 0.0 to 1.0. 
+This means that the bottom-right of an image has the coordinates U = 1.0 and V = 1.0. </p>
+<p><img alt="" src="res/uv_coords.png" /></p>
+<p>To ensure that our renderer applies the image onto our mesh correctly, we need to map the correct UV coordinates to each vertex of our mesh. </p>
+<p>Given that the XY coordinates of each of our vertices represents a corner, we simple map a UV coordinate that corresponds to that corner of the image to the vertex. </p>
+<p>This means that we will map the vertex that represents the top-left corner of our mesh to the UV coordinate that represents the top-left of the image, the bottom-right vertex to the UV coordinates that represents the bottom-right of the image, and so on.</p>
+<p>The code below will create a square mesh of 1 pixel width and height centered around the origin and store it under <code>pMesh</code>. 
+Do this <em>BEFORE</em> the game loop. </p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Do not create a mesh within the game loop! We don't want to create a mesh each frame!</p>
+</div>
+<div class="language-c highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#rendering_sprites-__codelineno-0-1"></a><span class="c1">// We inform Alpha Engine that we are going to create a mesh</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#rendering_sprites-__codelineno-0-2"></a><span class="n">AEGfxMeshStart</span><span class="p">();</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#rendering_sprites-__codelineno-0-3"></a>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#rendering_sprites-__codelineno-0-4"></a><span class="c1">// AEGfxTriAdd() takes in 3 sets of 5 parameters,</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#rendering_sprites-__codelineno-0-5"></a><span class="c1">// totalling to a whooping 15 parameters to input.</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#rendering_sprites-__codelineno-0-6"></a><span class="c1">//</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#rendering_sprites-__codelineno-0-7"></a><span class="c1">// Each set represents a vertex, and with three sets</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#rendering_sprites-__codelineno-0-8"></a><span class="c1">// we form a single triangle. </span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#rendering_sprites-__codelineno-0-9"></a><span class="c1">// </span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#rendering_sprites-__codelineno-0-10"></a><span class="c1">// The 5 parameters in a set are:</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#rendering_sprites-__codelineno-0-11"></a><span class="c1">// - A vertex&#39;s x value</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#rendering_sprites-__codelineno-0-12"></a><span class="c1">// - A vertex&#39;s y value</span>
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#rendering_sprites-__codelineno-0-13"></a><span class="c1">// - A vertex&#39;s color in hexadecimal</span>
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#rendering_sprites-__codelineno-0-14"></a><span class="c1">// - The U value of a texture to map to this vertex</span>
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#rendering_sprites-__codelineno-0-15"></a><span class="c1">// - The V value of a texture to map to this vertex</span>
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#rendering_sprites-__codelineno-0-16"></a>
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#rendering_sprites-__codelineno-0-17"></a><span class="c1">// The code below tells Alpha Engine that the mesh will contain 2 </span>
+</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#rendering_sprites-__codelineno-0-18"></a><span class="c1">// triangles that makes up a white square. </span>
+</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#rendering_sprites-__codelineno-0-19"></a><span class="c1">//</span>
+</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#rendering_sprites-__codelineno-0-20"></a><span class="c1">// Notice that this 1x1 white square is centered around the origin.</span>
+</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#rendering_sprites-__codelineno-0-21"></a><span class="c1">//</span>
+</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22" href="#rendering_sprites-__codelineno-0-22"></a>
+</span><span id="__span-0-23"><a id="__codelineno-0-23" name="__codelineno-0-23" href="#rendering_sprites-__codelineno-0-23"></a><span class="n">AEGfxTriAdd</span><span class="p">(</span>
+</span><span id="__span-0-24"><a id="__codelineno-0-24" name="__codelineno-0-24" href="#rendering_sprites-__codelineno-0-24"></a><span class="w">  </span><span class="mf">-0.5f</span><span class="p">,</span><span class="w"> </span><span class="mf">-0.5f</span><span class="p">,</span><span class="w"> </span><span class="mh">0xFFFFFFFF</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0f</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0f</span><span class="p">,</span>
+</span><span id="__span-0-25"><a id="__codelineno-0-25" name="__codelineno-0-25" href="#rendering_sprites-__codelineno-0-25"></a><span class="w">  </span><span class="mf">0.5f</span><span class="p">,</span><span class="w"> </span><span class="mf">-0.5f</span><span class="p">,</span><span class="w"> </span><span class="mh">0xFFFFFFFF</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0f</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0f</span><span class="p">,</span>
+</span><span id="__span-0-26"><a id="__codelineno-0-26" name="__codelineno-0-26" href="#rendering_sprites-__codelineno-0-26"></a><span class="w">  </span><span class="mf">-0.5f</span><span class="p">,</span><span class="w"> </span><span class="mf">0.5f</span><span class="p">,</span><span class="w"> </span><span class="mh">0xFFFFFFFF</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0f</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0f</span><span class="p">);</span>
+</span><span id="__span-0-27"><a id="__codelineno-0-27" name="__codelineno-0-27" href="#rendering_sprites-__codelineno-0-27"></a>
+</span><span id="__span-0-28"><a id="__codelineno-0-28" name="__codelineno-0-28" href="#rendering_sprites-__codelineno-0-28"></a><span class="n">AEGfxTriAdd</span><span class="p">(</span>
+</span><span id="__span-0-29"><a id="__codelineno-0-29" name="__codelineno-0-29" href="#rendering_sprites-__codelineno-0-29"></a><span class="w">  </span><span class="mf">0.5f</span><span class="p">,</span><span class="w"> </span><span class="mf">-0.5f</span><span class="p">,</span><span class="w"> </span><span class="mh">0xFFFFFFFF</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0f</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0f</span><span class="p">,</span>
+</span><span id="__span-0-30"><a id="__codelineno-0-30" name="__codelineno-0-30" href="#rendering_sprites-__codelineno-0-30"></a><span class="w">  </span><span class="mf">0.5f</span><span class="p">,</span><span class="w"> </span><span class="mf">0.5f</span><span class="p">,</span><span class="w"> </span><span class="mh">0xFFFFFFFF</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0f</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0f</span><span class="p">,</span>
+</span><span id="__span-0-31"><a id="__codelineno-0-31" name="__codelineno-0-31" href="#rendering_sprites-__codelineno-0-31"></a><span class="w">  </span><span class="mf">-0.5f</span><span class="p">,</span><span class="w"> </span><span class="mf">0.5f</span><span class="p">,</span><span class="w"> </span><span class="mh">0xFFFFFFFF</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0f</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0f</span><span class="p">);</span>
+</span><span id="__span-0-32"><a id="__codelineno-0-32" name="__codelineno-0-32" href="#rendering_sprites-__codelineno-0-32"></a>
+</span><span id="__span-0-33"><a id="__codelineno-0-33" name="__codelineno-0-33" href="#rendering_sprites-__codelineno-0-33"></a><span class="c1">// Saving the mesh (list of triangles) in pMesh</span>
+</span><span id="__span-0-34"><a id="__codelineno-0-34" name="__codelineno-0-34" href="#rendering_sprites-__codelineno-0-34"></a><span class="n">AEGfxVertexList</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">pMesh</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">AEGfxMeshEnd</span><span class="p">();</span>
+</span></code></pre></div>
+<p>After you are done with the Mesh, remember to free it <em>AFTER</em> the game loop <em>BEFORE</em> the application exits with:</p>
+<div class="language-c highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#rendering_sprites-__codelineno-1-1"></a><span class="c1">// This will free the Mesh.</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#rendering_sprites-__codelineno-1-2"></a><span class="n">AEGfxMeshFree</span><span class="p">(</span><span class="n">pMesh</span><span class="p">);</span>
+</span></code></pre></div>
+<h2 id="rendering_sprites-loading-a-texture">Loading A Texture</h2>
+<p>Loading a texture is straightforward. 
+The code below will load a texture located in our Assets folder and store it under <code>pTex</code>:</p>
+<div class="language-c highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#rendering_sprites-__codelineno-2-1"></a><span class="c1">// This will load a texture in `Assets/PlanetTexture.png` </span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#rendering_sprites-__codelineno-2-2"></a><span class="c1">// and store it in pTex. </span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#rendering_sprites-__codelineno-2-3"></a><span class="n">AEGfxTexture</span><span class="o">*</span><span class="w"> </span><span class="n">pTex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">AEGfxTextureLoad</span><span class="p">(</span><span class="s">&quot;Assets/PlanetTexture.png&quot;</span><span class="p">);</span>
+</span></code></pre></div>
+<p>After you are done with the Texture, remember to free it <em>AFTER</em> the game loop <em>BEFORE</em> the application exits:</p>
+<div class="language-c highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#rendering_sprites-__codelineno-3-1"></a><span class="c1">// &#39;Frees&#39; the texture.</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#rendering_sprites-__codelineno-3-2"></a><span class="n">AEGfxTextureUnload</span><span class="p">(</span><span class="n">pTex</span><span class="p">);</span>
+</span></code></pre></div>
+<h2 id="rendering_sprites-calculating-the-transformation-matrix">Calculating the transformation matrix</h2>
+<p>Our next step is to calculate a transformation matrix that will be applied to every vertex of our mesh. 
+In our example, let's say we want a sprite that is:</p>
+<ul>
+<li>Scaled 500 pixels width and height </li>
+<li>Rotated by 90 degrees anti-clockwise</li>
+<li>Translated 200 pixels along the x-axis and 100 along the y-axis</li>
+</ul>
+<p>To calculate the transformation matrix <span class="arithmatex">\(F\)</span> for this, it's a simple case of concatenating the scale, rotation and translation matrices in that order.</p>
+<div class="arithmatex">\[
+F =
+\begin{bmatrix}
+1 &amp; 0 &amp; t_x \\
+0 &amp; 1 &amp; t_y \\
+0 &amp; 0 &amp; 1
+\end{bmatrix}
+\begin{bmatrix}
+\cos(r) &amp; -\sin(r) &amp; 0 \\
+\sin(r) &amp; \cos(r) &amp; 0 \\
+0 &amp; 0 &amp; 1
+\end{bmatrix}
+\begin{bmatrix}
+s_x &amp; 0 &amp; 0 \\
+0 &amp; s_y &amp; 0 \\
+0 &amp; 0 &amp; 1
+\end{bmatrix}
+\]</div>
+<p>Where:</p>
+<ul>
+<li><span class="arithmatex">\(t_x, t_y\)</span> represents our translation along the x and y axis respectively.</li>
+<li><span class="arithmatex">\(s_x, s_y\)</span> represents our scale along the x and y axis respectively.</li>
+<li><span class="arithmatex">\(r\)</span> represents the angle of anticlockwise rotation in radians. </li>
+</ul>
+<p>Thus, substituting the values we want in, we should get the following matrices:</p>
+<div class="arithmatex">\[
+F =
+\begin{bmatrix}
+1 &amp; 0 &amp; 200 \\
+0 &amp; 1 &amp; 100 \\
+0 &amp; 0 &amp; 1
+\end{bmatrix}
+\begin{bmatrix}
+\cos(\frac{\pi}{2}) &amp; \sin(\frac{\pi}{2}) &amp; 0 \\
+\sin(\frac{\pi}{2}) &amp; \cos(\frac{\pi}{2}) &amp; 0 \\
+0 &amp; 0 &amp; 1
+\end{bmatrix}
+\begin{bmatrix}
+500 &amp; 0 &amp; 0 \\
+0 &amp; 500 &amp; 0 \\
+0 &amp; 0 &amp; 1
+\end{bmatrix}
+\]</div>
+<p>Now that we know how to form our transformation matrix, we need to translate that into code. 
+Below is a snippet on how to do it in Alpha Engine.</p>
+<div class="language-c highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#rendering_sprites-__codelineno-4-1"></a><span class="c1">// Create a scale matrix that scales by 500 x and y</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#rendering_sprites-__codelineno-4-2"></a><span class="n">AEMtx33</span><span class="w"> </span><span class="n">scale</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">};</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#rendering_sprites-__codelineno-4-3"></a><span class="n">AEMtx33Scale</span><span class="p">(</span><span class="o">&amp;</span><span class="n">scale</span><span class="p">,</span><span class="w"> </span><span class="mf">500.f</span><span class="p">,</span><span class="w"> </span><span class="mf">500.f</span><span class="p">);</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#rendering_sprites-__codelineno-4-4"></a>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#rendering_sprites-__codelineno-4-5"></a><span class="c1">// Create a rotation matrix that rotates by 90 degrees</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#rendering_sprites-__codelineno-4-6"></a><span class="c1">// Note that PI in radians is 180 degrees.</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#rendering_sprites-__codelineno-4-7"></a><span class="c1">// Since 90 degrees is 180/2, 90 degrees in radians is PI/2</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#rendering_sprites-__codelineno-4-8"></a><span class="n">AEMtx33</span><span class="w"> </span><span class="n">rotate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">};</span>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#rendering_sprites-__codelineno-4-9"></a><span class="n">AEMtx33Rot</span><span class="p">(</span><span class="o">&amp;</span><span class="n">rotate</span><span class="p">,</span><span class="w"> </span><span class="n">PI</span><span class="o">/</span><span class="mi">2</span><span class="p">);</span>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#rendering_sprites-__codelineno-4-10"></a>
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#rendering_sprites-__codelineno-4-11"></a><span class="c1">// Create a translation matrix that translates by</span>
+</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#rendering_sprites-__codelineno-4-12"></a><span class="c1">// 200 in the x-axis and 100 in the y-axis</span>
+</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#rendering_sprites-__codelineno-4-13"></a><span class="n">AEMtx33</span><span class="w"> </span><span class="n">translate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">};</span>
+</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#rendering_sprites-__codelineno-4-14"></a><span class="n">AEMtx33Trans</span><span class="p">(</span><span class="o">&amp;</span><span class="n">translate</span><span class="p">,</span><span class="w"> </span><span class="mf">200.f</span><span class="p">,</span><span class="w"> </span><span class="mf">100.f</span><span class="p">);</span>
+</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#rendering_sprites-__codelineno-4-15"></a>
+</span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16" href="#rendering_sprites-__codelineno-4-16"></a><span class="c1">// Concatenate the matrices into the &#39;transform&#39; variable.</span>
+</span><span id="__span-4-17"><a id="__codelineno-4-17" name="__codelineno-4-17" href="#rendering_sprites-__codelineno-4-17"></a><span class="c1">// We concatenate in the order of translation * rotation * scale</span>
+</span><span id="__span-4-18"><a id="__codelineno-4-18" name="__codelineno-4-18" href="#rendering_sprites-__codelineno-4-18"></a><span class="c1">// i.e. this means we scale, then rotate, then translate.</span>
+</span><span id="__span-4-19"><a id="__codelineno-4-19" name="__codelineno-4-19" href="#rendering_sprites-__codelineno-4-19"></a><span class="n">AEMtx33</span><span class="w"> </span><span class="n">transform</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">};</span>
+</span><span id="__span-4-20"><a id="__codelineno-4-20" name="__codelineno-4-20" href="#rendering_sprites-__codelineno-4-20"></a><span class="n">AEMtx33Concat</span><span class="p">(</span><span class="o">&amp;</span><span class="n">transform</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">rotate</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">scale</span><span class="p">);</span>
+</span><span id="__span-4-21"><a id="__codelineno-4-21" name="__codelineno-4-21" href="#rendering_sprites-__codelineno-4-21"></a><span class="n">AEMtx33Concat</span><span class="p">(</span><span class="o">&amp;</span><span class="n">transform</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">translate</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">transform</span><span class="p">);</span>
+</span></code></pre></div>
+<p>Note that this is just a way to put together a transformation matrix that will be used to render a sprite in our example.
+Alpha Engine doesn't care about how you form the transformation matrix; it just uses the final matrix you give it. </p>
+<h2 id="rendering_sprites-putting-it-all-together-to-render-a-sprite">Putting it all together to render a sprite</h2>
+<p>At this stage you should have the following ready:</p>
+<ul>
+<li>The transformation matrix that you will use to apply to all vertices of a mesh.</li>
+<li>The texture to apply onto the mesh.</li>
+<li>The mesh to be used to draw after applying the transformation matrix and texture.</li>
+</ul>
+<p>The code below shows how to configure the rendering settings and draw a single sprite using the mesh, transform and texture we prepared in the previous sections.
+Ideally, the code should be placed within the game loop. </p>
+<div class="language-c highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#rendering_sprites-__codelineno-5-1"></a><span class="c1">// Tell the Alpha Engine to set the background to black.</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#rendering_sprites-__codelineno-5-2"></a><span class="n">AEGfxSetBackgroundColor</span><span class="p">(</span><span class="mf">0.0f</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0f</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0f</span><span class="p">);</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#rendering_sprites-__codelineno-5-3"></a>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#rendering_sprites-__codelineno-5-4"></a><span class="c1">// Tell the Alpha Engine to get ready to draw something with texture.</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#rendering_sprites-__codelineno-5-5"></a><span class="n">AEGfxSetRenderMode</span><span class="p">(</span><span class="n">AE_GFX_RM_TEXTURE</span><span class="p">);</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#rendering_sprites-__codelineno-5-6"></a>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#rendering_sprites-__codelineno-5-7"></a><span class="c1">// Set the the color to multiply to white, so that the sprite can </span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#rendering_sprites-__codelineno-5-8"></a><span class="c1">// display the full range of colors (default is black).</span>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#rendering_sprites-__codelineno-5-9"></a><span class="n">AEGfxSetColorToMultiply</span><span class="p">(</span><span class="mf">1.0f</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0f</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0f</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0f</span><span class="p">);</span>
+</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#rendering_sprites-__codelineno-5-10"></a>
+</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#rendering_sprites-__codelineno-5-11"></a><span class="c1">// Set the color to add to nothing, so that we don&#39;t alter the sprite&#39;s color</span>
+</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#rendering_sprites-__codelineno-5-12"></a><span class="n">AEGfxSetColorToAdd</span><span class="p">(</span><span class="mf">0.0f</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0f</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0f</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0f</span><span class="p">);</span>
+</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#rendering_sprites-__codelineno-5-13"></a>
+</span><span id="__span-5-14"><a id="__codelineno-5-14" name="__codelineno-5-14" href="#rendering_sprites-__codelineno-5-14"></a><span class="c1">// Set blend mode to AE_GFX_BM_BLEND, which will allow transparency.</span>
+</span><span id="__span-5-15"><a id="__codelineno-5-15" name="__codelineno-5-15" href="#rendering_sprites-__codelineno-5-15"></a><span class="n">AEGfxSetBlendMode</span><span class="p">(</span><span class="n">AE_GFX_BM_BLEND</span><span class="p">);</span>
+</span><span id="__span-5-16"><a id="__codelineno-5-16" name="__codelineno-5-16" href="#rendering_sprites-__codelineno-5-16"></a><span class="n">AEGfxSetTransparency</span><span class="p">(</span><span class="mf">1.0f</span><span class="p">);</span>
+</span><span id="__span-5-17"><a id="__codelineno-5-17" name="__codelineno-5-17" href="#rendering_sprites-__codelineno-5-17"></a>
+</span><span id="__span-5-18"><a id="__codelineno-5-18" name="__codelineno-5-18" href="#rendering_sprites-__codelineno-5-18"></a><span class="c1">// Tell Alpha Engine to use the texture stored in pTex</span>
+</span><span id="__span-5-19"><a id="__codelineno-5-19" name="__codelineno-5-19" href="#rendering_sprites-__codelineno-5-19"></a><span class="n">AEGfxTextureSet</span><span class="p">(</span><span class="n">pTex</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
+</span><span id="__span-5-20"><a id="__codelineno-5-20" name="__codelineno-5-20" href="#rendering_sprites-__codelineno-5-20"></a>
+</span><span id="__span-5-21"><a id="__codelineno-5-21" name="__codelineno-5-21" href="#rendering_sprites-__codelineno-5-21"></a><span class="c1">// Tell Alpha Engine to use the matrix in &#39;transform&#39; to apply onto all </span>
+</span><span id="__span-5-22"><a id="__codelineno-5-22" name="__codelineno-5-22" href="#rendering_sprites-__codelineno-5-22"></a><span class="c1">// the vertices of the mesh that we are about to choose to draw in the next line.</span>
+</span><span id="__span-5-23"><a id="__codelineno-5-23" name="__codelineno-5-23" href="#rendering_sprites-__codelineno-5-23"></a><span class="n">AEGfxSetTransform</span><span class="p">(</span><span class="n">transform</span><span class="p">.</span><span class="n">m</span><span class="p">);</span>
+</span><span id="__span-5-24"><a id="__codelineno-5-24" name="__codelineno-5-24" href="#rendering_sprites-__codelineno-5-24"></a>
+</span><span id="__span-5-25"><a id="__codelineno-5-25" name="__codelineno-5-25" href="#rendering_sprites-__codelineno-5-25"></a><span class="c1">// Tell Alpha Engine to draw the mesh with the above settings.</span>
+</span><span id="__span-5-26"><a id="__codelineno-5-26" name="__codelineno-5-26" href="#rendering_sprites-__codelineno-5-26"></a><span class="n">AEGfxMeshDraw</span><span class="p">(</span><span class="n">pMesh</span><span class="p">,</span><span class="w"> </span><span class="n">AE_GFX_MDM_TRIANGLES</span><span class="p">);</span>
+</span></code></pre></div>
+<p>You should see a sprite with the image from PlanetTexture.png drawn on the screen, scaled to 500x500 pixels, rotated by 90 degrees and translated by 100 on the x-axis and 100 on the y-axis like so:</p>
+<p><img alt="" src="res/hello_sprite.png" /></p>
+<p>The completed minimal code to render the sprite above can be found <code>snippets/rendering_a_sprite.png</code>.</p>
+<h2 id="rendering_sprites-exercise-transformation">Exercise: Transformation</h2>
+<p>As an exercise, try to do the following:</p>
+<ul>
+<li>Draw 3 planets with varying sizes. Let's name the planets A, B and C.<ul>
+<li>Note that they should use the same mesh. Feel free to have different textures if you want.</li>
+</ul>
+</li>
+<li>Planet A: Stay in the middle of the screen, rotating about itself.</li>
+<li>Planet B: Rotates around Planet A, while also rotating about itself</li>
+<li>Planet C: Rotates around Planet B, while also rotating about itself.</li>
+</ul>
+<p>The solution for this can be found in <code>snippets\solar_system.cpp</code>.
+For more information related to graphics, check out the documentation surrounding the <code>AEGraphics.h</code> file.</p>
+<h2 id="rendering_sprites-colors-and-color-modification">Colors and Color Modification</h2>
+<p>For each sprite you choose to render, Alpha Engine has to decide what color to assign each pixel (or fragment) of your sprite. 
+If we use a texture, Alpha Engine does the heavy lifting of deciding which part of the texture corresponds to which pixel of the sprite. </p>
+<p>In Alpha Engine, each pixel is represented by 4 color components: Red, Green, Blue and Alpha.
+Each color component are floating point values that range from 0.0 to 1.0, where 0 means 0% and 1 means 100%.
+The values representing the Red, Green and Blue components should be straightforward; 1.0 red means 100% red, 0.5 blue mean 50% blue, and so forth. 
+The value on the Alpha component refers to transparency of the pixel, where 0.0 is not visible and 1.0 is fully opaque.</p>
+<p>Alpha Engine has support for multiplying and adding values to every color component for each pixel of your sprite before rendering them.</p>
+<p>Using these functions will enable us to create interesting effects with our sprite. </p>
+<p>To add colors, we use <code>AEGfxSetColorToAdd()</code>.
+The concept of adding colors is straightforward; we are simply asking Alpha Engine to add each color component of every pixel of the sprite with the values we set.
+For example, if we use the code from the &lt;<render_sprite>&gt; section and set <code>AEGfxSetColorToAdd()</code> such that we add 100% red: </p>
+<div class="language-c highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#rendering_sprites-__codelineno-6-1"></a><span class="n">AEGfxSetBackgroundColor</span><span class="p">(</span><span class="mf">0.0f</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0f</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0f</span><span class="p">);</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#rendering_sprites-__codelineno-6-2"></a><span class="n">AEGfxSetRenderMode</span><span class="p">(</span><span class="n">AE_GFX_RM_TEXTURE</span><span class="p">);</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#rendering_sprites-__codelineno-6-3"></a><span class="n">AEGfxSetColorToMultiply</span><span class="p">(</span><span class="mf">1.0f</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0f</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0f</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0f</span><span class="p">);</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#rendering_sprites-__codelineno-6-4"></a>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#rendering_sprites-__codelineno-6-5"></a><span class="c1">// Add more red!!</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#rendering_sprites-__codelineno-6-6"></a><span class="n">AEGfxSetColorToAdd</span><span class="p">(</span><span class="mf">1.0f</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0f</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0f</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0f</span><span class="p">);</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#rendering_sprites-__codelineno-6-7"></a>
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#rendering_sprites-__codelineno-6-8"></a><span class="n">AEGfxSetBlendMode</span><span class="p">(</span><span class="n">AE_GFX_BM_BLEND</span><span class="p">);</span>
+</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#rendering_sprites-__codelineno-6-9"></a><span class="n">AEGfxSetTransparency</span><span class="p">(</span><span class="mf">1.0f</span><span class="p">);</span>
+</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#rendering_sprites-__codelineno-6-10"></a><span class="n">AEGfxTextureSet</span><span class="p">(</span><span class="n">pTex</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
+</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#rendering_sprites-__codelineno-6-11"></a><span class="n">AEGfxSetTransform</span><span class="p">(</span><span class="n">transform</span><span class="p">.</span><span class="n">m</span><span class="p">);</span>
+</span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#rendering_sprites-__codelineno-6-12"></a><span class="n">AEGfxMeshDraw</span><span class="p">(</span><span class="n">pMesh</span><span class="p">,</span><span class="w"> </span><span class="n">AE_GFX_MDM_TRIANGLES</span><span class="p">);</span>
+</span></code></pre></div>
+<p>The sprite will end up looking like this:</p>
+<p><img alt="" src="res/hello_sprite_add_red.png" /></p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>Note that the transparent part of the sprite remains transparent!</p>
+</div>
+<p>Multiplying can be done using <code>AEGfxSetColorToMultiply()</code>. 
+The concept of multiplying colors is also straightforward; we are asking Alpha Engine to multiply each color component of every pixel of the sprite with the values we set.
+For example, if we use the code from <a href="#rendering_sprites-putting-it-all-together-to-render-a-sprite">before</a> and set <code>AEGfxSetColorToAdd()</code> such that we multiply with 200% red: </p>
+<div class="language-c highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#rendering_sprites-__codelineno-7-1"></a><span class="n">AEGfxSetBackgroundColor</span><span class="p">(</span><span class="mf">0.0f</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0f</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0f</span><span class="p">);</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#rendering_sprites-__codelineno-7-2"></a><span class="n">AEGfxSetRenderMode</span><span class="p">(</span><span class="n">AE_GFX_RM_TEXTURE</span><span class="p">);</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#rendering_sprites-__codelineno-7-3"></a>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#rendering_sprites-__codelineno-7-4"></a><span class="c1">// Multiply all red by 200%!!</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#rendering_sprites-__codelineno-7-5"></a><span class="c1">// Multiply the rest by 100% so that the colors for </span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#rendering_sprites-__codelineno-7-6"></a><span class="c1">// the rest of the components remain the same!</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#rendering_sprites-__codelineno-7-7"></a><span class="n">AEGfxSetColorToMultiply</span><span class="p">(</span><span class="mf">2.0f</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0f</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0f</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0f</span><span class="p">);</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#rendering_sprites-__codelineno-7-8"></a>
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#rendering_sprites-__codelineno-7-9"></a><span class="n">AEGfxSetColorToAdd</span><span class="p">(</span><span class="mf">0.0f</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0f</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0f</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0f</span><span class="p">);</span>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#rendering_sprites-__codelineno-7-10"></a><span class="n">AEGfxSetBlendMode</span><span class="p">(</span><span class="n">AE_GFX_BM_BLEND</span><span class="p">);</span>
+</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#rendering_sprites-__codelineno-7-11"></a><span class="n">AEGfxSetTransparency</span><span class="p">(</span><span class="mf">1.0f</span><span class="p">);</span>
+</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#rendering_sprites-__codelineno-7-12"></a><span class="n">AEGfxTextureSet</span><span class="p">(</span><span class="n">pTex</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
+</span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#rendering_sprites-__codelineno-7-13"></a><span class="n">AEGfxSetTransform</span><span class="p">(</span><span class="n">transform</span><span class="p">.</span><span class="n">m</span><span class="p">);</span>
+</span><span id="__span-7-14"><a id="__codelineno-7-14" name="__codelineno-7-14" href="#rendering_sprites-__codelineno-7-14"></a><span class="n">AEGfxMeshDraw</span><span class="p">(</span><span class="n">pMesh</span><span class="p">,</span><span class="w"> </span><span class="n">AE_GFX_MDM_TRIANGLES</span><span class="p">);</span>
+</span></code></pre></div>
+<p>The sprite will end up looking like this:</p>
+<p><img alt="" src="res/hello_sprite_mul_red.png" /></p>
+<p>These are just simple use cases for adding and multiplying colors to your sprites.
+You are highly encouraged to experiment and come up with unique interesting color effects of your own!</p>
+<h2 id="rendering_sprites-sprites-without-textures">Sprites without textures</h2>
+<p>Recall <a href="#rendering_sprites-creating-a-1x1-mesh">that we created a 1x1 mesh</a> using <code>AEGfxTriAdd</code> and skipped explaining the color parameter. 
+In this section, we will be talking about that parameter, which can be useful if you don't have a texture to work with.</p>
+<p>The color parameter for each vertex is represented using 32-bits (or 4 bytes), with each byte representing a color component ranging from 0 to 255.</p>
+<p>There are many ways to represent colors in this way. 
+In Alpha Engine, we use the ARGB format, where A means alpha, R means red, G means green and B means blue. 
+This means that the first byte represents alpha, the second byte represents red, third byte represents green and fourth byte represents blue.</p>
+<p>The easiest way to visualize this is to use the hexidecimal format, where 0 is <code>00</code> and 255 is <code>FF</code>, like so:</p>
+<div class="language-c highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#rendering_sprites-__codelineno-8-1"></a><span class="n">u32</span><span class="w"> </span><span class="n">color</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mh">0xFFFFFF00</span><span class="p">;</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#rendering_sprites-__codelineno-8-2"></a><span class="c1">//                  ^^ blue</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#rendering_sprites-__codelineno-8-3"></a><span class="c1">//                ^^ green</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#rendering_sprites-__codelineno-8-4"></a><span class="c1">//              ^^ red</span>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#rendering_sprites-__codelineno-8-5"></a><span class="c1">//           ^^ alpha</span>
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#rendering_sprites-__codelineno-8-6"></a><span class="c1">//</span>
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#rendering_sprites-__codelineno-8-7"></a><span class="c1">// This means that there is 255 alpha, 255 red, 255 green and 0 blue.</span>
+</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#rendering_sprites-__codelineno-8-8"></a><span class="c1">// This represents an opaque yellow color. </span>
+</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#rendering_sprites-__codelineno-8-9"></a><span class="c1">//</span>
+</span></code></pre></div>
+<p>Each vertex on a mesh can be given a color in this format.
+Let's set the vertices of <a href="#rendering_sprites-creating-a-1x1-mesh">our 1x1 mesh</a> with different color:</p>
+<div class="language-c highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#rendering_sprites-__codelineno-9-1"></a><span class="c1">// We inform Alpha Engine that we are going to create a mesh</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#rendering_sprites-__codelineno-9-2"></a><span class="n">AEGfxMeshStart</span><span class="p">();</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#rendering_sprites-__codelineno-9-3"></a>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#rendering_sprites-__codelineno-9-4"></a><span class="c1">// This time, we will look at the 3rd parameter of each line </span>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#rendering_sprites-__codelineno-9-5"></a><span class="c1">// (namely, the 3rd, 8th and 13th parameters).</span>
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#rendering_sprites-__codelineno-9-6"></a><span class="c1">// </span>
+</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#rendering_sprites-__codelineno-9-7"></a><span class="c1">//  </span>
+</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#rendering_sprites-__codelineno-9-8"></a>
+</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#rendering_sprites-__codelineno-9-9"></a><span class="n">AEGfxTriAdd</span><span class="p">(</span>
+</span><span id="__span-9-10"><a id="__codelineno-9-10" name="__codelineno-9-10" href="#rendering_sprites-__codelineno-9-10"></a><span class="w">  </span><span class="mf">-0.5f</span><span class="p">,</span><span class="w"> </span><span class="mf">-0.5f</span><span class="p">,</span><span class="w"> </span><span class="mh">0xFFFF0000</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0f</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0f</span><span class="p">,</span><span class="w">  </span><span class="c1">// bottom-left: red</span>
+</span><span id="__span-9-11"><a id="__codelineno-9-11" name="__codelineno-9-11" href="#rendering_sprites-__codelineno-9-11"></a><span class="w">  </span><span class="mf">0.5f</span><span class="p">,</span><span class="w"> </span><span class="mf">-0.5f</span><span class="p">,</span><span class="w"> </span><span class="mh">0xFF00FF00</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0f</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0f</span><span class="p">,</span><span class="w">   </span><span class="c1">// bottom-right: green</span>
+</span><span id="__span-9-12"><a id="__codelineno-9-12" name="__codelineno-9-12" href="#rendering_sprites-__codelineno-9-12"></a><span class="w">  </span><span class="mf">-0.5f</span><span class="p">,</span><span class="w"> </span><span class="mf">0.5f</span><span class="p">,</span><span class="w"> </span><span class="mh">0xFF0000FF</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0f</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0f</span><span class="p">);</span><span class="w">  </span><span class="c1">// top-left: blue</span>
+</span><span id="__span-9-13"><a id="__codelineno-9-13" name="__codelineno-9-13" href="#rendering_sprites-__codelineno-9-13"></a>
+</span><span id="__span-9-14"><a id="__codelineno-9-14" name="__codelineno-9-14" href="#rendering_sprites-__codelineno-9-14"></a><span class="n">AEGfxTriAdd</span><span class="p">(</span>
+</span><span id="__span-9-15"><a id="__codelineno-9-15" name="__codelineno-9-15" href="#rendering_sprites-__codelineno-9-15"></a><span class="w">  </span><span class="mf">0.5f</span><span class="p">,</span><span class="w"> </span><span class="mf">-0.5f</span><span class="p">,</span><span class="w"> </span><span class="mh">0xFF00FF00</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0f</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0f</span><span class="p">,</span><span class="w">   </span><span class="c1">// bottom-right: green</span>
+</span><span id="__span-9-16"><a id="__codelineno-9-16" name="__codelineno-9-16" href="#rendering_sprites-__codelineno-9-16"></a><span class="w">  </span><span class="mf">0.5f</span><span class="p">,</span><span class="w"> </span><span class="mf">0.5f</span><span class="p">,</span><span class="w"> </span><span class="mh">0xFFFFFFFF</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0f</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0f</span><span class="p">,</span><span class="w">    </span><span class="c1">// top-right: white</span>
+</span><span id="__span-9-17"><a id="__codelineno-9-17" name="__codelineno-9-17" href="#rendering_sprites-__codelineno-9-17"></a><span class="w">  </span><span class="mf">-0.5f</span><span class="p">,</span><span class="w"> </span><span class="mf">0.5f</span><span class="p">,</span><span class="w"> </span><span class="mh">0xFF0000FF</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0f</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0f</span><span class="p">);</span><span class="w">  </span><span class="c1">// top-left: blue</span>
+</span><span id="__span-9-18"><a id="__codelineno-9-18" name="__codelineno-9-18" href="#rendering_sprites-__codelineno-9-18"></a>
+</span><span id="__span-9-19"><a id="__codelineno-9-19" name="__codelineno-9-19" href="#rendering_sprites-__codelineno-9-19"></a><span class="c1">// Saving the mesh (list of triangles) in pMesh</span>
+</span><span id="__span-9-20"><a id="__codelineno-9-20" name="__codelineno-9-20" href="#rendering_sprites-__codelineno-9-20"></a><span class="n">AEGfxVertexList</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">pMesh</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">AEGfxMeshEnd</span><span class="p">();</span>
+</span></code></pre></div>
+<p>Next, we need to change the render mode to <code>AE_GFX_RM_COLOR</code> before using <code>AEGfxMeshDraw()</code>.
+This informs Alpha Engine that we are not using the UV coordinates or a texture to draw our mesh, instead using the color values we set for each vertex of our mesh.</p>
+<div class="language-c highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#rendering_sprites-__codelineno-10-1"></a><span class="c1">// Change to AE_GFX_RM_COLOR</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#rendering_sprites-__codelineno-10-2"></a><span class="c1">// AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#rendering_sprites-__codelineno-10-3"></a><span class="n">AEGfxSetRenderMode</span><span class="p">(</span><span class="n">AE_GFX_RM_COLOR</span><span class="p">);</span>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#rendering_sprites-__codelineno-10-4"></a>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#rendering_sprites-__codelineno-10-5"></a><span class="c1">//</span>
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#rendering_sprites-__codelineno-10-6"></a><span class="c1">// Other settings here...</span>
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#rendering_sprites-__codelineno-10-7"></a><span class="c1">//</span>
+</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#rendering_sprites-__codelineno-10-8"></a>
+</span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#rendering_sprites-__codelineno-10-9"></a><span class="c1">// Draw the mesh </span>
+</span><span id="__span-10-10"><a id="__codelineno-10-10" name="__codelineno-10-10" href="#rendering_sprites-__codelineno-10-10"></a><span class="n">AEGfxMeshDraw</span><span class="p">(</span><span class="n">pMesh</span><span class="p">,</span><span class="w"> </span><span class="n">AE_GFX_MDM_TRIANGLES</span><span class="p">);</span>
+</span></code></pre></div>
+<p>This will result in something like this:</p>
+<p><img alt="" src="res/color_interp.png" /></p>
+<p>Notice that the colors will interpolate across the surface when it goes from one vertex to another!</p></section><section class="print-page" id="rendering_text" heading-number="6"><h1 id="rendering_text-rendering-text">Rendering Text</h1>
+<p>In Alpha Engine, text rendering is a special component within the Graphics Module. </p>
+<p>There are 4 functions that is related to text rendering:</p>
+<ul>
+<li>AEGfxCreateFont()</li>
+<li>AEGfxDestroyFont()</li>
+<li>AEGfxPrint()</li>
+<li>AEGfxGetPrintSize()</li>
+</ul>
+<h2 id="rendering_text-loading-and-unloading-fonts">Loading and unloading fonts</h2>
+<p>Before we can print text on the screen, we first need to load the font.
+Do this <em>before</em> the game loop.</p>
+<div class="language-c highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#rendering_text-__codelineno-0-1"></a><span class="c1">//</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#rendering_text-__codelineno-0-2"></a><span class="c1">// Loads a font and prepares it at a font height of 72 pixels.</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#rendering_text-__codelineno-0-3"></a><span class="c1">//</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#rendering_text-__codelineno-0-4"></a><span class="c1">// Note that it returns a s8, which is something like a &quot;handle&quot;</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#rendering_text-__codelineno-0-5"></a><span class="c1">// to the font managed by Alpha Engine.</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#rendering_text-__codelineno-0-6"></a><span class="c1">//</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#rendering_text-__codelineno-0-7"></a><span class="n">s8</span><span class="w"> </span><span class="n">pFont</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">AEGfxCreateFont</span><span class="p">(</span><span class="s">&quot;Assets/liberation-mono.ttf&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">72</span><span class="p">);</span>
+</span></code></pre></div>
+<p>The code above loads a TrueType font file from <code>Assets/liberation-mono.ttf</code> and prepares it to be rendered with a base font-height of 72 pixels. 
+Internally, Alpha Engine will prepare something like a spritesheet (a.k.a altas) of characters from the font file, which each character a font height of 72 pixels.</p>
+<p><img alt="" src="res/font_atlas.png" /></p>
+<p>Currently, Alpha Engine will prepare characters from the ASCII value 32 to 127.</p>
+<p>To unload a font, simply use <code>AEGfxDestroyFont()</code>:</p>
+<div class="language-c highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#rendering_text-__codelineno-1-1"></a><span class="c1">// Releases resources used by a font</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#rendering_text-__codelineno-1-2"></a><span class="n">AEGfxDestroyFont</span><span class="p">(</span><span class="n">pFont</span><span class="p">);</span>
+</span></code></pre></div>
+<h2 id="rendering_text-printing-text">Printing text</h2>
+<p>Printing text one the screen is a simple matter of using <code>AEGfxPrint()</code>. 
+The code below will print white "Hello World" text starting from the middle of the window at 72px font height (assume that you loaded the font at 72px font-height).</p>
+<div class="language-c highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#rendering_text-__codelineno-2-1"></a><span class="c1">// Put this code between AESysFrameStart() and</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#rendering_text-__codelineno-2-2"></a><span class="c1">// AESysFrameEnd(), of course! </span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#rendering_text-__codelineno-2-3"></a><span class="n">AEGfxPrint</span><span class="p">(</span><span class="n">pFont</span><span class="p">,</span><span class="w">           </span><span class="c1">// font handle given by AEGfxCreateFont()</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#rendering_text-__codelineno-2-4"></a><span class="w">           </span><span class="s">&quot;Hello World&quot;</span><span class="p">,</span><span class="w">   </span><span class="c1">// null-terminated c-string to print</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#rendering_text-__codelineno-2-5"></a><span class="w">           </span><span class="mf">0.f</span><span class="p">,</span><span class="w">             </span><span class="c1">// x position on normalized coordinates, ranging from -1.f to 1.f </span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#rendering_text-__codelineno-2-6"></a><span class="w">           </span><span class="mf">0.f</span><span class="p">,</span><span class="w">             </span><span class="c1">// y position in normalized coordinates, ranging from -1.f to 1.f </span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#rendering_text-__codelineno-2-7"></a><span class="w">           </span><span class="mf">1.f</span><span class="p">,</span><span class="w">             </span><span class="c1">// how much to scale the text by </span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#rendering_text-__codelineno-2-8"></a><span class="w">           </span><span class="mf">1.f</span><span class="p">,</span><span class="w">             </span><span class="c1">// percentage of red, ranging from 0.f to 1.f </span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#rendering_text-__codelineno-2-9"></a><span class="w">           </span><span class="mf">1.f</span><span class="p">,</span><span class="w">             </span><span class="c1">// percentage of green, ranging from 0.f to 1.f</span>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#rendering_text-__codelineno-2-10"></a><span class="w">           </span><span class="mf">1.f</span><span class="p">,</span><span class="w">             </span><span class="c1">// percentage of blue, ranging from 0.f to 1.f </span>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#rendering_text-__codelineno-2-11"></a><span class="w">           </span><span class="mf">1.f</span><span class="p">);</span><span class="w">            </span><span class="c1">// percentage of alpha, ranging from 0.f to 1.f</span>
+</span></code></pre></div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Be aware that the 3rd and 4th parameters are x and y positions in Normalized Coordinates, which is covered <a href="#coordinate_systems-normalized-coordinates">in this section</a>. </p>
+</div>
+<p>You might notice that even though we told Alpha Engine to draw from the middle of the screen, the text did not end up aligned nicely in the middle.
+This is because Alpha Engine draws the text starting from the bottom-left side.</p>
+<p><img alt="" src="res/text_origin.png" /></p>
+<p>Although you cannot change the way Alpha Engine renders text, you can use <code>AEGfxGetPrintSize()</code> help simluate text vertical alignment and justification.</p>
+<p>Below is a snippet of code that will print "Hello World" text directly in the middle, with center justification and middle vertical alignment:</p>
+<div class="language-c highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#rendering_text-__codelineno-3-1"></a><span class="c1">// Draws text that is neatly aligned to the center of the window.</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#rendering_text-__codelineno-3-2"></a><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">pText</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;Hello World&quot;</span><span class="p">;</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#rendering_text-__codelineno-3-3"></a><span class="n">f32</span><span class="w"> </span><span class="n">width</span><span class="p">,</span><span class="w"> </span><span class="n">height</span><span class="p">;</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#rendering_text-__codelineno-3-4"></a><span class="n">AEGfxGetPrintSize</span><span class="p">(</span><span class="n">pFont</span><span class="p">,</span><span class="w"> </span><span class="n">pText</span><span class="p">,</span><span class="w"> </span><span class="mf">1.f</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">width</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">height</span><span class="p">);</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#rendering_text-__codelineno-3-5"></a><span class="n">AEGfxPrint</span><span class="p">(</span><span class="n">pFont</span><span class="p">,</span><span class="w"> </span><span class="n">pText</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="n">width</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="n">height</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+</span></code></pre></div>
+<p>More snippets for text rendering can be found at <code>snippets/render_text.cpp</code>.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Even though these functions are using the <code>AEGfx</code> prefix, functions that work on <code>AEGfxDrawMesh()</code> like <code>AEGfxSetTransparency()</code> or <code>AEGfxSetTransform()</code> are not guaranteed to work on them.</p>
+</div></section><section class="print-page" id="spritesheets" heading-number="7"><h1 id="spritesheets-using-spritesheets">Using Spritesheets</h1>
+<p>Alpha Engine does not provide a spritesheet animation system, but it does provide enough tools for you to implement one. </p>
+<h2 id="spritesheets-calculating-the-uv">Calculating the UV</h2>
+<p>First, you must build a mesh that fits your spritesheet and the animation you want to do. 
+Let's say we have a spritesheet like the one below:</p>
+<p><img alt="" src="res/spritesheet.png" /></p>
+<p>In this case, the spritesheet consists of 5 rows and 4 columns sprites.</p>
+<p>In this example, we will use the <a href="#rendering_sprites-creating-a-1x1-mesh">same 1x1 mesh that we defined</a> before, but there is a problem: the UV coordinates for each vertex in that mesh encompasses the whole image.
+This brings us to the next step: we need to calculate the UV coordinates such that it encompasses a sprite in the spritesheet.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>If you need a refresher on what UV coordinates are, you can refer to &lt;<sprite_mesh>&gt;.</p>
+</div>
+<p>Let's calculate the UV such that we target the top-left sprite.
+Since we have 5 rows and 4 columns in the spritesheet, a sprite's width is 1/4 of the spritesheet's width and its height is 1/5 of the spritesheet's height.   </p>
+<p>Thus, given that:</p>
+<ul>
+<li><span class="arithmatex">\(v_{tl}\)</span> is the top left vertex of the mesh.</li>
+<li><span class="arithmatex">\(v_{tr}\)</span> is the top right vertex of the mesh.</li>
+<li><span class="arithmatex">\(v_{bl}\)</span> is the bottom left vertex of the mesh.</li>
+<li><span class="arithmatex">\(v_{br}\)</span> is the bottom left vertex of the mesh.</li>
+<li><span class="arithmatex">\(c\)</span> is the number of columns in your spritesheet. </li>
+<li><span class="arithmatex">\(r\)</span> is the number of rows in your spritesheet. </li>
+</ul>
+<p>The formula for calculating the UVs for each vertex of our 1x1 sprite to target the top-left sprite is as follows:</p>
+<div class="arithmatex">\[ 
+v_{tl} = \begin{bmatrix} 0 \\ 0 \end{bmatrix} \quad v_{tr} = \begin{bmatrix} \frac{1}{c} \\ 0 \end{bmatrix} \quad v_{bl} = \begin{bmatrix} 0 \\ \frac{1}{r} \end{bmatrix} \quad v_{br} = \begin{bmatrix} \frac{1}{c} \\ \frac{1}{r} \end{bmatrix}
+\]</div>
+<p>which gives us:</p>
+<div class="arithmatex">\[
+v_{tl} = \begin{bmatrix} 0 \\ 0 \end{bmatrix} \quad v_{tr} = \begin{bmatrix} \frac{1}{4} \\ 0 \end{bmatrix} \quad v_{bl} = \begin{bmatrix} 0 \\ \frac{1}{5} \end{bmatrix} \quad v_{br} = \begin{bmatrix} \frac{1}{4} \\ \frac{1}{5} \end{bmatrix}
+\]</div>
+<p>The code to create the 1x1 mesh with the UV coordinates calculated above is therefore:</p>
+<div class="language-c highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#spritesheets-__codelineno-0-1"></a><span class="n">AEGfxMeshStart</span><span class="p">();</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#spritesheets-__codelineno-0-2"></a>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#spritesheets-__codelineno-0-3"></a><span class="n">AEGfxTriAdd</span><span class="p">(</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#spritesheets-__codelineno-0-4"></a><span class="w">  </span><span class="mf">-0.5f</span><span class="p">,</span><span class="w"> </span><span class="mf">-0.5f</span><span class="p">,</span><span class="w"> </span><span class="mh">0xFFFFFFFF</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0f</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="o">/</span><span class="mf">5.f</span><span class="p">,</span><span class="w"> </span><span class="c1">// bottom left</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#spritesheets-__codelineno-0-5"></a><span class="w">  </span><span class="mf">0.5f</span><span class="p">,</span><span class="w"> </span><span class="mf">-0.5f</span><span class="p">,</span><span class="w"> </span><span class="mh">0xFFFFFFFF</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="o">/</span><span class="mf">4.f</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="o">/</span><span class="mf">5.f</span><span class="p">,</span><span class="w"> </span><span class="c1">// bottom right </span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#spritesheets-__codelineno-0-6"></a><span class="w">  </span><span class="mf">-0.5f</span><span class="p">,</span><span class="w"> </span><span class="mf">0.5f</span><span class="p">,</span><span class="w"> </span><span class="mh">0xFFFFFFFF</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0f</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0f</span><span class="p">);</span><span class="w">  </span><span class="c1">// top left</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#spritesheets-__codelineno-0-7"></a>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#spritesheets-__codelineno-0-8"></a><span class="n">AEGfxTriAdd</span><span class="p">(</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#spritesheets-__codelineno-0-9"></a><span class="w">  </span><span class="mf">0.5f</span><span class="p">,</span><span class="w"> </span><span class="mf">-0.5f</span><span class="p">,</span><span class="w"> </span><span class="mh">0xFFFFFFFF</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="o">/</span><span class="mf">4.f</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="o">/</span><span class="mf">5.f</span><span class="p">,</span><span class="w"> </span><span class="c1">// bottom right </span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#spritesheets-__codelineno-0-10"></a><span class="w">  </span><span class="mf">0.5f</span><span class="p">,</span><span class="w"> </span><span class="mf">0.5f</span><span class="p">,</span><span class="w"> </span><span class="mh">0xFFFFFFFF</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="o">/</span><span class="mf">4.f</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0f</span><span class="p">,</span><span class="w">   </span><span class="c1">// top right</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#spritesheets-__codelineno-0-11"></a><span class="w">  </span><span class="mf">-0.5f</span><span class="p">,</span><span class="w"> </span><span class="mf">0.5f</span><span class="p">,</span><span class="w"> </span><span class="mh">0xFFFFFFFF</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0f</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0f</span><span class="p">);</span><span class="w">  </span><span class="c1">// bottom left</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#spritesheets-__codelineno-0-12"></a>
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#spritesheets-__codelineno-0-13"></a><span class="n">AEGfxVertexList</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">pMesh</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">AEGfxMeshEnd</span><span class="p">();</span>
+</span></code></pre></div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This means that for each spritesheet using a different set of UV coordinates, you will need create a seperate mesh! </p>
+</div>
+<h2 id="spritesheets-uv-offset">UV Offset</h2>
+<p>Now that we have a mesh that can the top-left sprite of a spritesheet, how can we target the rest of the sprites?
+The key lies in <code>AEGfxTextureSet()</code>. 
+The 2nd and 3rd parameter allows you to pass in an offset that will modify the UV of our vertices. </p>
+<p>In the case of the spritesheet that we are using in this example, this means that:</p>
+<ul>
+<li>The first sprite's offset is <span class="arithmatex">\(x = 0, y = 0\)</span>.</li>
+<li>The sprite on the first row, second column is <span class="arithmatex">\(x = 1/4, y = 0\)</span>.</li>
+<li>The sprite on the second row, second column is <span class="arithmatex">\(x= 1/4, y = 1/5\)</span>.</li>
+<li>And so on.</li>
+</ul>
+<p>This gives us the ability to choose which section of the spritesheet we want to render, which subsequently allows us to implement spritesheet animation!
+The code that performs spritesheet animation for this spritesheet can be found at <code>snippets/spritesheet.cpp</code>.</p></section><section class="print-page" id="input" heading-number="8"><h1 id="input-input-handling">Input Handling</h1>
+<p>Alpha Engine only supports mouse and keyboard input.
+It does not support input from other sources (e.g. controllers).</p>
+<h2 id="input-mouse-position">Mouse Position</h2>
+<p>Getting the current mouse cursor position is straightforward with <code>AEInputGetCursorPosition()</code>:</p>
+<div class="language-c highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#input-__codelineno-0-1"></a><span class="n">s32</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">;</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#input-__codelineno-0-2"></a><span class="n">AEInputGetCursorPosition</span><span class="p">(</span><span class="o">&amp;</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">y</span><span class="p">);</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#input-__codelineno-0-3"></a><span class="c1">// After the previous line, x should contain the x-position of the cursor</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#input-__codelineno-0-4"></a><span class="c1">// while y will contain the y-position of the cursor.</span>
+</span></code></pre></div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Note that the mouse cursor position obtained via <code>AEInputGetCursorPosition()</code> is in Screen Coordinates. Screen Coordinates are detailed here: &lt;<screen_coordinates>&gt;.</p>
+</div>
+<h2 id="input-key-presses">Key Presses</h2>
+<p>When it comes to key input (via mouse buttons or keyboard keys), pay close attention to how a key is being pressed. 
+The OS can only tell us whether a key is pressed or released. 
+Alpha Engine takes a step further by recording whether a key is pressed/released the previous frame.<br />
+For common cases, the following functions might be good enough for your application:</p>
+<ul>
+<li><code>AEInputCheckTriggered()</code>: This checks if a key is just pressed.</li>
+<li><code>AEInputCheckReleased()</code>: This checks if a key is just released.</li>
+</ul>
+<p>For example:</p>
+<div class="language-c highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#input-__codelineno-1-1"></a><span class="c1">// Checks if escape key is recently pressed.</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#input-__codelineno-1-2"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">AEInputCheckTriggered</span><span class="p">(</span><span class="n">AEVK_ESCAPE</span><span class="p">))</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#input-__codelineno-1-3"></a>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#input-__codelineno-1-4"></a><span class="c1">// Checks if escape key is recently released.</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#input-__codelineno-1-5"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">AEInputCheckRelease</span><span class="p">(</span><span class="n">AEVK_ESCAPE</span><span class="p">))</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">}</span>
+</span></code></pre></div>
+<p>For more information related to input, check out the documentation surrounding the <code>AEInput.h</code> file.</p></section><section class="print-page" id="playing_audio" heading-number="9"><h1 id="playing_audio-playing-audio">Playing Audio</h1>
+<h2 id="playing_audio-differences-between-sound-and-music">Differences between Sound and Music</h2>
+<p>Alpha Engine supports loading of multiple types of audio files including <code>.mp3</code> and <code>.wav</code> formats. </p>
+<p>In Alpha Engine, audio is separated into 2 types: <code>Sound</code> and <code>Music</code>. </p>
+<p><code>Sounds</code> are audios that are fully loaded into the memory before being played. 
+They are most suitable to short sound effects that are played repeatedly. 
+To load a Sound-type audio, simply use this function:</p>
+<div class="language-c highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#playing_audio-__codelineno-0-1"></a><span class="c1">// Loads a sound from given filepath and assign to &#39;audio&#39;</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#playing_audio-__codelineno-0-2"></a><span class="n">AEAudio</span><span class="w"> </span><span class="n">audio</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">AEAudioLoadSound</span><span class="p">(</span><span class="s">&quot;filepath&quot;</span><span class="p">);</span>
+</span></code></pre></div>
+<p><code>Music</code> are audios that are streamed from file. 
+This means that they are loaded as separate chunks into the memory as it is being played. 
+For example, the first 10 seconds of a music is first loaded into memory.
+Before the 10 seconds is done playing, the next 10 seconds is loaded. 
+This repeats until the music is done. </p>
+<p>To load a Music-type audio, simply use this function:</p>
+<div class="language-c highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#playing_audio-__codelineno-1-1"></a><span class="c1">// Loads a music from given filepath and assign it to &#39;audio&#39;</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#playing_audio-__codelineno-1-2"></a><span class="n">AEAudio</span><span class="w"> </span><span class="n">audio</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">AEAudioLoadMusic</span><span class="p">(</span><span class="s">&quot;filepath&quot;</span><span class="p">);</span>
+</span></code></pre></div>
+<p>One noticable difference between <code>Sound</code> and <code>Music</code> is that multiple <code>Sound</code> from the same  <code>AEAudio</code> can overlap each other when you play them (up to a certain amount, of course). 
+Multiple <code>Music</code> from the same <code>AEAudio</code>, however, cannot overlap each other. </p>
+<p>That is, if you use <code>AEAudioPlay</code> on multiple <code>Sounds</code> from the same <code>AEAudio</code> at once, you will hear multiple <code>Sounds</code> being played. 
+If you use <code>AEAudioPlay</code> on multiple <code>Music</code> at once, only the last <code>Music</code> will be played; the previous </p>
+<h2 id="playing_audio-playing-an-audio">Playing an Audio</h2>
+<p><code>AEAudio</code> is a type that represents an audio (which can either be a <code>Sound</code> or <code>Music</code>) loaded by Alpha Engine. 
+Before we can play an audio, we must first create an audio group for the audio to play in. </p>
+<p>You can create an audio group simply with the following function:</p>
+<div class="language-c highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#playing_audio-__codelineno-2-1"></a><span class="c1">// Creates an audio group</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#playing_audio-__codelineno-2-2"></a><span class="n">AEAudioGroup</span><span class="w"> </span><span class="n">audio_group</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">AEAudioCreateGroup</span><span class="p">();</span>
+</span></code></pre></div>
+<p><code>AEAudioGroup</code> is a type that represents an audio group where <code>AEAudios</code> are played in. 
+Typically, we would create one <code>AEAudioGroup</code> for background music and another audio group for sound effects. </p>
+<p>To play an audio, we simply use <code>AEAudioPlay</code>. </p>
+<p>As an example, we will load a sound from a file named "ore.mp3" in the Assets folder and play it at the start of the application.
+Write the code below before entering the game loop:</p>
+<div class="language-c highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#playing_audio-__codelineno-3-1"></a><span class="c1">// Loads a sound from a file named &#39;ore.mp3&#39; in the &#39;Assets&#39; folder </span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#playing_audio-__codelineno-3-2"></a><span class="c1">// and assign it to &#39;ore&#39;</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#playing_audio-__codelineno-3-3"></a><span class="n">AEAudio</span><span class="w"> </span><span class="n">ore</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">AEAudioLoadSound</span><span class="p">(</span><span class="s">&quot;Assets/ore.mp3&quot;</span><span class="p">);</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#playing_audio-__codelineno-3-4"></a>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#playing_audio-__codelineno-3-5"></a><span class="c1">// Creates an audio group named &#39;sound_effect&#39;</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#playing_audio-__codelineno-3-6"></a><span class="n">AEAudioGroup</span><span class="w"> </span><span class="n">sound_effect</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">AEAudioCreateGroup</span><span class="p">();</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#playing_audio-__codelineno-3-7"></a>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#playing_audio-__codelineno-3-8"></a><span class="c1">// Plays &#39;ore&#39; audio in the &quot;sound_effect&quot; audio group with </span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#playing_audio-__codelineno-3-9"></a><span class="c1">// 100% volume, 100% pitch, looped infinitely.</span>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#playing_audio-__codelineno-3-10"></a><span class="n">AEAudioPlay</span><span class="p">(</span><span class="n">ore</span><span class="p">,</span><span class="w"> </span><span class="n">sound_effect</span><span class="p">,</span><span class="w"> </span><span class="mf">1.f</span><span class="p">,</span><span class="w"> </span><span class="mf">1.f</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">);</span>
+</span></code></pre></div>
+<p>Upon compiling and running the application, you should be able to hear a sound.</p>
+<p>Next, we will load a background music to play. 
+This time, we will lower the volume and increase the pitch of the music.
+Note that we are now using <code>AEAudioLoadMusic</code> instead!
+Write the code below before entering the game loop:</p>
+<div class="language-c highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#playing_audio-__codelineno-4-1"></a><span class="c1">// Loads a sound from a file named &#39;bouken.mp3&#39; in the &#39;Assets&#39; folder </span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#playing_audio-__codelineno-4-2"></a><span class="c1">// and assign it to &#39;bouken&#39;.</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#playing_audio-__codelineno-4-3"></a><span class="n">AEAudio</span><span class="w"> </span><span class="n">bouken</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">AEAudioLoadMusic</span><span class="p">(</span><span class="s">&quot;Assets/bouken.mp3&quot;</span><span class="p">);</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#playing_audio-__codelineno-4-4"></a>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#playing_audio-__codelineno-4-5"></a><span class="c1">// Creates an audio group named &#39;bgm&#39;</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#playing_audio-__codelineno-4-6"></a><span class="n">AEAudioGroup</span><span class="w"> </span><span class="n">bgm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">AEAudioCreateGroup</span><span class="p">();</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#playing_audio-__codelineno-4-7"></a>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#playing_audio-__codelineno-4-8"></a><span class="c1">// Plays &#39;bouken&#39; audio in the &quot;bgm&quot; audio group with </span>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#playing_audio-__codelineno-4-9"></a><span class="c1">// 50% volume, 200% pitch, looped infinitely.</span>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#playing_audio-__codelineno-4-10"></a><span class="n">AEAudioPlay</span><span class="p">(</span><span class="n">bouken</span><span class="p">,</span><span class="w"> </span><span class="n">bgm</span><span class="p">,</span><span class="w"> </span><span class="mf">0.5f</span><span class="p">,</span><span class="w"> </span><span class="mf">2.f</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">);</span>
+</span></code></pre></div>
+<p>When you run the application this time, you should be able to hear a soft music playing in the background in a very fast pace. 
+Try to play "bouken.mp3" in your preferred music player and compare the differences!</p>
+<h2 id="playing_audio-releasing-resources">Releasing resources</h2>
+<p>Finally, we will need to clean up the AEAudioGroups and AEAudios that we created.
+<code>AEUnloadAudio</code> will free the resources used by a <code>AEAudio</code> object.
+<code>AEUnloadAudioGroup</code> will free the resources used by a <code>AEAudioGroup</code> object.
+Thus, before exiting the application, we will write the following code to clean our audio up:</p>
+<div class="language-c highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#playing_audio-__codelineno-5-1"></a><span class="c1">// Release our audios.</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#playing_audio-__codelineno-5-2"></a><span class="n">AEUnloadAudio</span><span class="p">(</span><span class="n">bouken</span><span class="p">);</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#playing_audio-__codelineno-5-3"></a><span class="n">AEUnloadAudio</span><span class="p">(</span><span class="n">ore</span><span class="p">)</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#playing_audio-__codelineno-5-4"></a>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#playing_audio-__codelineno-5-5"></a><span class="c1">// Release our audio groups.</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#playing_audio-__codelineno-5-6"></a><span class="n">AEUnloadAudioGroup</span><span class="p">(</span><span class="n">sound_effect</span><span class="p">);</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#playing_audio-__codelineno-5-7"></a><span class="n">AEUnloadAudioGroup</span><span class="p">(</span><span class="n">bgm</span><span class="p">);</span>
+</span></code></pre></div>
+<h2 id="playing_audio-sample-code">Sample code</h2>
+<p>Sample code regarding audio can be found in <code>snippets\playing_audio.cpp</code>.
+For more information related to audio, check out the documentation surrounding the <code>AEAudio.h</code> file.</p></section><section class="print-page" id="camera_system" heading-number="10"><h1 id="camera_system-camera-system">Camera System</h1>
+<h2 id="camera_system-basics-of-camera-movement">Basics of camera movement</h2>
+<p>In computer graphics, the idea of a "camera" is simply a matrix that is applied on top of the transform that you set before rendering a mesh. 
+In this section, we are go through the basics of implementing a "camera".</p>
+<p>It illustrate this, let's use our previous <a href="#rendering_sprites">sprite rendering example</a>. </p>
+<p><a href="#rendering_sprites-calculating-the-transformation-matrix">When we calculated its transformation matrix</a>, we formed the matrix transformation of our sprite using TRS:</p>
+<div class="arithmatex">\[
+T_{sprite} =
+\begin{bmatrix}
+1 &amp; 0 &amp; t_x \\
+0 &amp; 1 &amp; t_y \\
+0 &amp; 0 &amp; 1
+\end{bmatrix}
+\begin{bmatrix}
+\cos(r) &amp; -\sin(r) &amp; 0 \\
+\sin(r) &amp; \cos(r) &amp; 0 \\
+0 &amp; 0 &amp; 1
+\end{bmatrix}
+\begin{bmatrix}
+s_x &amp; 0 &amp; 0 \\
+0 &amp; s_y &amp; 0 \\
+0 &amp; 0 &amp; 1
+\end{bmatrix}
+\]</div>
+<p>In computer graphics, we don't have a "camera" object per se. 
+What we have are transforms to concatenate together for each sprite.
+We can use this to simulate the effect of a "camera".</p>
+<p>Let's start with camera movement.
+If we wanted to "move our camera to the right", what we will essentially be doing is to move our sprites to the left.
+Likewise, if we wanted to "move our camera upwards", we will move our sprites downwards. 
+Essentially, we will translate our sprites the negative of the camera's position.</p>
+<p>As an example, if our sprite is at <code>x = 100</code> and our "camera" is at <code>x = 100</code>, what we should see is that our sprite is rendered <em>as if</em> it's at <code>x = 0</code>.</p>
+<p>We do this for every sprite that we want to be affected by our so-called "camera".</p>
+<p>Therefore, the idea of a implementing camera movement is simply to concatenate our sprite's transform with a translation matrix that moves our object by the negative camera position. </p>
+<div class="arithmatex">\[
+T_{sprite} =
+\begin{bmatrix}
+1 &amp; 0 &amp; -c_x \\
+0 &amp; 1 &amp; -c_y \\
+0 &amp; 0 &amp; 1
+\end{bmatrix}
+\begin{bmatrix}
+1 &amp; 0 &amp; t_x \\
+0 &amp; 1 &amp; t_y \\
+0 &amp; 0 &amp; 1
+\end{bmatrix}
+\begin{bmatrix}
+\cos(r) &amp; -\sin(r) &amp; 0 \\
+\sin(r) &amp; \cos(r) &amp; 0 \\
+0 &amp; 0 &amp; 1
+\end{bmatrix}
+\begin{bmatrix}
+s_x &amp; 0 &amp; 0 \\
+0 &amp; s_y &amp; 0 \\
+0 &amp; 0 &amp; 1
+\end{bmatrix}
+\]</div>
+<p>where <span class="arithmatex">\(c_x\)</span> is the camera's X position and <span class="arithmatex">\(c_y\)</span> is the camera's Y position.</p>
+<h2 id="camera_system-camera-movement-with-alpha-engine">Camera movement with Alpha Engine</h2>
+<p>Alpha Engine provides a few functions that will simulate camera movements all meshes drawn by <code>AEGfxMeshDraw()</code>:</p>
+<ul>
+<li>AEGfxSetCamPosition()</li>
+<li>AEGfxGetCamPosition().</li>
+</ul>
+<h2 id="camera_system-exercise">Exercise</h2>
+<p>Try to write your own camera movement system without using Alpha Engine's camera functions!
+Can you come up with a camera system that does zooms and rotations?</p></section></div><style>.print-site-enumerate-headings #index > h1:before { content: '1 ' }
+
+                .print-site-enumerate-headings #index h2:before { content: '1.' counter(counter-index-2) ' ' }
+                .print-site-enumerate-headings #index h2 {  counter-reset: counter-index-3 ;  counter-increment: counter-index-2 }
+            
+                .print-site-enumerate-headings #index h3:before { content: '1.' counter(counter-index-2) '.' counter(counter-index-3) ' ' }
+                .print-site-enumerate-headings #index h3 {  counter-increment: counter-index-3 }
+            
+.print-site-enumerate-headings #project_setup > h1:before { content: '2 ' }
+
+                .print-site-enumerate-headings #project_setup h2:before { content: '2.' counter(counter-project_setup-2) ' ' }
+                .print-site-enumerate-headings #project_setup h2 {  counter-reset: counter-project_setup-3 ;  counter-increment: counter-project_setup-2 }
+            
+                .print-site-enumerate-headings #project_setup h3:before { content: '2.' counter(counter-project_setup-2) '.' counter(counter-project_setup-3) ' ' }
+                .print-site-enumerate-headings #project_setup h3 {  counter-increment: counter-project_setup-3 }
+            
+.print-site-enumerate-headings #primitive_types > h1:before { content: '3 ' }
+
+                .print-site-enumerate-headings #primitive_types h2:before { content: '3.' counter(counter-primitive_types-2) ' ' }
+                .print-site-enumerate-headings #primitive_types h2 {  counter-reset: counter-primitive_types-3 ;  counter-increment: counter-primitive_types-2 }
+            
+                .print-site-enumerate-headings #primitive_types h3:before { content: '3.' counter(counter-primitive_types-2) '.' counter(counter-primitive_types-3) ' ' }
+                .print-site-enumerate-headings #primitive_types h3 {  counter-increment: counter-primitive_types-3 }
+            
+.print-site-enumerate-headings #coordinate_systems > h1:before { content: '4 ' }
+
+                .print-site-enumerate-headings #coordinate_systems h2:before { content: '4.' counter(counter-coordinate_systems-2) ' ' }
+                .print-site-enumerate-headings #coordinate_systems h2 {  counter-reset: counter-coordinate_systems-3 ;  counter-increment: counter-coordinate_systems-2 }
+            
+                .print-site-enumerate-headings #coordinate_systems h3:before { content: '4.' counter(counter-coordinate_systems-2) '.' counter(counter-coordinate_systems-3) ' ' }
+                .print-site-enumerate-headings #coordinate_systems h3 {  counter-increment: counter-coordinate_systems-3 }
+            
+.print-site-enumerate-headings #rendering_sprites > h1:before { content: '5 ' }
+
+                .print-site-enumerate-headings #rendering_sprites h2:before { content: '5.' counter(counter-rendering_sprites-2) ' ' }
+                .print-site-enumerate-headings #rendering_sprites h2 {  counter-reset: counter-rendering_sprites-3 ;  counter-increment: counter-rendering_sprites-2 }
+            
+                .print-site-enumerate-headings #rendering_sprites h3:before { content: '5.' counter(counter-rendering_sprites-2) '.' counter(counter-rendering_sprites-3) ' ' }
+                .print-site-enumerate-headings #rendering_sprites h3 {  counter-increment: counter-rendering_sprites-3 }
+            
+.print-site-enumerate-headings #rendering_text > h1:before { content: '6 ' }
+
+                .print-site-enumerate-headings #rendering_text h2:before { content: '6.' counter(counter-rendering_text-2) ' ' }
+                .print-site-enumerate-headings #rendering_text h2 {  counter-reset: counter-rendering_text-3 ;  counter-increment: counter-rendering_text-2 }
+            
+                .print-site-enumerate-headings #rendering_text h3:before { content: '6.' counter(counter-rendering_text-2) '.' counter(counter-rendering_text-3) ' ' }
+                .print-site-enumerate-headings #rendering_text h3 {  counter-increment: counter-rendering_text-3 }
+            
+.print-site-enumerate-headings #spritesheets > h1:before { content: '7 ' }
+
+                .print-site-enumerate-headings #spritesheets h2:before { content: '7.' counter(counter-spritesheets-2) ' ' }
+                .print-site-enumerate-headings #spritesheets h2 {  counter-reset: counter-spritesheets-3 ;  counter-increment: counter-spritesheets-2 }
+            
+                .print-site-enumerate-headings #spritesheets h3:before { content: '7.' counter(counter-spritesheets-2) '.' counter(counter-spritesheets-3) ' ' }
+                .print-site-enumerate-headings #spritesheets h3 {  counter-increment: counter-spritesheets-3 }
+            
+.print-site-enumerate-headings #input > h1:before { content: '8 ' }
+
+                .print-site-enumerate-headings #input h2:before { content: '8.' counter(counter-input-2) ' ' }
+                .print-site-enumerate-headings #input h2 {  counter-reset: counter-input-3 ;  counter-increment: counter-input-2 }
+            
+                .print-site-enumerate-headings #input h3:before { content: '8.' counter(counter-input-2) '.' counter(counter-input-3) ' ' }
+                .print-site-enumerate-headings #input h3 {  counter-increment: counter-input-3 }
+            
+.print-site-enumerate-headings #playing_audio > h1:before { content: '9 ' }
+
+                .print-site-enumerate-headings #playing_audio h2:before { content: '9.' counter(counter-playing_audio-2) ' ' }
+                .print-site-enumerate-headings #playing_audio h2 {  counter-reset: counter-playing_audio-3 ;  counter-increment: counter-playing_audio-2 }
+            
+                .print-site-enumerate-headings #playing_audio h3:before { content: '9.' counter(counter-playing_audio-2) '.' counter(counter-playing_audio-3) ' ' }
+                .print-site-enumerate-headings #playing_audio h3 {  counter-increment: counter-playing_audio-3 }
+            
+.print-site-enumerate-headings #camera_system > h1:before { content: '10 ' }
+
+                .print-site-enumerate-headings #camera_system h2:before { content: '10.' counter(counter-camera_system-2) ' ' }
+                .print-site-enumerate-headings #camera_system h2 {  counter-reset: counter-camera_system-3 ;  counter-increment: counter-camera_system-2 }
+            
+                .print-site-enumerate-headings #camera_system h3:before { content: '10.' counter(counter-camera_system-2) '.' counter(counter-camera_system-3) ' ' }
+                .print-site-enumerate-headings #camera_system h3 {  counter-increment: counter-camera_system-3 }
+            </style>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "/", "features": ["navigation.expand", "content.code.copy", "content.code.select"], "search": "assets/javascripts/workers/search.f8cc74c7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="assets/javascripts/bundle.c8b220af.min.js"></script>
+      
+        <script src="js/print-site.js"></script>
+      
+        <script src="js/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>
