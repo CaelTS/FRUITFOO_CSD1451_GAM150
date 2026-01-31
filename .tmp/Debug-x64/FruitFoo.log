@@ -11,8 +11,11 @@
   UI.cpp
   Utilities.cpp
   Generating Code...
-  FruitFoo.vcxproj -> C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\bin\Debug-x64\FruitFoo.exe
-  14 File(s) copied
-  1 File(s) copied
-  1 File(s) copied
-  1 File(s) copied
+  LINK : C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\bin\Debug-x64\FruitFoo.exe not found or not built by the last incremental link; performing full link
+GameStateManager.obj : error LNK2019: unresolved external symbol "void __cdecl Farm_Load(void)" (?Farm_Load@@YAXXZ) referenced in function "void __cdecl GSM_Update(void)" (?GSM_Update@@YAXXZ)
+GameStateManager.obj : error LNK2019: unresolved external symbol "void __cdecl Farm_Initialize(void)" (?Farm_Initialize@@YAXXZ) referenced in function "void __cdecl GSM_Update(void)" (?GSM_Update@@YAXXZ)
+GameStateManager.obj : error LNK2019: unresolved external symbol "void __cdecl Farm_Update(void)" (?Farm_Update@@YAXXZ) referenced in function "void __cdecl GSM_Update(void)" (?GSM_Update@@YAXXZ)
+GameStateManager.obj : error LNK2019: unresolved external symbol "void __cdecl Farm_Render(void)" (?Farm_Render@@YAXXZ) referenced in function "void __cdecl GSM_Update(void)" (?GSM_Update@@YAXXZ)
+GameStateManager.obj : error LNK2019: unresolved external symbol "void __cdecl Farm_Free(void)" (?Farm_Free@@YAXXZ) referenced in function "void __cdecl GSM_Update(void)" (?GSM_Update@@YAXXZ)
+GameStateManager.obj : error LNK2019: unresolved external symbol "void __cdecl Farm_Unload(void)" (?Farm_Unload@@YAXXZ) referenced in function "void __cdecl GSM_Update(void)" (?GSM_Update@@YAXXZ)
+C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\bin\Debug-x64\FruitFoo.exe : fatal error LNK1120: 6 unresolved externals
