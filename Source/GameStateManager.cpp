@@ -12,16 +12,21 @@ int current = 0, previous = 0, next = 0;
 FP fpLoad = nullptr, fpInitialize = nullptr, fpUpdate = nullptr,
 fpDraw = nullptr, fpFree = nullptr, fpUnload = nullptr;
 
-void GSM_Initialize(int startingState) {
-    current = previous = next = startingState;
+void GSM_Initialize(int startingState)
+{
+    previous = current = -1;
+    next = startingState;
 
-    // Initialize function pointers for starting state
-    GSM_Update();
+    fpLoad = fpInitialize = fpUpdate =
+        fpDraw = fpFree = fpUnload = nullptr;
 }
 
-void GSM_Update() {
-    // Set function pointers based on current state
-    switch (current) {
+
+
+void GSM_Update()
+{
+    switch (current)
+    {
     case GS_MAIN_SCREEN:
         fpLoad = MainScreen_Load;
         fpInitialize = MainScreen_Initialize;
@@ -49,21 +54,9 @@ void GSM_Update() {
         fpUnload = Farm_Unload;
         break;
 
-
-
     case GS_EXIT:
-        // Clear function pointers for exit state
-        fpLoad = nullptr;
-        fpInitialize = nullptr;
-        fpUpdate = nullptr;
-        fpDraw = nullptr;
-        fpFree = nullptr;
-        fpUnload = nullptr;
+        fpLoad = fpInitialize = fpUpdate =
+            fpDraw = fpFree = fpUnload = nullptr;
         break;
-    }
-
-    if (next != current) {
-        previous = current;
-        current = next;
     }
 }

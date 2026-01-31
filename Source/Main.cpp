@@ -441,16 +441,27 @@ void MainScreen_Free()
 	if (pMeshFruit) AEGfxMeshFree(pMeshFruit);
 
 	// Free textures
-	if (pTexStall) AEGfxTextureUnload(pTexStall);
-	if (pTexApple) AEGfxTextureUnload(pTexApple);
-	if (pTexPear) AEGfxTextureUnload(pTexPear);
+	if (pTexStall)  AEGfxTextureUnload(pTexStall);
+	if (pTexApple)  AEGfxTextureUnload(pTexApple);
+	if (pTexPear)   AEGfxTextureUnload(pTexPear);
 	if (pTexBanana) AEGfxTextureUnload(pTexBanana);
 
+	// Free font
+	if (fontId >= 0)
+	{
+		AEGfxDestroyFont(fontId);
+		fontId = -1;
+	}
+
+	// Clear STL containers
+	fruits.clear();
+	fruits.shrink_to_fit();
+
 	// Reset pointers
-	pMeshStall = pMeshFruit =  NULL;
-	pTexStall = pTexApple = pTexPear = pTexBanana = NULL;
-	//fontId = -1;
+	pMeshStall = pMeshFruit = nullptr;
+	pTexStall = pTexApple = pTexPear = pTexBanana = nullptr;
 }
+
 
 void MainScreen_Unload()
 {
@@ -463,7 +474,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	_In_ LPWSTR    lpCmdLine,
 	_In_ int       nCmdShow)
 {
-	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#ifdef _DEBUG
+	// _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
+
 
 	UNREFERENCED_PARAMETER(hPrevInstance);
 	UNREFERENCED_PARAMETER(lpCmdLine);
@@ -496,8 +510,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	GSM_Initialize(GS_MAIN_SCREEN);
 
 	// Load and initialize first state
-	if (fpLoad) fpLoad();
-	if (fpInitialize) fpInitialize();
+	//if (fpLoad) fpLoad();
+	//if (fpInitialize) fpInitialize();
 
 	// ---------------------------------------------------------------------------
 	// Game Loop
