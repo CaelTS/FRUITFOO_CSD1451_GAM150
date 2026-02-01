@@ -1,12 +1,123 @@
 {
   "Version": 1,
   "WorkspaceRootPath": "C:\\Users\\mumup\\\u6587\u6863\\SIT\\Year 1 Trimester 2\\SEP2\\fruitfoo\\FRUITFOO_CSD1451_GAM150\\",
-  "Documents": [],
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\FruitFoo.vcxproj|C:\\Users\\mumup\\\u6587\u6863\\SIT\\Year 1 Trimester 2\\SEP2\\fruitfoo\\FRUITFOO_CSD1451_GAM150\\FruitFoo\\Economy.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\FruitFoo.vcxproj|solutionrelative:FruitFoo\\Economy.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\FruitFoo.vcxproj|C:\\Users\\mumup\\\u6587\u6863\\SIT\\Year 1 Trimester 2\\SEP2\\fruitfoo\\FRUITFOO_CSD1451_GAM150\\FruitFoo\\Inventory.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\FruitFoo.vcxproj|solutionrelative:FruitFoo\\Inventory.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\FruitFoo.vcxproj|C:\\Users\\mumup\\\u6587\u6863\\SIT\\Year 1 Trimester 2\\SEP2\\fruitfoo\\FRUITFOO_CSD1451_GAM150\\FruitFoo\\Economy.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\FruitFoo.vcxproj|solutionrelative:FruitFoo\\Economy.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\FruitFoo.vcxproj|C:\\USERS\\MUMUP\\\u6587\u6863\\SIT\\YEAR 1 TRIMESTER 2\\SEP2\\FRUITFOO\\FRUITFOO_CSD1451_GAM150\\EXTERN\\ALPHAENGINE\\INCLUDE\\AEMATH.H||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\FruitFoo.vcxproj|solutionrelative:EXTERN\\ALPHAENGINE\\INCLUDE\\AEMATH.H||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\FruitFoo.vcxproj|C:\\Users\\mumup\\\u6587\u6863\\SIT\\Year 1 Trimester 2\\SEP2\\fruitfoo\\FRUITFOO_CSD1451_GAM150\\Source\\Main.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\FruitFoo.vcxproj|solutionrelative:Source\\Main.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\FruitFoo.vcxproj|C:\\Users\\mumup\\\u6587\u6863\\SIT\\Year 1 Trimester 2\\SEP2\\fruitfoo\\FRUITFOO_CSD1451_GAM150\\Source\\GameStateManager.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\FruitFoo.vcxproj|solutionrelative:Source\\GameStateManager.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    }
+  ],
   "DocumentGroupContainers": [
     {
       "Orientation": 0,
       "VerticalTabListWidth": 256,
-      "DocumentGroups": []
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 5,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "Main.cpp",
+              "DocumentMoniker": "C:\\Users\\mumup\\\u6587\u6863\\SIT\\Year 1 Trimester 2\\SEP2\\fruitfoo\\FRUITFOO_CSD1451_GAM150\\Source\\Main.cpp",
+              "RelativeDocumentMoniker": "Source\\Main.cpp",
+              "ToolTip": "C:\\Users\\mumup\\\u6587\u6863\\SIT\\Year 1 Trimester 2\\SEP2\\fruitfoo\\FRUITFOO_CSD1451_GAM150\\Source\\Main.cpp",
+              "RelativeToolTip": "Source\\Main.cpp",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAALABAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2026-02-01T12:46:29.168Z",
+              "IsPinned": true,
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "Inventory.cpp",
+              "DocumentMoniker": "C:\\Users\\mumup\\\u6587\u6863\\SIT\\Year 1 Trimester 2\\SEP2\\fruitfoo\\FRUITFOO_CSD1451_GAM150\\FruitFoo\\Inventory.cpp",
+              "RelativeDocumentMoniker": "FruitFoo\\Inventory.cpp",
+              "ToolTip": "C:\\Users\\mumup\\\u6587\u6863\\SIT\\Year 1 Trimester 2\\SEP2\\fruitfoo\\FRUITFOO_CSD1451_GAM150\\FruitFoo\\Inventory.cpp",
+              "RelativeToolTip": "FruitFoo\\Inventory.cpp",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2026-02-01T13:24:58.712Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "AEMath.h",
+              "DocumentMoniker": "C:\\Users\\mumup\\\u6587\u6863\\SIT\\Year 1 Trimester 2\\SEP2\\fruitfoo\\FRUITFOO_CSD1451_GAM150\\Extern\\AlphaEngine\\include\\AEMath.h",
+              "RelativeDocumentMoniker": "Extern\\AlphaEngine\\include\\AEMath.h",
+              "ToolTip": "C:\\Users\\mumup\\\u6587\u6863\\SIT\\Year 1 Trimester 2\\SEP2\\fruitfoo\\FRUITFOO_CSD1451_GAM150\\Extern\\AlphaEngine\\include\\AEMath.h",
+              "RelativeToolTip": "Extern\\AlphaEngine\\include\\AEMath.h",
+              "ViewState": "AgIAAHsAAAAAAAAAAIAwwI0AAAAHAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2026-02-01T13:23:58.021Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "Economy.h",
+              "DocumentMoniker": "C:\\Users\\mumup\\\u6587\u6863\\SIT\\Year 1 Trimester 2\\SEP2\\fruitfoo\\FRUITFOO_CSD1451_GAM150\\FruitFoo\\Economy.h",
+              "RelativeDocumentMoniker": "FruitFoo\\Economy.h",
+              "ToolTip": "C:\\Users\\mumup\\\u6587\u6863\\SIT\\Year 1 Trimester 2\\SEP2\\fruitfoo\\FRUITFOO_CSD1451_GAM150\\FruitFoo\\Economy.h",
+              "RelativeToolTip": "FruitFoo\\Economy.h",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAUAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2026-02-01T12:54:50.868Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "GameStateManager.cpp",
+              "DocumentMoniker": "C:\\Users\\mumup\\\u6587\u6863\\SIT\\Year 1 Trimester 2\\SEP2\\fruitfoo\\FRUITFOO_CSD1451_GAM150\\Source\\GameStateManager.cpp",
+              "RelativeDocumentMoniker": "Source\\GameStateManager.cpp",
+              "ToolTip": "C:\\Users\\mumup\\\u6587\u6863\\SIT\\Year 1 Trimester 2\\SEP2\\fruitfoo\\FRUITFOO_CSD1451_GAM150\\Source\\GameStateManager.cpp",
+              "RelativeToolTip": "Source\\GameStateManager.cpp",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2026-02-01T12:46:03.32Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Economy.cpp",
+              "DocumentMoniker": "C:\\Users\\mumup\\\u6587\u6863\\SIT\\Year 1 Trimester 2\\SEP2\\fruitfoo\\FRUITFOO_CSD1451_GAM150\\FruitFoo\\Economy.cpp",
+              "RelativeDocumentMoniker": "FruitFoo\\Economy.cpp",
+              "ToolTip": "C:\\Users\\mumup\\\u6587\u6863\\SIT\\Year 1 Trimester 2\\SEP2\\fruitfoo\\FRUITFOO_CSD1451_GAM150\\FruitFoo\\Economy.cpp",
+              "RelativeToolTip": "FruitFoo\\Economy.cpp",
+              "ViewState": "AgIAAFoAAAAAAAAAAAAgwHEAAABKAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2026-02-01T10:22:42.901Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
     }
   ]
 }

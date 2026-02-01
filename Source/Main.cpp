@@ -10,6 +10,7 @@
 #include <vector>
 #include <fstream>
 #include <random>
+#include "../FruitFoo/Economy.h"
 
 // ---------------------------------------------------------------------------
 // Game State Variables
@@ -134,6 +135,9 @@ void MainScreen_Initialize()
 	fruits.clear();
 	inventory[0] = inventory[1] = inventory[2] = 0;
 
+	//Economy Init
+	Economy_Init();
+
 	// Load saved game
 	LoadGame(gold, energy, inventory);
 
@@ -158,6 +162,9 @@ void MainScreen_Update()
 {
 	// Get Delta Time
 	float dt = (float)AEFrameRateControllerGetFrameTime();
+
+	//Update Economy
+	Economy_Update(dt);
 
 	// Energy Regeneration Logic
 	if (energy < MAX_ENERGY)
@@ -247,10 +254,18 @@ void MainScreen_Update()
 			}
 		}
 	}
+	if (AEInputCheckTriggered(AEVK_F))
+	{
+		OutputDebugStringA("Switching to FARM state\n");
+		next = GS_FARM_SCREEN;
+	}
+
 
 	if (AEInputCheckTriggered(AEVK_N)) {
 		next = GS_NEXT_SCREEN;
 	}
+
+
 }
 
 void MainScreen_Render()
@@ -412,6 +427,11 @@ void MainScreen_Render()
 		sprintf_s(strBuffer, "%sBananas:%d/%d", marker2, inventory[2], MAX_INVENTORY);
 		if (selectedFruit == 2) AEGfxPrint(fontId, strBuffer, textX, textY - (lineSpacing * 2), 1.0f, 1.0f, 0.0f, 1.0f, 1.0f);
 		else AEGfxPrint(fontId, strBuffer, textX, textY - (lineSpacing * 2), 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
+
+		sprintf_s(strBuffer, "Money: %llu", Economy_GetTotalMoney());
+		AEGfxPrint(fontId, strBuffer, -0.9f, 0.8f, 1.0f, 1, 1, 1, 1);
+
+
 	}
 
 	if (TR_IsActive())
@@ -435,16 +455,27 @@ void MainScreen_Free()
 	if (pMeshFruit) AEGfxMeshFree(pMeshFruit);
 
 	// Free textures
-	if (pTexStall) AEGfxTextureUnload(pTexStall);
-	if (pTexApple) AEGfxTextureUnload(pTexApple);
-	if (pTexPear) AEGfxTextureUnload(pTexPear);
+	if (pTexStall)  AEGfxTextureUnload(pTexStall);
+	if (pTexApple)  AEGfxTextureUnload(pTexApple);
+	if (pTexPear)   AEGfxTextureUnload(pTexPear);
 	if (pTexBanana) AEGfxTextureUnload(pTexBanana);
 
+	// Free font
+	if (fontId >= 0)
+	{
+		AEGfxDestroyFont(fontId);
+		fontId = -1;
+	}
+
+	// Clear STL containers
+	fruits.clear();
+	fruits.shrink_to_fit();
+
 	// Reset pointers
-	pMeshStall = pMeshFruit =  NULL;
-	pTexStall = pTexApple = pTexPear = pTexBanana = NULL;
-	//fontId = -1;
+	pMeshStall = pMeshFruit = nullptr;
+	pTexStall = pTexApple = pTexPear = pTexBanana = nullptr;
 }
+
 
 void MainScreen_Unload()
 {
@@ -457,7 +488,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	_In_ LPWSTR    lpCmdLine,
 	_In_ int       nCmdShow)
 {
-	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#ifdef _DEBUG
+	// _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
+
 
 	UNREFERENCED_PARAMETER(hPrevInstance);
 	UNREFERENCED_PARAMETER(lpCmdLine);
@@ -490,8 +524,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	GSM_Initialize(GS_MAIN_SCREEN);
 
 	// Load and initialize first state
-	if (fpLoad) fpLoad();
-	if (fpInitialize) fpInitialize();
+	//if (fpLoad) fpLoad();
+	//if (fpInitialize) fpInitialize();
 
 	// ---------------------------------------------------------------------------
 	// Game Loop

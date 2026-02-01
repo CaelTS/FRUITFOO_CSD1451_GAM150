@@ -1,0 +1,143 @@
+#include "Economy.h"
+#include <Windows.h>
+#include "AEEngine.h"
+#include "AEUtil.h"
+#include <stdio.h>
+#include <utility>
+#include <AETypes.h>
+
+// Global variables
+static u64 total_money = 0;
+static u64 max_money = 255; //depend on shop upgrades later
+static f32 money_multiplier = 1.0f;
+
+static f32 timer = 0.0f;
+static f32 next_sale_time = 0.0f; //seconds
+
+static u8 total_fruits = 10;
+
+//placeholder inventory stock function
+u8 static Inventory_GetFruitStock(u8 total_fruits) {
+	return total_fruits; //assume always have fruit for now
+}
+//placeholder function to remove fruit from inventory function
+void Inventory_RemoveFruit(u8 amount) {
+	total_fruits -= amount;
+	printf("Removed %d fruits from inventory.\n", amount);
+	printf("Fruits left in inventory: %d\n", total_fruits);
+}
+
+//placeholder for base price
+u8 base_fruit_price = 5;
+
+//Helper functions
+f32 random_time(f32 min, f32 max) {
+	return min + (max - min) * AERandFloat();
+}
+u8 random_range(u8 min, u8 max) {
+	return (u8)(min + (max - min) * AERandFloat());
+}
+std::pair<f32, f32> random_range_pair(f32 min1, f32 max1, f32 min2, f32 max2) {
+	f32 rng = AERandFloat();
+	if (rng < 0.3f) {
+		return std::make_pair(min1, max1);
+	}
+	else {
+		return std::make_pair(min2, max2);
+	}
+}
+
+void static sell_fruit() {
+	u8 stock = Inventory_GetFruitStock();
+	//determine sale amount
+	u8 sale_amount = min(stock,random_range(1.0f, 3.0f)); //sell between 1 and 3 fruits
+
+	//determine sale price
+	u64 total_price = sale_amount * base_fruit_price * money_multiplier;
+	//add money to total
+	Economy_AddMoney(total_price);
+	//remove fruit from inventory
+	Inventory_RemoveFruit(sale_amount);
+	
+}
+
+// lifecycle
+void Economy_Init() {
+	total_money = 0; //to read from config file 
+	money_multiplier = 1.0f; //to read from config file
+
+	timer = 0.0f; //initialize timer
+
+	//randomize next sale time
+	std::pair<float, float> range_pair = random_range_pair(20.0f, 70.0f, 45.0f, 180.0f); //random time (fast, slow)between sales
+	f32 first_sale_time = range_pair.first;
+	f32 second_sale_time = range_pair.second;
+
+	next_sale_time = random_time(first_sale_time, second_sale_time); 
+	
+
+}
+void Economy_Update(float dt) {
+
+	timer += dt;
+
+	if (timer >= next_sale_time && total_money <= max_money) { //time to sell fruit	
+
+		bool in_stock = Inventory_GetFruitStock() > 0;
+		//check for fruit in stock
+		if (in_stock) {
+			sell_fruit();
+
+		}
+		//reset timer
+		timer = 0.0f;
+
+		//randomize next sale time
+		std::pair<float, float> range_pair = random_range_pair(20.0f, 70.0f, 45.0f, 180.0f); //random time (fast, slow)between sales
+		f32 first_sale_time = range_pair.first;
+		f32 second_sale_time = range_pair.second;
+
+		next_sale_time = random_time(first_sale_time, second_sale_time);
+	}
+
+	if (total_money >= max_money) {
+		total_money = max_money; //cap money at max
+		timer = 0.0f; //reset timer to try again later
+	}
+
+	if (Inventory_GetFruitStock() == 0) {
+		//no stock, reset timer to try again later
+		timer = 0.0f;
+	}
+
+	if (timer > 10.0f) {
+		printf("Money: %llu | Stock: %d\n", total_money, Inventory_GetFruitStock());
+	}
+
+
+}
+//void Economy_Exit();
+//
+//// commands (change state)
+
+void Economy_AddMoney(int amount) {
+	total_money += amount;
+}
+
+bool Economy_SpendMoney(int amount) {
+	if (total_money >= amount) {
+		total_money -= amount;
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+// getters (read-only)
+int Economy_GetTotalMoney() {
+	return total_money;
+}
+float Economy_GetMultiplier() {
+	return money_multiplier;
+}
