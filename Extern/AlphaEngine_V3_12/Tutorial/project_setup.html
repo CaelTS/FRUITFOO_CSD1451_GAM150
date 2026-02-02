@@ -1,0 +1,859 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="index.html">
+      
+      
+        <link rel="next" href="primitive_types.html">
+      
+      
+      <link rel="icon" href="assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.12">
+    
+    
+      
+        <title>Project Setup - Alpha Engine Tutorial</title>
+      
+    
+    
+      <link rel="stylesheet" href="assets/stylesheets/main.2afb09e1.min.css">
+      
+        
+        <link rel="stylesheet" href="assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+        <script src="https://unpkg.com/iframe-worker/shim"></script>
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="css/print-site.css">
+    
+      <link rel="stylesheet" href="css/print-site-material.css">
+    
+    <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#project-setup" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="index.html" title="Alpha Engine Tutorial" class="md-header__button md-logo" aria-label="Alpha Engine Tutorial" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Alpha Engine Tutorial
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Project Setup
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="index.html" title="Alpha Engine Tutorial" class="md-nav__button md-logo" aria-label="Alpha Engine Tutorial" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Alpha Engine Tutorial
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Introduction
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Project Setup
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="project_setup.html" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    Project Setup
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#project-creation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Project Creation
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adding-a-folder-for-alpha-engine-and-assets" class="md-nav__link">
+    <span class="md-ellipsis">
+      Adding a folder for Alpha Engine and assets
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#project-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Project Configuration
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#running-our-first-application" class="md-nav__link">
+    <span class="md-ellipsis">
+      Running our first application
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="primitive_types.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Primitive Types
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="coordinate_systems.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Coordinate Systems
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="rendering_sprites.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Rendering A Sprite
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="rendering_text.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Rendering Text
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="spritesheets.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Using Spritesheets
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="input.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Input Handling
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="playing_audio.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Playing Audio
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="camera_system.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Camera System
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#project-creation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Project Creation
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adding-a-folder-for-alpha-engine-and-assets" class="md-nav__link">
+    <span class="md-ellipsis">
+      Adding a folder for Alpha Engine and assets
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#project-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Project Configuration
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#running-our-first-application" class="md-nav__link">
+    <span class="md-ellipsis">
+      Running our first application
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="project-setup">Project Setup</h1>
+<p>In this section, we will cover how to create a new Visual Studios 2022 project in Alpha Engine. </p>
+<p>Be sure to <a href="res/Assets.zip">download Assets here</a> and the Alpha Engine library on Moodle before continuing.</p>
+<h2 id="project-creation">Project Creation</h2>
+<p>First, we will create the Visual Studios Solution and Project files that will be used to run our first application.</p>
+<ul>
+<li>Open Visual Studios. You should see a window that looks like this:</li>
+</ul>
+<p><img alt="" src="res/vs2022_create.png" /></p>
+<ul>
+<li>Under the <code>Visual Studio 2022</code> window:<ul>
+<li>Click on <code>Create a new project</code></li>
+</ul>
+</li>
+<li>Under the <code>Create a new project</code> window:<ul>
+<li>Click on <code>Empty Project</code>. Make sure that it's the C++ version. </li>
+<li>Click on <code>Next</code>.</li>
+</ul>
+</li>
+<li>Under the <code>Configure your new project</code> page:<ul>
+<li>(Optional) Change the <code>Project Name</code> to one of your liking.</li>
+<li>(Optional) Change the <strong>Location</strong>.</li>
+<li>Uncheck <code>Place solution and project in the same directory</code>.</li>
+<li>Note the <strong>Location</strong> as we need to navigate to it later.</li>
+<li>Click on <code>Create</code>.</li>
+</ul>
+</li>
+</ul>
+<p>You should see Visual Studios appear on your screen, like so:</p>
+<p><img alt="" src="res/vs2022_empty.png" /></p>
+<p>This means that it has successfully created and opened.</p>
+<p>In this project, we will not be building for 32-bit systems, so to avoid confusion, we need to remove 32-bit system-related configurations from the project.</p>
+<ul>
+<li>Under <code>Build</code> &gt; <code>Configuration Manager</code> <ul>
+<li>Click on <code>Active Solution Platform</code> &gt; <code>Edit…</code> &gt; Click on <code>x86</code> &gt; <code>Remove</code></li>
+<li>Click on <code>Platform</code> &gt; <code>Edit…</code> &gt; Click on <code>Win32</code> &gt; <code>Remove</code></li>
+</ul>
+</li>
+</ul>
+<h2 id="adding-a-folder-for-alpha-engine-and-assets">Adding a folder for Alpha Engine and assets</h2>
+<p>Next, we will add the Alpha Engine library to a location within the project folder. 
+This is so that our project can easily locate Alpha Engine’s header and library files, and subsequently use its code.</p>
+<ul>
+<li>Go to the project’s Solution File (.sln) using Windows Explorer. It should be at the <strong>Location</strong> that you set earlier.</li>
+<li>Create a folder named <code>Extern</code> at that location.</li>
+<li>Create a folder named <code>Assets</code> at that location.</li>
+<li>Copy the AlphaEngine folder in the given AlphaEngine.zip file into the <code>Extern</code> folder.</li>
+<li>Copy the contents in the given <code>Assets.zip</code> file into the <code>Assets</code> folder.</li>
+</ul>
+<h2 id="project-configuration">Project Configuration</h2>
+<p>Next, we configure the project properties. Right-click on the project in the Solution Explorer:</p>
+<p><img alt="" src="res/vs2022_project_properties.png" /></p>
+<p>Then click on <code>Properties</code>. 
+It should open a window that looks something like this:</p>
+<p><img alt="" src="res/vs2022_project_config.png" /></p>
+<p>This window contains all configurations of the project. By default, all projects in VS2022 come with two configurations to compile the app: <code>Debug</code> and <code>Release</code>.</p>
+<p>In general, <code>Debug</code> builds are easier to debug but slower. <code>Release</code> builds are most optimized but are harder to debug.</p>
+<p>Set the <code>Configuration</code> drop down bar to <code>All Configurations</code>. This will cause our settings to affect both <code>Debug</code> and <code>Release</code> versions of our application. </p>
+<p><img alt="" src="res/vs2022_debug_release_config_change.png" /></p>
+<p>Add the additional directories the compiler needs to look for when compiling and linking:</p>
+<ul>
+<li>Under <code>Configuration Properties</code> &gt; <code>VC++ Directories</code><ul>
+<li>Add <code>$(SolutionDir)Extern\AlphaEngine\include</code> to <code>General</code> &gt; <code>Include Directories</code></li>
+<li>Add <code>$(SolutionDir)Extern\AlphaEngine\lib</code> to <code>General</code> &gt; <code>Library Directories</code></li>
+</ul>
+</li>
+</ul>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>When you add an entry into a section, you have to seperate each entry with ';'. For example, if the entry for <code>Include Directories</code> is: <code>$(VC_IncludePath);$(WindowsSDK_IncludePath)</code>, to add <code>$(SolutionDir)Extern\CProcessing\include</code>, you will have to do: <code>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)Extern\CProcessing\include</code></p>
+</div>
+<p>Configure the character set the project is using.</p>
+<ul>
+<li>Under <code>Configuration Properties</code> &gt; <code>Advanced</code> &gt; <code>Character Set</code><ul>
+<li>Set to <code>Use Multibyte Set</code></li>
+</ul>
+</li>
+</ul>
+<p>Configure the subsystem the project is using.</p>
+<ul>
+<li>Under <code>Configuration Properties</code> &gt; <code>Linker</code> &gt; <code>System</code> &gt; <code>Subsystem</code><ul>
+<li>Set to <code>Windows (/SUBSYSTEM:WINDOWS)</code></li>
+</ul>
+</li>
+</ul>
+<p>Set the output directory of the compiler where the executable will be created. 
+We will set this to a folder named <code>bin</code> at the directory the Solution file is in:</p>
+<ul>
+<li>Under <code>Configuration Properties</code> &gt; <code>General</code> &gt; <code>Output Directory</code><ul>
+<li>Set to <code>$(SolutionDir)bin\$(Configuration)-$(Platform)\</code></li>
+</ul>
+</li>
+</ul>
+<p>Set the intermediate directory of the compiler. 
+This is where all the 'rubbish' files that the compiler generates will go to.<br />
+We will set this to a folder named ".tmp" at the directory the Solution file is in:</p>
+<ul>
+<li>Under <code>Configuration Properties</code> &gt; <code>General</code> &gt; <code>Intermediate Directory</code><ul>
+<li>Set to <code>$(SolutionDir).tmp\$(Configuration)-$(Platform)\</code></li>
+</ul>
+</li>
+</ul>
+<p>Set the working directory of the debugger to be in the same directory as the executables output by the compiler:</p>
+<ul>
+<li>Under <code>Configuration Properties</code> &gt; <code>Debugging</code>  &gt; <code>Working Directory</code><ul>
+<li>Set to <code>$(SolutionDir)bin\$(Configuration)-$(Platform)\</code></li>
+</ul>
+</li>
+</ul>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>For the next few steps, you might need to change the <code>Configuration</code> drop down to either <code>Debug</code> to <code>Release</code>. Follow the steps carefully!</p>
+</div>
+<p>Configure the linker to link to the appropriate Alpha Engine depending on whether we are on Debug or Release configurations:</p>
+<ul>
+<li>Click on <code>Configuration Properties</code> &gt; <code>Linker</code> &gt; <code>Input</code> &gt; <code>Additional Dependencies</code><ul>
+<li>With <code>Configuration</code> set to <code>Debug</code>:<ul>
+<li>Click on the <code>v</code> arrow at the right side of the text field to toggle a dropdown menu</li>
+<li>Click on <code>&lt;Edit...&gt;</code>. A window should appear.</li>
+<li>Add <code>Alpha_EngineD.lib</code>. </li>
+<li>Click on <code>OK</code> to close the window.</li>
+<li>Click on <code>Apply</code></li>
+</ul>
+</li>
+<li>With <code>Configuration</code> set to <code>Release</code><ul>
+<li>Click on the <code>v</code> arrow at the right side of the text field to toggle a dropdown menu</li>
+<li>Click on <code>&lt;Edit...&gt;</code>. A window should appear.</li>
+<li>Add <code>Alpha_Engine.lib</code></li>
+<li>Click on <code>OK</code> to close the window.</li>
+<li>Click on <code>Apply</code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<video width="100%" controls>
+    <source src = "res/vs2022_additional_dependencies.mp4">
+</video>
+
+<p>Tell Visual Studios to copy the appropriate .dll and assets to where the executable is after it's built:</p>
+<ul>
+<li>Under <code>Configuration Properties</code> &gt; <code>Build Events</code> &gt; <code>Post-Build Event</code> &gt; <code>Command Line</code> &gt; <code>Edit…</code><ul>
+<li>With <code>Configuration</code> set to <code>Debug</code>:<ul>
+<li>Click on the <code>v</code> arrow at the right side of the text field to toggle a dropdown menu</li>
+<li>Click on <code>&lt;Edit...&gt;</code>. A window should appear.</li>
+<li>Add <code>xcopy "$(SolutionDir)Assets\</code>" "$(OutDir)Assets\" /s /r /y /q`</li>
+<li>Add <code>xcopy "$(SolutionDir)Extern\AlphaEngine\lib\freetype.dll" "$(OutDir)" /s /r /y /q</code></li>
+<li>Add <code>xcopy "$(SolutionDir)Extern\AlphaEngine\lib\Alpha_EngineD.dll" "$(OutDir)" /s /r /y /q</code></li>
+<li>Add <code>xcopy "$(SolutionDir)Extern\AlphaEngine\lib\fmodL.dll" "$(OutDir)" /s /r /y /q</code></li>
+<li>Click on <code>OK</code> to close the window.</li>
+<li>Click on <code>Apply</code></li>
+</ul>
+</li>
+<li>With <code>Configuration</code> set to <code>Release</code>:<ul>
+<li>Click on the <code>v</code> arrow at the right side of the text field to toggle a dropdown menu</li>
+<li>Click on <code>&lt;Edit...&gt;</code>. A window should appear.</li>
+<li>Add <code>xcopy "$(SolutionDir)Assets\</code>" "$(OutDir)Assets\" /s /r /y /q`</li>
+<li>Add <code>xcopy "$(SolutionDir)Extern\AlphaEngine\lib\freetype.dll" "$(OutDir)" /s /r /y /q</code></li>
+<li>Add <code>xcopy "$(SolutionDir)Extern\AlphaEngine\lib\Alpha_Engine.dll" "$(OutDir)" /s /r /y /q</code></li>
+<li>Add <code>xcopy "$(SolutionDir)Extern\AlphaEngine\lib\fmod.dll" "$(OutDir)" /s /r /y /q</code></li>
+<li>Click on <code>OK</code> to close the window.</li>
+<li>Click on <code>Apply</code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<video width="100%" controls>
+    <source src = "res/vs2022_post_build.mp4">
+</video>
+
+<h2 id="running-our-first-application">Running our first application</h2>
+<p>Create a fresh CPP file with the entry point function and name it <code>Main.cpp</code>.</p>
+<ul>
+<li>Open File Explorer and navigate to the project's directory.</li>
+<li>Create a folder there to hold all our code. For this example, we will name the folder <code>Source</code></li>
+<li>Go into the <code>Source</code> folder and create a file named <code>Main.cpp</code>. This will contain the code with the entry point to our application.</li>
+<li>Drag and drop <code>Main.cpp</code> from the File Explorer into the Source File filter in Visual Studios 2022.</li>
+</ul>
+<p><img alt="" src="res/vs2022_main_drag_drop.jpg" /></p>
+<ul>
+<li>Copy the code from the given <code>snippets\barebones.cpp</code> into the <code>Main.cpp</code> file that you just created.</li>
+<li>Build and run the project.</li>
+<li>You should see a blank window with the title "My New Demo" pop up with a console window at the back. The problem should close upon pressing the escape key.</li>
+</ul>
+<p>If you got here, congratulations! You have set up Alpha Engine!</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you are new to Visual Studios, it is recommended to follow these steps to add a new source file into Visual Studios. This will at least keep our source files organized into a folder, rather than all over the project. If you have a better idea on how you want to organize your source files, feel free to do so!</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": ".", "features": ["navigation.expand", "content.code.copy", "content.code.select"], "search": "assets/javascripts/workers/search.f8cc74c7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="assets/javascripts/bundle.c8b220af.min.js"></script>
+      
+        <script src="js/print-site.js"></script>
+      
+        <script src="js/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>
