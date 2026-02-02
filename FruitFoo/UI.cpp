@@ -6,19 +6,23 @@
 static bool menuOpen = false;
 static AEGfxTexture* menuTexture = nullptr;
 extern AEGfxVertexList* g_pMeshFullScreen;
+extern s8 fontId;
 
 struct FruitInfo
 {
     const char* name;
-    const char* description;
+    const char* line1;
+    const char* line2;
 };
+
 
 static FruitInfo fruitInfo[3] =
 {
-    { "Apple",  "Sweet red fruit\nPrice: 10 gold" },
-    { "Pear",   "Juicy green fruit\nPrice: 10 gold" },
-    { "Banana", "Soft yellow fruit\nPrice: 10 gold" }
+    { "Apple",  "Sweet red fruit",  "Price: 10 gold" },
+    { "Pear",   "Juicy green fruit", "Price: 10 gold" },
+    { "Banana", "Soft yellow fruit", "Price: 10 gold" }
 };
+
 
 
 void UI_Init()
@@ -97,10 +101,11 @@ static bool IsMouseOverBasket(const FruitBasket& basket)
         worldY <= basket.y + basket.height * 0.5f;
 }
 
-static void DrawTooltip(float x, float y, const char* title, const char* desc)
+static void DrawTooltip(float x, float y, const char* title, const char* line1, const char* line2)
+
 {
-    float w = 220.0f;
-    float h = 90.0f;
+    float w = 300.0f;
+    float h = 100.0f;
 
     AEMtx33 scale, trans, transform;
     AEMtx33Scale(&scale, w, h);
@@ -113,12 +118,19 @@ static void DrawTooltip(float x, float y, const char* title, const char* desc)
     AEGfxSetTransform(transform.m);
     AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
 
-    // AEGfxPrint expects 9 arguments: fontId, str, x, y, scale, r, g, b, a
-    AEGfxPrint(0, title, (x - w * 0.45f) / 800.0f,
-        (y + h * 0.15f) / 450.0f, 1, 1, 1, 1, 1);
+    // ---- TEXT POSITION (THIS WAS MISSING) ----
+    float xText = (x - w * 0.45f) / 800.0f;
+    float yText = (y + h * 0.25f) / 450.0f;
 
-    AEGfxPrint(0, desc, (x - w * 0.45f) / 800.0f,
-        (y - h * 0.15f) / 450.0f, 0.9f, 0.9f, 0.9f, 0.9f, 1);
+    // Title
+    AEGfxPrint(fontId, title, xText, yText, 1.0f, 1, 1, 1, 1);
+
+    // Line 1
+    AEGfxPrint(fontId, line1, xText, yText - 0.08f, 0.9f, 0.9f, 0.9f, 0.9f, 1);
+
+    // Line 2
+    AEGfxPrint(fontId, line2, xText, yText - 0.16f, 0.9f, 0.9f, 0.9f, 0.9f, 1);
+
 }
 
 void UI_DrawFruitBasketTooltips()
@@ -142,8 +154,10 @@ void UI_DrawFruitBasketTooltips()
                 worldX,
                 worldY,
                 fruitInfo[basket.fruitType].name,
-                fruitInfo[basket.fruitType].description
+                fruitInfo[basket.fruitType].line1,
+                fruitInfo[basket.fruitType].line2
             );
+
             break;
         }
     }
