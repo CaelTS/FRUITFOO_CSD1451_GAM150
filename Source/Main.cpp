@@ -136,7 +136,7 @@ void MainScreen_Initialize()
 	inventory[0] = inventory[1] = inventory[2] = 0;
 
 	//Economy Init
-	Economy_Init();
+	//Economy_Init();
 
 	// Load saved game
 	LoadGame(gold, energy, inventory);
@@ -164,7 +164,7 @@ void MainScreen_Update()
 	float dt = (float)AEFrameRateControllerGetFrameTime();
 
 	// Economy Update
-	Economy_Update(dt);
+	//Economy_Update(dt);
 
 	// Energy Regeneration Logic
 	if (energy < MAX_ENERGY)
