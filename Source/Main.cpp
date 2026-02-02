@@ -145,6 +145,11 @@ void MainScreen_Initialize()
 	Economy_Init();
 
 	UI_Init();
+	gFruitBaskets.clear();
+	gFruitBaskets.push_back({ 0, -350.0f, -250.0f, 120.0f, 120.0f }); // Apple
+	gFruitBaskets.push_back({ 1, -150.0f, -250.0f, 120.0f, 120.0f }); // Pear
+	gFruitBaskets.push_back({ 2,   50.0f, -250.0f, 120.0f, 120.0f }); // Banana
+
 
 	// Load saved game
 	LoadGame(gold, energy, inventory);
