@@ -10,6 +10,7 @@
 #include <vector>
 #include <fstream>
 #include <random>
+#include "Economy.h"
 
 // ---------------------------------------------------------------------------
 // Game State Variables
@@ -134,6 +135,9 @@ void MainScreen_Initialize()
 	fruits.clear();
 	inventory[0] = inventory[1] = inventory[2] = 0;
 
+	//Economy Init
+	Economy_Init();
+
 	// Load saved game
 	LoadGame(gold, energy, inventory);
 
@@ -158,6 +162,9 @@ void MainScreen_Update()
 {
 	// Get Delta Time
 	float dt = (float)AEFrameRateControllerGetFrameTime();
+
+	// Economy Update
+	Economy_Update(dt);
 
 	// Energy Regeneration Logic
 	if (energy < MAX_ENERGY)
