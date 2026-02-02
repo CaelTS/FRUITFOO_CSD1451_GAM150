@@ -11,6 +11,7 @@
 #include <fstream>
 #include <random>
 #include "Economy.h"
+#include "UI.h"
 
 // ---------------------------------------------------------------------------
 // Game State Variables
