@@ -1,17 +1,8 @@
 ﻿  Farm.cpp
-<<<<<<< HEAD
-\OneDrive\Documents\GitHub\FRUITFOO_CSD1451_GAM150\Source\Farm.cpp(1,1): error C1083: Cannot open source file: '..\..\..\..\OneDrive\Documents\GitHub\FRUITFOO_CSD1451_GAM150\Source\Farm.cpp': No such file or directory
-  (compiling source file '/OneDrive/Documents/GitHub/FRUITFOO_CSD1451_GAM150/Source/Farm.cpp')
-  
-=======
->>>>>>> e1c494ce70ff9ec3eac4148d2cf3155a84d27d76
   GameStateManager.cpp
   Main.cpp
   Next.cpp
+C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\Main.cpp(139,2): error C3861: 'Economy_Init': identifier not found
+C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\Main.cpp(167,2): error C3861: 'Economy_Update': identifier not found
   Transition.cpp
   Generating Code...
-  FruitFoo.vcxproj -> C:\Users\Admin\OneDrive\Documents\GitHub\FRUITFOO_CSD1451_GAM150\bin\Debug-x64\FruitFoo.exe
-  9 File(s) copied
-  1 File(s) copied
-  1 File(s) copied
-  1 File(s) copied
