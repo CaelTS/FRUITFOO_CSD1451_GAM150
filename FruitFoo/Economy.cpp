@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <utility>
 #include <AETypes.h>
+#include <stdlib.h>
+#include <time.h>
 
 // Global variables
 static u64 total_money = 0;
@@ -15,6 +17,7 @@ static f32 timer = 0.0f;
 static f32 next_sale_time = 0.0f; //seconds
 
 static u8 total_fruits = 10;
+bool timer_reset = true;
 
 //placeholder inventory stock function
 u8 static Inventory_GetFruitStock() {
@@ -63,13 +66,16 @@ void static sell_fruit() {
 
 // lifecycle
 void Economy_Init() {
+	//initialize random seed
+	srand((unsigned int)time(NULL));
+
 	total_money = 0; //to read from config file 
 	money_multiplier = 1.0f; //to read from config file
 
 	timer = 0.0f; //initialize timer
 
 	//randomize next sale time
-	std::pair<float, float> range_pair = random_range_pair(20.0f, 70.0f, 45.0f, 180.0f); //random time (fast, slow)between sales
+	std::pair<float, float> range_pair = random_range_pair(5.0f, 10.0f, 4.0f, 20.0f); //random time (fast, slow)between sales
 	f32 first_sale_time = range_pair.first;
 	f32 second_sale_time = range_pair.second;
 
@@ -80,6 +86,19 @@ void Economy_Init() {
 void Economy_Update(float dt) {
 
 	timer += dt;
+	static int last_second = -1;
+	int current_second = (int)timer;
+
+	if (current_second != last_second) {
+		printf("Economy Timer: %d seconds.\n", current_second);
+		last_second = current_second;
+	}
+
+	if (timer_reset) {
+		printf("Next sale in %.2f seconds.\n", next_sale_time);
+		printf("Money: %llu | Stock: %d\n", total_money, Inventory_GetFruitStock());
+		timer_reset = false;
+	}
 
 	if (timer >= next_sale_time && total_money <= max_money) { //time to sell fruit	
 
@@ -93,7 +112,7 @@ void Economy_Update(float dt) {
 		timer = 0.0f;
 
 		//randomize next sale time
-		std::pair<float, float> range_pair = random_range_pair(20.0f, 70.0f, 45.0f, 180.0f); //random time (fast, slow)between sales
+		std::pair<float, float> range_pair = random_range_pair(10.0f, 20.0f, 5.0f, 40.0f); //random time (fast, slow)between sales
 		f32 first_sale_time = range_pair.first;
 		f32 second_sale_time = range_pair.second;
 
@@ -105,17 +124,15 @@ void Economy_Update(float dt) {
 	if (total_money >= max_money) {
 		total_money = max_money; //cap money at max
 		timer = 0.0f; //reset timer to try again later
+		timer_reset = true;
 	}
 
 	if (Inventory_GetFruitStock() == 0) {
 		//no stock, reset timer to try again later
 		timer = 0.0f;
+		timer_reset = true;
 	}
 
-	if (timer == 0.0f) {
-		printf("Next sale in %.2f seconds.\n", next_sale_time);
-		printf("Money: %llu | Stock: %d\n", total_money, Inventory_GetFruitStock());
-	}
 
 
 }
