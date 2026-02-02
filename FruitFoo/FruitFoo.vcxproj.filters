@@ -27,7 +27,7 @@
     <ClCompile Include="..\Source\Transition.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\OneDrive\Documents\GitHub\FRUITFOO_CSD1451_GAM150\Source\Farm.cpp">
+    <ClCompile Include="..\Source\Farm.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
