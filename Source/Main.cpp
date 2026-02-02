@@ -144,6 +144,8 @@ void MainScreen_Initialize()
 	//Economy Init
 	Economy_Init();
 
+	UI_Init();
+
 	// Load saved game
 	LoadGame(gold, energy, inventory);
 
@@ -171,6 +173,7 @@ void MainScreen_Update()
 
 	// Economy Update
 	Economy_Update(dt);
+	UI_Input();
 
 	// Energy Regeneration Logic
 	if (energy < MAX_ENERGY)
@@ -269,6 +272,45 @@ void MainScreen_Update()
 
 	if (AEInputCheckTriggered(AEVK_N)) {
 		next = GS_NEXT_SCREEN;
+	}
+
+	// Input Logic: Mouse Click to Pluck Fruits
+	if (AEInputCheckTriggered(AEVK_LBUTTON))
+	{
+		s32 mouseX, mouseY;
+		AEInputGetCursorPosition(&mouseX, &mouseY);
+
+		// Convert screen coordinates to world coordinates
+		float worldX = (float)mouseX - 800.0f;
+		float worldY = 450.0f - (float)mouseY;
+
+		// Check collision with fruits
+		for (auto it = fruits.begin(); it != fruits.end(); )
+		{
+			if (it->active)
+			{
+				// Simple AABB collision (Fruit size is approx 64x64)
+				float halfSize = 32.0f;
+				if (worldX >= it->x - halfSize && worldX <= it->x + halfSize &&
+					worldY >= it->y - halfSize && worldY <= it->y + halfSize)
+				{
+					// Check inventory capacity
+					if (inventory[it->type] < MAX_INVENTORY)
+					{
+						// Add to inventory
+						inventory[it->type]++;
+
+						// Remove fruit from tree
+						it = fruits.erase(it);
+						continue; // Skip incrementing iterator since we erased
+					}
+				}
+			}
+			++it;
+		}
+
+		if (UI_IsMenuOpen())
+			return;
 	}
 }
 
@@ -445,6 +487,9 @@ void MainScreen_Render()
 		AEGfxSetTransform(transform.m);
 		AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
 	}
+
+	UI_Draw();
+	UI_DrawFruitBasketTooltips();
 }
 
 void MainScreen_Free()
