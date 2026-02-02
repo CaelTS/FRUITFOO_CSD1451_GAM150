@@ -17,7 +17,7 @@ static f32 next_sale_time = 0.0f; //seconds
 static u8 total_fruits = 10;
 
 //placeholder inventory stock function
-u8 static Inventory_GetFruitStock(u8 total_fruits) {
+u8 static Inventory_GetFruitStock() {
 	return total_fruits; //assume always have fruit for now
 }
 //placeholder function to remove fruit from inventory function
@@ -98,6 +98,8 @@ void Economy_Update(float dt) {
 		f32 second_sale_time = range_pair.second;
 
 		next_sale_time = random_time(first_sale_time, second_sale_time);
+
+		printf("Money: %llu | Stock: %d\n", total_money, Inventory_GetFruitStock());
 	}
 
 	if (total_money >= max_money) {
@@ -110,7 +112,8 @@ void Economy_Update(float dt) {
 		timer = 0.0f;
 	}
 
-	if (timer > 10.0f) {
+	if (timer == 0.0f) {
+		printf("Next sale in %.2f seconds.\n", next_sale_time);
 		printf("Money: %llu | Stock: %d\n", total_money, Inventory_GetFruitStock());
 	}
 

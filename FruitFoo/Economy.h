@@ -3,11 +3,9 @@
 
 #include <stdio.h>
 #include <utility> // for std::pair
-#include <AESystem.h>
 #include <AETypes.h>
 
 //Placeholder inventory function declarations
-u8 Inventory_GetFruitStock();  // Returns the current stock of fruit
 void Inventory_RemoveFruit(u8 amount);  // Removes fruit from the inventory
 
 // Forward declarations of functions
