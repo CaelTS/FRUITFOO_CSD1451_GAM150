@@ -6,11 +6,12 @@
 #include "Main.h"
 #include "GameStateManager.h"
 #include "Transition.h"
-#include "UI.h"
 #include <stdio.h>
 #include <vector>
 #include <fstream>
 #include <random>
+#include "Economy.h"
+#include "UI.h"
 
 // ---------------------------------------------------------------------------
 // Game State Variables
@@ -65,14 +66,12 @@ AEGfxVertexList* g_pMeshFullScreen = NULL;
 // Random number generator
 std::random_device rd;
 std::mt19937 gen(rd());
-
 // Fruit basket (hover)
 std::vector<FruitBasket> gFruitBaskets;
 const std::vector<FruitBasket>& GetFruitBaskets()
 {
 	return gFruitBaskets;
 }
-
 void SaveGame(int goldParam, int energyParam, int inventoryparam[3])
 {
 	std::ofstream outFile("savegame.txt");
@@ -142,11 +141,13 @@ void MainScreen_Initialize()
 	fruits.clear();
 	inventory[0] = inventory[1] = inventory[2] = 0;
 
+	//Economy Init
+	Economy_Init();
+
+	UI_Init();
+
 	// Load saved game
 	LoadGame(gold, energy, inventory);
-
-	// Menu UI
-	UI_Init();
 
 	// Load font
 	fontId = AEGfxCreateFont("Assets/liberation-mono.ttf", 26);
@@ -163,8 +164,6 @@ void MainScreen_Initialize()
 	AEGfxTriAdd(-0.5f, -0.5f, 0xFFFFFFFF, 0.0f, 1.0f, 0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f, -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
 	AEGfxTriAdd(0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f, 0.5f, 0.5f, 0xFFFFFFFF, 1.0f, 0.0f, -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
 	pMeshFruit = AEGfxMeshEnd();
-
-	
 }
 
 void MainScreen_Update()
@@ -172,7 +171,8 @@ void MainScreen_Update()
 	// Get Delta Time
 	float dt = (float)AEFrameRateControllerGetFrameTime();
 
-
+	// Economy Update
+	Economy_Update(dt);
 	UI_Input();
 
 	// Energy Regeneration Logic
@@ -242,10 +242,6 @@ void MainScreen_Update()
 			}
 			++it;
 		}
-
-		if (UI_IsMenuOpen())
-			return;
-
 	}
 
 	// Input Logic: Select Fruit to Sell
@@ -267,18 +263,55 @@ void MainScreen_Update()
 			}
 		}
 	}
+	if (AEInputCheckTriggered(AEVK_F))
+	{
+		OutputDebugStringA("Switching to FARM state\n");
+		next = GS_FARM_SCREEN;
+	}
+
 
 	if (AEInputCheckTriggered(AEVK_N)) {
 		next = GS_NEXT_SCREEN;
 	}
 
-	gFruitBaskets.clear();
+	// Input Logic: Mouse Click to Pluck Fruits
+	if (AEInputCheckTriggered(AEVK_LBUTTON))
+	{
+		s32 mouseX, mouseY;
+		AEInputGetCursorPosition(&mouseX, &mouseY);
 
-	// Placeholder positions (stall area)
-	gFruitBaskets.push_back({ 0, -350.0f, -250.0f, 120.0f, 120.0f }); // Apple
-	gFruitBaskets.push_back({ 1, -150.0f, -250.0f, 120.0f, 120.0f }); // Pear
-	gFruitBaskets.push_back({ 2,   50.0f, -250.0f, 120.0f, 120.0f }); // Banana
+		// Convert screen coordinates to world coordinates
+		float worldX = (float)mouseX - 800.0f;
+		float worldY = 450.0f - (float)mouseY;
 
+		// Check collision with fruits
+		for (auto it = fruits.begin(); it != fruits.end(); )
+		{
+			if (it->active)
+			{
+				// Simple AABB collision (Fruit size is approx 64x64)
+				float halfSize = 32.0f;
+				if (worldX >= it->x - halfSize && worldX <= it->x + halfSize &&
+					worldY >= it->y - halfSize && worldY <= it->y + halfSize)
+				{
+					// Check inventory capacity
+					if (inventory[it->type] < MAX_INVENTORY)
+					{
+						// Add to inventory
+						inventory[it->type]++;
+
+						// Remove fruit from tree
+						it = fruits.erase(it);
+						continue; // Skip incrementing iterator since we erased
+					}
+				}
+			}
+			++it;
+		}
+
+		if (UI_IsMenuOpen())
+			return;
+	}
 }
 
 void MainScreen_Render()
@@ -457,9 +490,6 @@ void MainScreen_Render()
 
 	UI_Draw();
 	UI_DrawFruitBasketTooltips();
-
-	
-
 }
 
 void MainScreen_Free()
@@ -469,16 +499,27 @@ void MainScreen_Free()
 	if (pMeshFruit) AEGfxMeshFree(pMeshFruit);
 
 	// Free textures
-	if (pTexStall) AEGfxTextureUnload(pTexStall);
-	if (pTexApple) AEGfxTextureUnload(pTexApple);
-	if (pTexPear) AEGfxTextureUnload(pTexPear);
+	if (pTexStall)  AEGfxTextureUnload(pTexStall);
+	if (pTexApple)  AEGfxTextureUnload(pTexApple);
+	if (pTexPear)   AEGfxTextureUnload(pTexPear);
 	if (pTexBanana) AEGfxTextureUnload(pTexBanana);
 
+	// Free font
+	if (fontId >= 0)
+	{
+		AEGfxDestroyFont(fontId);
+		fontId = -1;
+	}
+
+	// Clear STL containers
+	fruits.clear();
+	fruits.shrink_to_fit();
+
 	// Reset pointers
-	pMeshStall = pMeshFruit =  NULL;
-	pTexStall = pTexApple = pTexPear = pTexBanana = NULL;
-	//fontId = -1;
+	pMeshStall = pMeshFruit = nullptr;
+	pTexStall = pTexApple = pTexPear = pTexBanana = nullptr;
 }
+
 
 void MainScreen_Unload()
 {
@@ -491,7 +532,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	_In_ LPWSTR    lpCmdLine,
 	_In_ int       nCmdShow)
 {
-	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#ifdef _DEBUG
+	// _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
+
 
 	UNREFERENCED_PARAMETER(hPrevInstance);
 	UNREFERENCED_PARAMETER(lpCmdLine);
@@ -524,8 +568,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	GSM_Initialize(GS_MAIN_SCREEN);
 
 	// Load and initialize first state
-	if (fpLoad) fpLoad();
-	if (fpInitialize) fpInitialize();
+	//if (fpLoad) fpLoad();
+	//if (fpInitialize) fpInitialize();
 
 	// ---------------------------------------------------------------------------
 	// Game Loop

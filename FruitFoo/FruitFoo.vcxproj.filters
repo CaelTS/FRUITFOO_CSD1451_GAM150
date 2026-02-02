@@ -27,28 +27,28 @@
     <ClCompile Include="..\Source\Transition.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Rhythm.cpp">
+    <ClCompile Include="..\Source\Farm.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Economy.cpp">
+    <ClCompile Include="..\Source\Economy.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Farm.cpp">
+    <ClCompile Include="..\Source\Inventory.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SaveLoad.cpp">
+    <ClCompile Include="..\Source\Rhythm.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ShopUpgrade.cpp">
+    <ClCompile Include="..\Source\SaveLoad.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="UI.cpp">
+    <ClCompile Include="..\Source\ShopUpgrade.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Utilities.cpp">
+    <ClCompile Include="..\Source\UI.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Inventory.cpp">
+    <ClCompile Include="..\Source\Utilities.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -65,28 +65,28 @@
     <ClInclude Include="..\Source\Transition.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Economy.h">
+    <ClInclude Include="..\Source\Economy.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Farm.h">
+    <ClInclude Include="..\Source\Inventory.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Inventory.h">
+    <ClInclude Include="..\Source\Rhythm.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Rhythm.h">
+    <ClInclude Include="..\Source\SaveLoad.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SaveLoad.h">
+    <ClInclude Include="..\Source\ShopUpgrade.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ShopUpgrade.h">
+    <ClInclude Include="..\Source\UI.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="UI.h">
+    <ClInclude Include="..\Source\Utilities.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Utilities.h">
+    <ClInclude Include="..\Source\Farm.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
