@@ -1,6 +1,7 @@
 #include "Farm.h"
 #include <Windows.h>
 #include "AEEngine.h"
+#include <iostream>
 
 // ---------- FARM STATE (PROPOSAL-ALIGNED) ----------
 
@@ -12,18 +13,18 @@ const float GROW_TIME = 3.0f; // seconds to grow (short for testing)
 
 void Farm_Load()
 {
-    OutputDebugStringA("Farm_Load\n");
+    std::cout << "Farm_Load\n";
 }
 
 void Farm_Initialize()
 {
-    OutputDebugStringA("Farm_Initialize\n");
+    std::cout << "Farm_Initialize\n";
 
     growTimer = 0.0f;
     isPlanted = true;
     isReady = false;
 
-    OutputDebugStringA("Planting seed...\n");
+    std::cout << "Planting seed...\n";
 }
 
 void Farm_Update()
@@ -43,27 +44,27 @@ void Farm_Update()
             lastSecond = currentSecond;
             char buffer[64];
             sprintf_s(buffer, "Growing... %ds\n", currentSecond);
-            OutputDebugStringA(buffer);
+            std::cout << (buffer);
         }
 
         if (growTimer >= GROW_TIME)
         {
             isReady = true;
-            OutputDebugStringA("Crop ready to harvest!\n");
+            std::cout << "Crop ready to harvest!\n";
         }
     }
 
     // Simulate harvest with SPACE
     if (isReady && AEInputCheckTriggered(AEVK_SPACE))
     {
-        OutputDebugStringA("Harvested crop!\n");
+        std::cout << "Harvested crop!\n";
 
         // Reset cycle
         growTimer = 0.0f;
         isPlanted = true;
         isReady = false;
 
-        OutputDebugStringA("Planting seed...\n");
+        std::cout << "Planting seed...\n";
     }
 }
 
@@ -74,10 +75,10 @@ void Farm_Render()
 
 void Farm_Free()
 {
-    OutputDebugStringA("Farm_Free\n");
+    std::cout << "Farm_Free\n";
 }
 
 void Farm_Unload()
 {
-    OutputDebugStringA("Farm_Unload\n");
+    std::cout << "Farm_Unload\n";
 }
