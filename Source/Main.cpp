@@ -66,7 +66,12 @@ AEGfxVertexList* g_pMeshFullScreen = NULL;
 // Random number generator
 std::random_device rd;
 std::mt19937 gen(rd());
-
+// Fruit basket (hover)
+std::vector<FruitBasket> gFruitBaskets;
+const std::vector<FruitBasket>& GetFruitBaskets()
+{
+	return gFruitBaskets;
+}
 void SaveGame(int goldParam, int energyParam, int inventoryparam[3])
 {
 	std::ofstream outFile("savegame.txt");
