@@ -1,25 +1,4 @@
-﻿  Economy.cpp
-C:\Users\Simone\Documents\y1 sem2\GAM project\FRUITFOO_CSD1451_GAM150\Source\Economy.cpp(12,12): warning C4211: nonstandard extension used: redefined extern to static
-C:\Users\Simone\Documents\y1 sem2\GAM project\FRUITFOO_CSD1451_GAM150\Source\Economy.cpp(13,12): warning C4211: nonstandard extension used: redefined extern to static
-C:\Users\Simone\Documents\y1 sem2\GAM project\FRUITFOO_CSD1451_GAM150\Source\Economy.cpp(14,12): warning C4211: nonstandard extension used: redefined extern to static
-C:\Users\Simone\Documents\y1 sem2\GAM project\FRUITFOO_CSD1451_GAM150\Source\Economy.cpp(17,12): warning C4211: nonstandard extension used: redefined extern to static
-C:\Users\Simone\Documents\y1 sem2\GAM project\FRUITFOO_CSD1451_GAM150\Source\Economy.cpp(56,19): warning C4244: 'argument': conversion from 'float' to 'u8', possible loss of data
-C:\Users\Simone\Documents\y1 sem2\GAM project\FRUITFOO_CSD1451_GAM150\Source\Economy.cpp(59,18): warning C4244: 'initializing': conversion from 'f32' to 'u64', possible loss of data
-C:\Users\Simone\Documents\y1 sem2\GAM project\FRUITFOO_CSD1451_GAM150\Source\Economy.cpp(61,19): warning C4244: 'argument': conversion from 'u64' to 'int', possible loss of data
-C:\Users\Simone\Documents\y1 sem2\GAM project\FRUITFOO_CSD1451_GAM150\Source\Economy.cpp(159,9): warning C4244: 'return': conversion from 'u64' to 'int', possible loss of data
-  Farm.cpp
-  GameStateManager.cpp
-  Inventory.cpp
-  Main.cpp
-  Next.cpp
-  Rhythm.cpp
-  SaveLoad.cpp
-  ShopUpgrade.cpp
-  Transition.cpp
-  UI.cpp
-  Utilities.cpp
-  Generating Code...
-  FruitFoo.vcxproj -> C:\Users\Simone\Documents\y1 sem2\GAM project\FRUITFOO_CSD1451_GAM150\bin\Debug-x64\FruitFoo.exe
+﻿  FruitFoo.vcxproj -> C:\Users\Admin\OneDrive\Documents\GitHub\FRUITFOO_CSD1451_GAM150\bin\Debug-x64\FruitFoo.exe
   10 File(s) copied
   1 File(s) copied
   1 File(s) copied
