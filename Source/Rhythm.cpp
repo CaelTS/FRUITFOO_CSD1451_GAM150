@@ -4,6 +4,8 @@
 #include <algorithm>
 #include <stdio.h>
 #include <cstring>
+#include <cstdlib>  // For rand()
+#include <ctime>    // For time()
 
 // ================= CONSTANTS =================
 
@@ -18,6 +20,12 @@ static const float NOTE_SIZE = 40.0f;
 
 static const int SCORE_PERFECT = 300;
 static const int SCORE_GOOD = 100;
+
+// Random spawn parameters
+static const float MIN_SPAWN_INTERVAL = 0.2f;   // Minimum time between notes
+static const float MAX_SPAWN_INTERVAL = 0.8f;   // Maximum time between notes
+static const float DOUBLE_NOTE_CHANCE = 0.15f;  // 15% chance for double notes
+static const float GOLD_NOTE_CHANCE = 0.25f;    // 25% chance for gold notes
 
 // ================= STATE =================
 
@@ -45,6 +53,9 @@ static float g_hitFeedbackTimer = 0.0f;
 static HitRating g_lastHitRating = HIT_NONE;
 
 static int g_nextSpawnIndex = 0;
+
+// Random seed initialization flag
+static bool g_randomInitialized = false;
 
 // ================= HELPERS =================
 
@@ -92,63 +103,78 @@ static void UpdateScore(HitRating rating) {
     }
 }
 
-// Create chart that lasts the entire song duration
-static void CreateChartForDuration(float totalDuration, float bpm) {
+// Helper function to get random float between min and max
+static float RandomFloat(float min, float max) {
+    return min + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (max - min)));
+}
+
+// Helper function to check if we should spawn a double note
+static bool ShouldSpawnDouble() {
+    return RandomFloat(0.0f, 1.0f) < DOUBLE_NOTE_CHANCE;
+}
+
+// Helper function to get random note type
+static NoteType GetRandomNoteType() {
+    float rng = RandomFloat(0.0f, 1.0f);
+    if (rng < GOLD_NOTE_CHANCE) {
+        return NOTE_GOLD;
+    }
+    return NOTE_NORMAL;
+}
+
+// Create randomized chart for the song duration
+static void CreateRandomChart(float totalDuration) {
     g_notes.clear();
     g_nextSpawnIndex = 0;
 
-    float beatTime = 60.0f / bpm;
-    float time = g_audioOffset;
+    float currentTime = g_audioOffset;
 
-    int beatCount = 0;
+    // Continue spawning notes until we reach near the end of the song
+    while (currentTime < totalDuration - 2.0f) {
+        // Random interval until next note
+        float interval = RandomFloat(MIN_SPAWN_INTERVAL, MAX_SPAWN_INTERVAL);
 
-    while (time < totalDuration - 2.0f) {
+        // Create the main note
         RhythmNote note = {};
+        note.type = GetRandomNoteType();
+        note.hitTime = currentTime;
+        note.xPosition = SPAWN_X;
+        note.hit = false;
+        note.missed = false;
+        note.rating = HIT_NONE;
+        g_notes.push_back(note);
 
-        if (beatCount % 8 == 7) {
-            // Double note
-            note.type = NOTE_NORMAL;
-            note.hitTime = time;
-            note.xPosition = SPAWN_X;
-            note.hit = false;
-            note.missed = false;
-            note.rating = HIT_NONE;
-            g_notes.push_back(note);
+        // Chance to spawn a double note (quick second note)
+        if (ShouldSpawnDouble()) {
+            RhythmNote doubleNote = {};
+            doubleNote.type = NOTE_NORMAL; // Double notes are always normal
+            doubleNote.hitTime = currentTime + 0.15f; // 150ms after first note
+            doubleNote.xPosition = SPAWN_X;
+            doubleNote.hit = false;
+            doubleNote.missed = false;
+            doubleNote.rating = HIT_NONE;
+            g_notes.push_back(doubleNote);
 
-            RhythmNote note2 = {};
-            note2.type = NOTE_NORMAL;
-            note2.hitTime = time + beatTime * 0.5f;
-            note2.xPosition = SPAWN_X;
-            note2.hit = false;
-            note2.missed = false;
-            note2.rating = HIT_NONE;
-            g_notes.push_back(note2);
-
-            time += beatTime;
-        }
-        else {
-            // Regular note
-            note.type = (beatCount % 4 == 0) ? NOTE_GOLD : NOTE_NORMAL;
-            note.hitTime = time;
-            note.xPosition = SPAWN_X;
-            note.hit = false;
-            note.missed = false;
-            note.rating = HIT_NONE;
-            g_notes.push_back(note);
-
-            time += beatTime;
+            // Add extra time after double note to prevent overcrowding
+            interval += 0.3f;
         }
 
-        beatCount++;
+        currentTime += interval;
     }
 
-    printf("Generated %d notes for %.1f second song at %.1f BPM\n",
-        (int)g_notes.size(), totalDuration, bpm);
+    printf("Generated %d random notes for %.1f second song\n",
+        (int)g_notes.size(), totalDuration);
 }
 
 // ================= LIFECYCLE =================
 
 void Rhythm_Load() {
+    // Initialize random seed once
+    if (!g_randomInitialized) {
+        srand(static_cast<unsigned int>(time(NULL)));
+        g_randomInitialized = true;
+    }
+
     ResetAudio(g_currentSong);
     ResetAudioGroup(g_musicGroup);
 
@@ -188,14 +214,14 @@ void Rhythm_Initialize() {
     g_audioStarted = false;
     g_preSongTimer = 0.0f;
 
-    // SET YOUR SONG PARAMETERS HERE
+    // SET SONG PARAMETERS HERE
     g_audioOffset = 2.0f;
-    g_songDuration = 120.0f;     // CHANGE THIS: Your song length in seconds
-    float bpm = 120.0f;          // CHANGE THIS: Your song BPM
+    g_songDuration = 75.0f;     // Song length in seconds
 
-    CreateChartForDuration(g_songDuration, bpm);
+    // Create random chart instead of pattern-based
+    CreateRandomChart(g_songDuration);
 
-    g_currentSong = AEAudioLoadMusic("Assets/Baila_Mejor.wav");
+    g_currentSong = AEAudioLoadMusic("Assets/kk.wav");
 
     g_isPlaying = true;
 }

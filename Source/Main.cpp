@@ -322,6 +322,7 @@ void MainScreen_Update()
 	// Switch to Rhythm game when pressing R
 	if (AEInputCheckTriggered(AEVK_R))
 	{
+		OutputDebugStringA("Switching to RHYTHM state\n");
 		next = GS_RHYTHM_SCREEN;
 	}
 }

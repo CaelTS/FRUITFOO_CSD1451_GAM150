@@ -8,10 +8,10 @@
 #include <stdlib.h>
 #include <time.h>
 
-// Global variables
-static u64 total_money = 0;
-static u64 max_money = 255; //depend on shop upgrades later
-static f32 money_multiplier = 1.0f;
+// Global variables - remove 'static' since they're extern in the header
+u64 total_money = 0;
+u64 max_money = 255; //depend on shop upgrades later
+f32 money_multiplier = 1.0f;
 
 static f32 timer = 0.0f;
 static f32 next_sale_time = 0.0f; //seconds
@@ -53,15 +53,15 @@ std::pair<f32, f32> random_range_pair(f32 min1, f32 max1, f32 min2, f32 max2) {
 void static sell_fruit() {
 	u8 stock = Inventory_GetFruitStock();
 	//determine sale amount
-	u8 sale_amount = min(stock,random_range(1.0f, 3.0f)); //sell between 1 and 3 fruits
+	u8 sale_amount = min(stock, random_range(1, 3)); //sell between 1 and 3 fruits (use int literals)
 
 	//determine sale price
-	u64 total_price = sale_amount * base_fruit_price * money_multiplier;
+	u64 total_price = static_cast<u64>(sale_amount) * static_cast<u64>(base_fruit_price) * static_cast<u64>(money_multiplier);
 	//add money to total
-	Economy_AddMoney(total_price);
+	Economy_AddMoney(static_cast<int>(total_price));
 	//remove fruit from inventory
 	Inventory_RemoveFruit(sale_amount);
-	
+
 }
 
 // lifecycle
@@ -79,8 +79,8 @@ void Economy_Init() {
 	f32 first_sale_time = range_pair.first;
 	f32 second_sale_time = range_pair.second;
 
-	next_sale_time = random_time(first_sale_time, second_sale_time); 
-	
+	next_sale_time = random_time(first_sale_time, second_sale_time);
+
 
 }
 void Economy_Update(float dt) {
@@ -141,12 +141,12 @@ void Economy_Update(float dt) {
 //// commands (change state)
 
 void Economy_AddMoney(int amount) {
-	total_money += amount;
+	total_money += static_cast<u64>(amount);
 }
 
 bool Economy_SpendMoney(int amount) {
-	if (total_money >= amount) {
-		total_money -= amount;
+	if (total_money >= static_cast<u64>(amount)) {
+		total_money -= static_cast<u64>(amount);
 		return true;
 	}
 	else {
@@ -156,7 +156,7 @@ bool Economy_SpendMoney(int amount) {
 
 // getters (read-only)
 int Economy_GetTotalMoney() {
-	return total_money;
+	return static_cast<int>(total_money);
 }
 float Economy_GetMultiplier() {
 	return money_multiplier;
