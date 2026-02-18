@@ -96,7 +96,32 @@ xcopy "$(SolutionDir)Extern\AlphaEngine\lib\fmod.dll" "$(OutDir)" /s /r /y /q</C
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Main.cpp" />
+    <ClCompile Include="..\Source\Economy.cpp" />
+    <ClCompile Include="..\Source\Farm.cpp" />
+    <ClCompile Include="..\Source\GameStateManager.cpp" />
+    <ClCompile Include="..\Source\Inventory.cpp" />
+    <ClCompile Include="..\Source\Main.cpp" />
+    <ClCompile Include="..\Source\Next.cpp" />
+    <ClCompile Include="..\Source\Rhythm.cpp" />
+    <ClCompile Include="..\Source\SaveLoad.cpp" />
+    <ClCompile Include="..\Source\ShopUpgrade.cpp" />
+    <ClCompile Include="..\Source\Transition.cpp" />
+    <ClCompile Include="..\Source\UI.cpp" />
+    <ClCompile Include="..\Source\Utilities.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\Source\Economy.h" />
+    <ClInclude Include="..\Source\Farm.h" />
+    <ClInclude Include="..\Source\GameStateManager.h" />
+    <ClInclude Include="..\Source\Inventory.h" />
+    <ClInclude Include="..\Source\Main.h" />
+    <ClInclude Include="..\Source\Next.h" />
+    <ClInclude Include="..\Source\Rhythm.h" />
+    <ClInclude Include="..\Source\SaveLoad.h" />
+    <ClInclude Include="..\Source\ShopUpgrade.h" />
+    <ClInclude Include="..\Source\Transition.h" />
+    <ClInclude Include="..\Source\UI.h" />
+    <ClInclude Include="..\Source\Utilities.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
