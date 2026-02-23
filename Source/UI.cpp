@@ -49,11 +49,11 @@ void UI_Draw()
     if (!menuOpen)
         return;
 
-    float menuWidth = 300.0f;
-    float menuHeight = 660.0f;
+    float menuWidth = 480.0f;
+    float menuHeight = 830.0f;
 
     // Center of screen in YOUR engine
-    float x = -800.0f + menuWidth / 2.0f;
+    float x = -760.0f + menuWidth / 2.0f;
     float y = 0.0f;
 
     AEMtx33 scale, trans, transform;
