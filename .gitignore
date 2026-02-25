@@ -1,4 +1,4 @@
-*.ipch
+﻿*.ipch
 *.suo
 *.db
 *.pdb
@@ -13,6 +13,7 @@
 *.exp
 *.iobj
 *.ipdb
+*.user
 bin
 Debug
 Release
