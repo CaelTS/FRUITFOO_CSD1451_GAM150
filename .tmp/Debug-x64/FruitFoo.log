@@ -1,15 +1,4 @@
-﻿  Economy.cpp
-C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\Economy.cpp(17,12): warning C4211: nonstandard extension used: redefined extern to static
-  Farm.cpp
-  GameStateManager.cpp
-  Inventory.cpp
-  Main.cpp
-  Next.cpp
-  Rhythm.cpp
-  SaveLoad.cpp
-  ShopUpgrade.cpp
-  Transition.cpp
-  UI.cpp
+﻿  UI.cpp
 C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(190,17): warning C4456: declaration of 'scale' hides previous local declaration
       C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(172,13):
       see declaration of 'scale'
@@ -46,8 +35,6 @@ C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(2
       C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(172,27):
       see declaration of 'transform'
   
-  Utilities.cpp
-  Generating Code...
   FruitFoo.vcxproj -> C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\bin\Debug-x64\FruitFoo.exe
   11 File(s) copied
   1 File(s) copied
