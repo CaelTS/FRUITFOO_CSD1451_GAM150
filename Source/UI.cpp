@@ -253,10 +253,10 @@ void UI_Draw()
 // -----------------------------
     if (seedsPopupOpen)
     {
-        float w = 500.0f;
-        float h = 650.0f;
+        float w = 400.0f;
+        float h = 550.0f;
 
-        float popupX = -200.0f; // adjust position
+        float popupX = -100.0f; // adjust position
         float popupY = 0.0f;
 
         AEMtx33 scale, trans, transform;
