@@ -10,6 +10,8 @@ extern s8 fontId;
 
 static bool popupOpen = false;
 static int activePopupIndex = -1;
+static bool seedsPopupOpen = false;
+static AEGfxTexture* seedsTexture = nullptr;
 
 
 struct FruitInfo
@@ -37,6 +39,7 @@ struct MenuButton
 };
 static std::vector<MenuButton> menuButtons;
 
+static MenuButton plotPlusButton;
 
 void UI_Init()
 {
@@ -48,6 +51,12 @@ void UI_Init()
     else
         printf("MenuMockup.png loaded successfully!\n");
 
+    seedsTexture = AEGfxTextureLoad("Assets/SeedsPanel.png");
+    if (!seedsTexture)
+        printf("ERROR: SeedsPanel.png failed to load!\n");
+    else
+        printf("SeedsPanel.png loaded successfully!\n");
+
     //Menu Buttons 
     menuButtons.clear();
 
@@ -55,6 +64,12 @@ void UI_Init()
     float spacingX = 150.0f;  // horizontal space between buttons
     float startX = -675.0f; // leftmost button
 
+    // Plot + button (adjust if needed)
+    plotPlusButton.x = -630.0f;
+    plotPlusButton.y = 150.0f;
+    plotPlusButton.width = 120.0f;
+    plotPlusButton.height = 120.0f;
+    plotPlusButton.isHovered = false;
 
     for (int i = 0; i < 3; ++i)
     {
@@ -117,6 +132,28 @@ void UI_UpdateButtons()
             activePopupIndex = i;
         }
     }
+
+    // -----------------------------
+// Plot + Button Click Detection
+// -----------------------------
+
+    plotPlusButton.isHovered =
+        worldX >= plotPlusButton.x - plotPlusButton.width * 0.5f &&
+        worldX <= plotPlusButton.x + plotPlusButton.width * 0.5f &&
+        worldY >= plotPlusButton.y - plotPlusButton.height * 0.5f &&
+        worldY <= plotPlusButton.y + plotPlusButton.height * 0.5f;
+
+    if (plotPlusButton.isHovered && AEInputCheckTriggered(AEVK_LBUTTON))
+    {
+        seedsPopupOpen = !seedsPopupOpen; // toggle
+    }
+
+    // Close if clicking elsewhere
+    if (seedsPopupOpen && AEInputCheckTriggered(AEVK_LBUTTON) && !plotPlusButton.isHovered)
+    {
+        seedsPopupOpen = false;
+    }
+
 }
 
 void UI_Draw()
@@ -210,6 +247,31 @@ void UI_Draw()
         }
     }
 
+
+    // -----------------------------
+// Seeds Popup Panel
+// -----------------------------
+    if (seedsPopupOpen)
+    {
+        float w = 500.0f;
+        float h = 650.0f;
+
+        float popupX = -200.0f; // adjust position
+        float popupY = 0.0f;
+
+        AEMtx33 scale, trans, transform;
+
+        AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+        AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+        AEGfxTextureSet(seedsTexture, 0, 0);
+
+        AEMtx33Scale(&scale, w, h);
+        AEMtx33Trans(&trans, popupX, popupY);
+        AEMtx33Concat(&transform, &trans, &scale);
+
+        AEGfxSetTransform(transform.m);
+        AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+    }
 }
 
 
@@ -219,6 +281,12 @@ void UI_Exit()
     {
         AEGfxTextureUnload(menuTexture);
         menuTexture = nullptr;
+    }
+
+    if (seedsTexture)
+    {
+        AEGfxTextureUnload(seedsTexture);
+        seedsTexture = nullptr;
     }
 }
 
