@@ -3,6 +3,7 @@
 #include "Main.h"
 #include "Next.h"
 #include "Farm.h"
+#include "Rhythm.h"
 
 
 // GSM state variables
@@ -52,6 +53,15 @@ void GSM_Update()
         fpDraw = Farm_Render;
         fpFree = Farm_Free;
         fpUnload = Farm_Unload;
+        break;
+
+    case GS_RHYTHM_SCREEN:
+        fpLoad = Rhythm_Load;
+        fpInitialize = Rhythm_Initialize;
+        fpUpdate = Rhythm_Update;
+        fpDraw = Rhythm_Render;
+        fpFree = Rhythm_Free;
+        fpUnload = Rhythm_Unload;
         break;
 
     case GS_EXIT:

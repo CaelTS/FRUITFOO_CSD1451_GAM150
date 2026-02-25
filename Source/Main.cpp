@@ -10,7 +10,9 @@
 #include <vector>
 #include <fstream>
 #include <random>
-#include "../FruitFoo/Economy.h"
+#include "Economy.h"
+#include "UI.h"
+#include "Rhythm.h"
 
 // ---------------------------------------------------------------------------
 // Game State Variables
@@ -65,7 +67,12 @@ AEGfxVertexList* g_pMeshFullScreen = NULL;
 // Random number generator
 std::random_device rd;
 std::mt19937 gen(rd());
-
+// Fruit basket (hover)
+std::vector<FruitBasket> gFruitBaskets;
+const std::vector<FruitBasket>& GetFruitBaskets()
+{
+	return gFruitBaskets;
+}
 void SaveGame(int goldParam, int energyParam, int inventoryparam[3])
 {
 	std::ofstream outFile("savegame.txt");
@@ -138,6 +145,12 @@ void MainScreen_Initialize()
 	//Economy Init
 	Economy_Init();
 
+	UI_Init();
+	gFruitBaskets.clear();
+	gFruitBaskets.push_back({ 0, -350.0f, -250.0f, 120.0f, 120.0f }); // Apple
+	gFruitBaskets.push_back({ 1, -150.0f, -250.0f, 120.0f, 120.0f }); // Pear
+	gFruitBaskets.push_back({ 2,   50.0f, -250.0f, 120.0f, 120.0f }); // Banana
+
 	// Load saved game
 	LoadGame(gold, energy, inventory);
 
@@ -163,8 +176,9 @@ void MainScreen_Update()
 	// Get Delta Time
 	float dt = (float)AEFrameRateControllerGetFrameTime();
 
-	//Update Economy
+	// Economy Update
 	Economy_Update(dt);
+	UI_Input();
 
 	// Energy Regeneration Logic
 	if (energy < MAX_ENERGY)
@@ -254,6 +268,46 @@ void MainScreen_Update()
 			}
 		}
 	}
+
+	// Input Logic: Mouse Click to Pluck Fruits
+	if (AEInputCheckTriggered(AEVK_LBUTTON))
+	{
+		s32 mouseX, mouseY;
+		AEInputGetCursorPosition(&mouseX, &mouseY);
+
+		// Convert screen coordinates to world coordinates
+		float worldX = (float)mouseX - 800.0f;
+		float worldY = 450.0f - (float)mouseY;
+
+		// Check collision with fruits
+		for (auto it = fruits.begin(); it != fruits.end(); )
+		{
+			if (it->active)
+			{
+				// Simple AABB collision (Fruit size is approx 64x64)
+				float halfSize = 32.0f;
+				if (worldX >= it->x - halfSize && worldX <= it->x + halfSize &&
+					worldY >= it->y - halfSize && worldY <= it->y + halfSize)
+				{
+					// Check inventory capacity
+					if (inventory[it->type] < MAX_INVENTORY)
+					{
+						// Add to inventory
+						inventory[it->type]++;
+
+						// Remove fruit from tree
+						it = fruits.erase(it);
+						continue; // Skip incrementing iterator since we erased
+					}
+				}
+			}
+			++it;
+		}
+
+		if (UI_IsMenuOpen())
+			return;
+	}
+
 	if (AEInputCheckTriggered(AEVK_F))
 	{
 		OutputDebugStringA("Switching to FARM state\n");
@@ -265,7 +319,12 @@ void MainScreen_Update()
 		next = GS_NEXT_SCREEN;
 	}
 
-
+	// Switch to Rhythm game when pressing R
+	if (AEInputCheckTriggered(AEVK_R))
+	{
+		OutputDebugStringA("Switching to RHYTHM state\n");
+		next = GS_RHYTHM_SCREEN;
+	}
 }
 
 void MainScreen_Render()
@@ -427,11 +486,6 @@ void MainScreen_Render()
 		sprintf_s(strBuffer, "%sBananas:%d/%d", marker2, inventory[2], MAX_INVENTORY);
 		if (selectedFruit == 2) AEGfxPrint(fontId, strBuffer, textX, textY - (lineSpacing * 2), 1.0f, 1.0f, 0.0f, 1.0f, 1.0f);
 		else AEGfxPrint(fontId, strBuffer, textX, textY - (lineSpacing * 2), 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
-
-		sprintf_s(strBuffer, "Money: %llu", Economy_GetTotalMoney());
-		AEGfxPrint(fontId, strBuffer, -0.9f, 0.8f, 1.0f, 1, 1, 1, 1);
-
-
 	}
 
 	if (TR_IsActive())
@@ -446,6 +500,9 @@ void MainScreen_Render()
 		AEGfxSetTransform(transform.m);
 		AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
 	}
+
+	UI_Draw();
+	UI_DrawFruitBasketTooltips();
 }
 
 void MainScreen_Free()
@@ -539,6 +596,31 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		if (AEInputCheckTriggered(AEVK_ESCAPE) || 0 == AESysDoesWindowExist()) {
 			next = GS_EXIT;  // Set next state to exit
 		}
+
+		// RHYTHM GAME INPUT
+		if (current == GS_RHYTHM_SCREEN)
+		{
+			if (AEInputCheckTriggered(AEVK_SPACE))
+			{
+				Rhythm_Hit();  // Hit the note
+			}
+
+			//// Check if song finished - ADD THIS HERE
+			//if (Rhythm_IsSongFinished()) {
+			//	// Option 1: Auto-return to main screen after delay
+			//	next = GS_MAIN_SCREEN;
+
+			//	// Option 2: Wait for player to press E
+			//	// (don't auto-exit, let them see final score)
+			//}
+
+			// Exit rhythm game with E key
+			if (AEInputCheckTriggered(AEVK_E))
+			{
+				next = GS_MAIN_SCREEN;
+			}
+		}
+
 
 		// Check for state transition
 		if (next != current && !TR_IsActive())
