@@ -26,3 +26,4 @@ void UI_DrawFruitBasketTooltips();
 // Debug helper
 bool UI_IsMouseOverAnyBasket();
 
+void UI_UpdateButtons();
