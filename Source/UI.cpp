@@ -8,6 +8,10 @@ static AEGfxTexture* menuTexture = nullptr;
 extern AEGfxVertexList* g_pMeshFullScreen;
 extern s8 fontId;
 
+static bool popupOpen = false;
+static int activePopupIndex = -1;
+
+
 struct FruitInfo
 {
     const char* name;
@@ -23,16 +27,46 @@ static FruitInfo fruitInfo[3] =
     { "Banana", "Soft yellow fruit", "Price: 10 gold" }
 };
 
+struct MenuButton
+{
+    float x;
+    float y;
+    float width;
+    float height;
+    bool isHovered;
+};
+static std::vector<MenuButton> menuButtons;
 
 
 void UI_Init()
 {
+    //Menu background
     menuTexture = AEGfxTextureLoad("Assets/MenuMockup.PNG");
     if (!menuTexture)
         printf("ERROR: MenuMockup.png failed to load!\n");
 
     else
         printf("MenuMockup.png loaded successfully!\n");
+
+    //Menu Buttons 
+    menuButtons.clear();
+
+    float buttonY = -350.0f; // near bottom of window
+    float spacingX = 150.0f;  // horizontal space between buttons
+    float startX = -675.0f; // leftmost button
+
+
+    for (int i = 0; i < 3; ++i)
+    {
+        MenuButton button;
+        button.x = startX + i * spacingX; // move right for each button
+        button.y = buttonY;
+        button.width = 96.0f;
+        button.height = 96.0f;
+        button.isHovered = false;
+
+        menuButtons.push_back(button);
+    }
 }
 
 
@@ -42,10 +76,52 @@ void UI_Input()
     {
         menuOpen = !menuOpen;
     }
+
+    // Update buttons when menu is open
+    if (menuOpen)
+        UI_UpdateButtons();
+
+    // Close popup with ESC
+    if (popupOpen && AEInputCheckTriggered(AEVK_Q))
+    {
+        popupOpen = false;
+        activePopupIndex = -1;
+    }
+
+}
+
+void UI_UpdateButtons()
+{
+    if (!menuOpen)
+        return;
+
+    int mx, my;
+    AEInputGetCursorPosition(&mx, &my);
+
+    float worldX = static_cast<float>(mx) - 800.0f;
+    float worldY = 450.0f - static_cast<float>(my);
+
+    for (int i = 0; i < (int)menuButtons.size(); ++i)
+    {
+        auto& button = menuButtons[i];
+
+        button.isHovered =
+            worldX >= button.x - button.width * 0.5f &&
+            worldX <= button.x + button.width * 0.5f &&
+            worldY >= button.y - button.height * 0.5f &&
+            worldY <= button.y + button.height * 0.5f;
+
+        if (button.isHovered && AEInputCheckTriggered(AEVK_LBUTTON))
+        {
+            popupOpen = true;
+            activePopupIndex = i;
+        }
+    }
 }
 
 void UI_Draw()
 {
+    // Menu background
     if (!menuOpen)
         return;
 
@@ -69,6 +145,71 @@ void UI_Draw()
 
     AEGfxSetTransform(transform.m);
     AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+
+    //Menu buttons
+    for (auto& button : menuButtons)
+    {
+        AEMtx33 scale, trans, transform;
+
+        AEMtx33Scale(&scale, button.width, button.height);
+        AEMtx33Trans(&trans, button.x, button.y);
+        AEMtx33Concat(&transform, &trans, &scale);
+
+        AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+
+        if (button.isHovered)
+            AEGfxSetColorToMultiply(1.0f, 0.0f, 0.0f, 1.0f); // red hover
+        else
+            AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 1.0f); // black normal
+
+        AEGfxSetTransform(transform.m);
+        AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+    }
+
+    if (popupOpen)
+    {
+        float w = 400.0f;
+        float h = 250.0f;
+
+        float popupX = 0.0f;
+        float popupY = 0.0f;
+
+        AEMtx33 scale, trans, transform;
+        AEMtx33Scale(&scale, w, h);
+        AEMtx33Trans(&trans, popupX, popupY);
+        AEMtx33Concat(&transform, &trans, &scale);
+
+        AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+        AEGfxSetColorToMultiply(0.15f, 0.15f, 0.15f, 0.95f);
+
+        AEGfxSetTransform(transform.m);
+        AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+        float xText = (popupX - w * 0.45f) / 800.0f;
+        float yText = (popupY + h * 0.25f) / 450.0f;
+
+        AEGfxPrint(fontId, "Fruit Info", xText, yText, 1.0f, 1, 1, 1, 1);
+
+        if (activePopupIndex >= 0 && activePopupIndex < 3)
+        {
+            AEGfxPrint(fontId,
+                fruitInfo[activePopupIndex].name,
+                xText, yText - 0.1f,
+                0.9f, 1, 1, 1, 1);
+
+            AEGfxPrint(fontId,
+                fruitInfo[activePopupIndex].line1,
+                xText, yText - 0.18f,
+                0.8f, 0.9f, 0.9f, 0.9f, 1);
+
+            AEGfxPrint(fontId,
+                fruitInfo[activePopupIndex].line2,
+                xText, yText - 0.26f,
+                0.8f, 0.9f, 0.9f, 0.9f, 1);
+        }
+    }
+
 }
 
 
@@ -150,15 +291,19 @@ void UI_DrawFruitBasketTooltips()
             float worldX = static_cast<float>(mx) - 800.0f + 20.0f;
             float worldY = 450.0f - static_cast<float>(my) - 20.0f;
 
-            DrawTooltip(
-                worldX,
-                worldY,
-                fruitInfo[basket.fruitType].name,
-                fruitInfo[basket.fruitType].line1,
-                fruitInfo[basket.fruitType].line2
-            );
+            if (basket.fruitType >= 0 && basket.fruitType < 3)
+            {
+                DrawTooltip(
+                    worldX,
+                    worldY,
+                    fruitInfo[basket.fruitType].name,
+                    fruitInfo[basket.fruitType].line1,
+                    fruitInfo[basket.fruitType].line2
+                );
+            }
 
             break;
         }
     }
 }
+
