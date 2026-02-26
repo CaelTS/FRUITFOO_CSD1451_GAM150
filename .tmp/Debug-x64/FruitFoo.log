@@ -1,26 +1,43 @@
-﻿  Economy.cpp
-C:\Users\Simone\Documents\y1 sem2\GAM project\FRUITFOO_CSD1451_GAM150\Source\Economy.cpp(12,12): warning C4211: nonstandard extension used: redefined extern to static
-C:\Users\Simone\Documents\y1 sem2\GAM project\FRUITFOO_CSD1451_GAM150\Source\Economy.cpp(13,12): warning C4211: nonstandard extension used: redefined extern to static
-C:\Users\Simone\Documents\y1 sem2\GAM project\FRUITFOO_CSD1451_GAM150\Source\Economy.cpp(14,12): warning C4211: nonstandard extension used: redefined extern to static
-C:\Users\Simone\Documents\y1 sem2\GAM project\FRUITFOO_CSD1451_GAM150\Source\Economy.cpp(17,12): warning C4211: nonstandard extension used: redefined extern to static
-C:\Users\Simone\Documents\y1 sem2\GAM project\FRUITFOO_CSD1451_GAM150\Source\Economy.cpp(56,19): warning C4244: 'argument': conversion from 'float' to 'u8', possible loss of data
-C:\Users\Simone\Documents\y1 sem2\GAM project\FRUITFOO_CSD1451_GAM150\Source\Economy.cpp(59,18): warning C4244: 'initializing': conversion from 'f32' to 'u64', possible loss of data
-C:\Users\Simone\Documents\y1 sem2\GAM project\FRUITFOO_CSD1451_GAM150\Source\Economy.cpp(61,19): warning C4244: 'argument': conversion from 'u64' to 'int', possible loss of data
-C:\Users\Simone\Documents\y1 sem2\GAM project\FRUITFOO_CSD1451_GAM150\Source\Economy.cpp(159,9): warning C4244: 'return': conversion from 'u64' to 'int', possible loss of data
-  Farm.cpp
-  GameStateManager.cpp
-  Inventory.cpp
-  Main.cpp
-  Next.cpp
-  Rhythm.cpp
-  SaveLoad.cpp
-  ShopUpgrade.cpp
-  Transition.cpp
-  UI.cpp
-  Utilities.cpp
-  Generating Code...
+﻿  UI.cpp
+C:\Users\Simone\Documents\y1 sem2\GAM project\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(214,17): warning C4456: declaration of 'scale' hides previous local declaration
+      C:\Users\Simone\Documents\y1 sem2\GAM project\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(196,13):
+      see declaration of 'scale'
+  
+C:\Users\Simone\Documents\y1 sem2\GAM project\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(214,24): warning C4456: declaration of 'trans' hides previous local declaration
+      C:\Users\Simone\Documents\y1 sem2\GAM project\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(196,20):
+      see declaration of 'trans'
+  
+C:\Users\Simone\Documents\y1 sem2\GAM project\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(214,31): warning C4456: declaration of 'transform' hides previous local declaration
+      C:\Users\Simone\Documents\y1 sem2\GAM project\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(196,27):
+      see declaration of 'transform'
+  
+C:\Users\Simone\Documents\y1 sem2\GAM project\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(257,17): warning C4456: declaration of 'scale' hides previous local declaration
+      C:\Users\Simone\Documents\y1 sem2\GAM project\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(196,13):
+      see declaration of 'scale'
+  
+C:\Users\Simone\Documents\y1 sem2\GAM project\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(257,24): warning C4456: declaration of 'trans' hides previous local declaration
+      C:\Users\Simone\Documents\y1 sem2\GAM project\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(196,20):
+      see declaration of 'trans'
+  
+C:\Users\Simone\Documents\y1 sem2\GAM project\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(257,31): warning C4456: declaration of 'transform' hides previous local declaration
+      C:\Users\Simone\Documents\y1 sem2\GAM project\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(196,27):
+      see declaration of 'transform'
+  
+C:\Users\Simone\Documents\y1 sem2\GAM project\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(303,17): warning C4456: declaration of 'scale' hides previous local declaration
+      C:\Users\Simone\Documents\y1 sem2\GAM project\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(196,13):
+      see declaration of 'scale'
+  
+C:\Users\Simone\Documents\y1 sem2\GAM project\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(303,24): warning C4456: declaration of 'trans' hides previous local declaration
+      C:\Users\Simone\Documents\y1 sem2\GAM project\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(196,20):
+      see declaration of 'trans'
+  
+C:\Users\Simone\Documents\y1 sem2\GAM project\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(303,31): warning C4456: declaration of 'transform' hides previous local declaration
+      C:\Users\Simone\Documents\y1 sem2\GAM project\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(196,27):
+      see declaration of 'transform'
+  
+Rhythm.obj : warning LNK4099: PDB 'vc143.pdb' was not found with 'Rhythm.obj' or at 'C:\Users\Simone\Documents\y1 sem2\GAM project\FRUITFOO_CSD1451_GAM150\bin\Debug-x64\vc143.pdb'; linking object as if no debug info
   FruitFoo.vcxproj -> C:\Users\Simone\Documents\y1 sem2\GAM project\FRUITFOO_CSD1451_GAM150\bin\Debug-x64\FruitFoo.exe
-  15 File(s) copied
+  19 File(s) copied
   1 File(s) copied
   1 File(s) copied
   1 File(s) copied

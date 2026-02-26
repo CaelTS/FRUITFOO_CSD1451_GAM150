@@ -12,6 +12,7 @@
 #include <random>
 #include "Economy.h"
 #include "UI.h"
+#include "Rhythm.h"  
 
 // ---------------------------------------------------------------------------
 // Game State Variables
@@ -150,7 +151,6 @@ void MainScreen_Initialize()
 	gFruitBaskets.push_back({ 1, -150.0f, -250.0f, 120.0f, 120.0f }); // Pear
 	gFruitBaskets.push_back({ 2,   50.0f, -250.0f, 120.0f, 120.0f }); // Banana
 
-
 	// Load saved game
 	LoadGame(gold, energy, inventory);
 
@@ -268,16 +268,6 @@ void MainScreen_Update()
 			}
 		}
 	}
-	if (AEInputCheckTriggered(AEVK_F))
-	{
-		OutputDebugStringA("Switching to FARM state\n");
-		next = GS_FARM_SCREEN;
-	}
-
-
-	if (AEInputCheckTriggered(AEVK_N)) {
-		next = GS_NEXT_SCREEN;
-	}
 
 	// Input Logic: Mouse Click to Pluck Fruits
 	if (AEInputCheckTriggered(AEVK_LBUTTON))
@@ -316,6 +306,24 @@ void MainScreen_Update()
 
 		if (UI_IsMenuOpen())
 			return;
+	}
+
+	if (AEInputCheckTriggered(AEVK_F))
+	{
+		OutputDebugStringA("Switching to FARM state\n");
+		next = GS_FARM_SCREEN;
+	}
+
+
+	if (AEInputCheckTriggered(AEVK_N)) {
+		next = GS_NEXT_SCREEN;
+	}
+
+	// Switch to Rhythm game when pressing R
+	if (AEInputCheckTriggered(AEVK_R))
+	{
+		OutputDebugStringA("Switching to RHYTHM state\n");
+		next = GS_RHYTHM_SCREEN;
 	}
 }
 
@@ -588,6 +596,31 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		if (AEInputCheckTriggered(AEVK_ESCAPE) || 0 == AESysDoesWindowExist()) {
 			next = GS_EXIT;  // Set next state to exit
 		}
+
+		// RHYTHM GAME INPUT
+		if (current == GS_RHYTHM_SCREEN)
+		{
+			if (AEInputCheckTriggered(AEVK_SPACE))
+			{
+				Rhythm_Hit();  // Hit the note
+			}
+
+			//// Check if song finished - ADD THIS HERE
+			//if (Rhythm_IsSongFinished()) {
+			//	// Option 1: Auto-return to main screen after delay
+			//	next = GS_MAIN_SCREEN;
+
+			//	// Option 2: Wait for player to press E
+			//	// (don't auto-exit, let them see final score)
+			//}
+
+			// Exit rhythm game with E key
+			if (AEInputCheckTriggered(AEVK_E))
+			{
+				next = GS_MAIN_SCREEN;
+			}
+		}
+
 
 		// Check for state transition
 		if (next != current && !TR_IsActive())
