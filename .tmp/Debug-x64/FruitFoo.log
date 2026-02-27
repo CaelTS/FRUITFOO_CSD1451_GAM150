@@ -1,44 +1,6 @@
-﻿  Rhythm.cpp
-  UI.cpp
-C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(214,17): warning C4456: declaration of 'scale' hides previous local declaration
-      C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(196,13):
-      see declaration of 'scale'
-  
-C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(214,24): warning C4456: declaration of 'trans' hides previous local declaration
-      C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(196,20):
-      see declaration of 'trans'
-  
-C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(214,31): warning C4456: declaration of 'transform' hides previous local declaration
-      C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(196,27):
-      see declaration of 'transform'
-  
-C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(257,17): warning C4456: declaration of 'scale' hides previous local declaration
-      C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(196,13):
-      see declaration of 'scale'
-  
-C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(257,24): warning C4456: declaration of 'trans' hides previous local declaration
-      C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(196,20):
-      see declaration of 'trans'
-  
-C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(257,31): warning C4456: declaration of 'transform' hides previous local declaration
-      C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(196,27):
-      see declaration of 'transform'
-  
-C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(303,17): warning C4456: declaration of 'scale' hides previous local declaration
-      C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(196,13):
-      see declaration of 'scale'
-  
-C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(303,24): warning C4456: declaration of 'trans' hides previous local declaration
-      C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(196,20):
-      see declaration of 'trans'
-  
-C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(303,31): warning C4456: declaration of 'transform' hides previous local declaration
-      C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(196,27):
-      see declaration of 'transform'
-  
-  Generating Code...
+﻿  UI.cpp
   FruitFoo.vcxproj -> C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\bin\Debug-x64\FruitFoo.exe
-  11 File(s) copied
+  12 File(s) copied
   1 File(s) copied
   1 File(s) copied
   1 File(s) copied

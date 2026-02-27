@@ -3,6 +3,8 @@
 #include "AEEngine.h"
 #include <vector>
 
+
+
 static bool menuOpen = false;
 static AEGfxTexture* menuTexture = nullptr;
 extern AEGfxVertexList* g_pMeshFullScreen;
@@ -14,8 +16,33 @@ static AEGfxTexture* inventoryIcon = nullptr;
 static AEGfxTexture* collectionIcon = nullptr;
 static AEGfxTexture* settingsIcon = nullptr;
 
+//for seed panel
+static float dragOffsetX = 0.0f;
+static float dragOffsetY = 0.0f;
+static float doubleClickTimer = 0.0f;
+static int lastClickedSeed = -1;
+
+enum SeedType
+{
+    SEED_APPLE = 0,
+   // SEED_PEAR,
+  //  SEED_BANANA,
+    SEED_COUNT = 1
+};
+
+struct SeedData
+{
+    AEGfxTexture* icon;
+    float offsetY;   // position inside panel
+};
+
+static SeedData seedData[SEED_COUNT];
+
 static bool seedsPopupOpen = false;
 static AEGfxTexture* seedsTexture = nullptr;
+
+
+
 
 struct FruitInfo
 {
@@ -67,8 +94,13 @@ void UI_Init()
         printf("ERROR: SeedsPanel.png failed to load!\n");
     else
         printf("SeedsPanel.png loaded successfully!\n");
+    seedData[SEED_APPLE].icon = AEGfxTextureLoad("Assets/AppleSeed.png");
+ //   seedData[SEED_PEAR].icon = AEGfxTextureLoad("Assets/PearSeed.png");
+  //  seedData[SEED_BANANA].icon = AEGfxTextureLoad("Assets/BananaSeed.png");
 
-
+    seedData[SEED_APPLE].offsetY = 120.0f;
+  //  seedData[SEED_PEAR].offsetY = 20.0f;
+  //  seedData[SEED_BANANA].offsetY = -80.0f;
     //Menu Buttons 
     menuButtons.clear();
 
@@ -130,8 +162,13 @@ void UI_Input()
 
 void UI_UpdateButtons()
 {
-    if (!menuOpen)
-        return;
+
+    float dt = (float)AEFrameRateControllerGetFrameTime();
+    doubleClickTimer += dt;
+    if (menuOpen)
+    {
+        // ---- MENU DRAWING CODE HERE ----
+    }
 
     int mx, my;
     AEInputGetCursorPosition(&mx, &my);
@@ -171,152 +208,245 @@ void UI_UpdateButtons()
         seedsPopupOpen = !seedsPopupOpen; // toggle
     }
 
-    // Close if clicking elsewhere
-    if (seedsPopupOpen && AEInputCheckTriggered(AEVK_LBUTTON) && !plotPlusButton.isHovered)
+    // Close only if clicking outside panel entirely
+    if (seedsPopupOpen && AEInputCheckTriggered(AEVK_LBUTTON))
     {
-        seedsPopupOpen = false;
+        float popupX = -100.0f;
+        float popupY = 0.0f;
+        float panelW = 400.0f;
+        float panelH = 550.0f;
+
+        bool insidePanel =
+            worldX >= popupX - panelW * 0.5f &&
+            worldX <= popupX + panelW * 0.5f &&
+            worldY >= popupY - panelH * 0.5f &&
+            worldY <= popupY + panelH * 0.5f;
+
+        if (!insidePanel && !plotPlusButton.isHovered)
+        {
+            seedsPopupOpen = false;
+        }
+    }
+
+    // -----------------------------
+// Start Dragging Seed
+// -----------------------------
+    if (seedsPopupOpen)
+    {
+        float popupX = -100.0f;
+        float popupY = 0.0f;
+
+        for (int i = 0; i < SEED_COUNT; i++)
+        {
+            float seedX = popupX;
+            float seedY = popupY + seedData[i].offsetY;
+
+            float seedW = 100.0f;
+            float seedH = 100.0f;
+
+            bool overSeed =
+                worldX >= seedX - seedW * 0.5f &&
+                worldX <= seedX + seedW * 0.5f &&
+                worldY >= seedY - seedH * 0.5f &&
+                worldY <= seedY + seedH * 0.5f;
+
+            if (overSeed && AEInputCheckTriggered(AEVK_LBUTTON))
+            {
+                if (lastClickedSeed == i && doubleClickTimer < 0.3f)
+                {
+                    // DOUBLE CLICK DETECTED
+                    Farm_PlantSeed(i);
+                    doubleClickTimer = 0.0f;
+                }
+                else
+                {
+                    // First click
+                    lastClickedSeed = i;
+                    doubleClickTimer = 0.0f;
+                    
+                }
+            }
+        }
+    }
+        
+
+    
     }
 
 
-}
-
-void UI_Draw()
-{
-    // Menu background
-    if (!menuOpen)
-        return;
-
-    float menuWidth = 480.0f;
-    float menuHeight = 830.0f;
-
-    // Center of screen in engine
-    float x = -770.0f + menuWidth / 2.0f;
-    float y = 0.0f;
-
-    AEMtx33 scale, trans, transform;
-
-    AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
-    AEGfxSetBlendMode(AE_GFX_BM_BLEND);
-    AEGfxSetTransparency(1.0f);
-    AEGfxTextureSet(menuTexture, 0, 0);
-
-    AEMtx33Scale(&scale, menuWidth, menuHeight);
-    AEMtx33Trans(&trans, x, y);
-    AEMtx33Concat(&transform, &trans, &scale);
-
-    AEGfxSetTransform(transform.m);
-    AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
-
-
-    //Menu buttons
-    for (auto& button : menuButtons)
+    void UI_Draw()
     {
+        if (!menuOpen)
+            return;
+
         AEMtx33 scale, trans, transform;
 
-        AEMtx33Scale(&scale, button.width, button.height);
-        AEMtx33Trans(&trans, button.x, button.y);
-        AEMtx33Concat(&transform, &trans, &scale);
+        float menuWidth = 480.0f;
+        float menuHeight = 830.0f;
 
+        float x = -770.0f + menuWidth / 2.0f;
+        float y = 0.0f;
+
+        // -------------------------
+        // Draw Menu Background
+        // -------------------------
         AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
         AEGfxSetBlendMode(AE_GFX_BM_BLEND);
         AEGfxSetTransparency(1.0f);
+        AEGfxSetColorToMultiply(1, 1, 1, 1);
+        AEGfxTextureSet(menuTexture, 0, 0);
 
-        switch (button.type)
-        {
-        case BUTTON_INVENTORY:
-            AEGfxTextureSet(inventoryIcon, 0, 0);
-            break;
-
-        case BUTTON_COLLECTION:
-            AEGfxTextureSet(collectionIcon, 0, 0);
-            break;
-
-        case BUTTON_SETTINGS:
-            AEGfxTextureSet(settingsIcon, 0, 0);
-            break;
-        }
-
-        // hover tint
-        if (button.isHovered)
-            AEGfxSetColorToMultiply(1.0f, 0.9f, 0.9f, 1.0f);
-        else
-            AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
-
-        AEGfxSetTransform(transform.m);
-        AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
-    }
-
-    if (popupOpen)
-    {
-        float w = 400.0f;
-        float h = 250.0f;
-
-        float popupX = 0.0f;
-        float popupY = 0.0f;
-
-        AEMtx33 scale, trans, transform;
-        AEMtx33Scale(&scale, w, h);
-        AEMtx33Trans(&trans, popupX, popupY);
-        AEMtx33Concat(&transform, &trans, &scale);
-
-        AEGfxSetRenderMode(AE_GFX_RM_COLOR);
-        AEGfxSetColorToMultiply(0.15f, 0.15f, 0.15f, 0.95f);
-
-        AEGfxSetTransform(transform.m);
-        AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
-
-        float xText = (popupX - w * 0.45f) / 800.0f;
-        float yText = (popupY + h * 0.25f) / 450.0f;
-
-
-
-        switch (activePopupIndex)
-        {
-        case BUTTON_INVENTORY:
-            AEGfxPrint(fontId, "Inventory", xText, yText, 1.0f, 1, 1, 1, 1);
-            AEGfxPrint(fontId, "Your items appear here.", xText, yText - 0.1f, 0.8f, 1, 1, 1, 1);
-            break;
-
-        case BUTTON_COLLECTION:
-            AEGfxPrint(fontId, "Collection", xText, yText, 1.0f, 1, 1, 1, 1);
-            AEGfxPrint(fontId, "Your discovered fruits.", xText, yText - 0.1f, 0.8f, 1, 1, 1, 1);
-            break;
-
-        case BUTTON_SETTINGS:
-            AEGfxPrint(fontId, "Settings", xText, yText, 1.0f, 1, 1, 1, 1);
-            AEGfxPrint(fontId, "Game options here.", xText, yText - 0.1f, 0.8f, 1, 1, 1, 1);
-            break;
-        }
-    }
-
-    // -----------------------------
-    // Seeds Popup Panel
-    // -----------------------------
-    if (seedsPopupOpen)
-    {
-        float w = 400.0f;
-        float h = 550.0f;
-
-        float popupX = -100.0f; // adjust position
-        float popupY = 0.0f;
-
-        AEMtx33 scale, trans, transform;
-
-        AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
-        AEGfxSetBlendMode(AE_GFX_BM_BLEND);
-        AEGfxTextureSet(seedsTexture, 0, 0);
-
-        AEMtx33Scale(&scale, w, h);
-        AEMtx33Trans(&trans, popupX, popupY);
+        AEMtx33Scale(&scale, menuWidth, menuHeight);
+        AEMtx33Trans(&trans, x, y);
         AEMtx33Concat(&transform, &trans, &scale);
 
         AEGfxSetTransform(transform.m);
         AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+        // -------------------------
+        // Menu Buttons
+        // -------------------------
+        for (auto& button : menuButtons)
+        {
+            AEMtx33Scale(&scale, button.width, button.height);
+            AEMtx33Trans(&trans, button.x, button.y);
+            AEMtx33Concat(&transform, &trans, &scale);
+
+            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+            AEGfxSetColorToMultiply(
+                button.isHovered ? 1.0f : 1.0f,
+                button.isHovered ? 0.9f : 1.0f,
+                button.isHovered ? 0.9f : 1.0f,
+                1.0f
+            );
+
+            switch (button.type)
+            {
+            case BUTTON_INVENTORY:  AEGfxTextureSet(inventoryIcon, 0, 0); break;
+            case BUTTON_COLLECTION: AEGfxTextureSet(collectionIcon, 0, 0); break;
+            case BUTTON_SETTINGS:   AEGfxTextureSet(settingsIcon, 0, 0); break;
+            }
+
+            AEGfxSetTransform(transform.m);
+            AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+        }
+
+        // -------------------------
+        // Popup
+        // -------------------------
+        if (popupOpen)
+        {
+            float w = 400.0f;
+            float h = 250.0f;
+            float popupX = 0.0f;
+            float popupY = 0.0f;
+
+            AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+            AEGfxSetColorToMultiply(0.15f, 0.15f, 0.15f, 0.95f);
+
+            AEMtx33Scale(&scale, w, h);
+            AEMtx33Trans(&trans, popupX, popupY);
+            AEMtx33Concat(&transform, &trans, &scale);
+
+            AEGfxSetTransform(transform.m);
+            AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+            float xText = (popupX - w * 0.45f) / 800.0f;
+            float yText = (popupY + h * 0.25f) / 450.0f;
+
+            switch (activePopupIndex)
+            {
+            case BUTTON_INVENTORY:
+                AEGfxPrint(fontId, "Inventory", xText, yText, 1.0f, 1, 1, 1, 1);
+                break;
+            case BUTTON_COLLECTION:
+                AEGfxPrint(fontId, "Collection", xText, yText, 1.0f, 1, 1, 1, 1);
+                break;
+            case BUTTON_SETTINGS:
+                AEGfxPrint(fontId, "Settings", xText, yText, 1.0f, 1, 1, 1, 1);
+                break;
+            }
+        }
+
+
+
+        // -------------------------
+        // Seeds Panel
+        // -------------------------
+        if (seedsPopupOpen)
+        {
+            float panelW = 400.0f;
+            float panelH = 550.0f;
+            float popupX = -100.0f;
+            float popupY = 0.0f;
+
+            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+            AEGfxSetColorToMultiply(1, 1, 1, 1);
+            AEGfxTextureSet(seedsTexture, 0, 0);
+
+            AEMtx33Scale(&scale, panelW, panelH);
+            AEMtx33Trans(&trans, popupX, popupY);
+            AEMtx33Concat(&transform, &trans, &scale);
+
+            AEGfxSetTransform(transform.m);
+            AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+            // -------------------------
+ // Draw Seed Icons
+ // -------------------------
+
+            int mx, my;
+            AEInputGetCursorPosition(&mx, &my);
+
+            float worldX = static_cast<float>(mx) - 800.0f;
+            float worldY = 450.0f - static_cast<float>(my);
+
+            for (int i = 0; i < SEED_COUNT; i++)
+            {
+                if (!seedData[i].icon)
+                    continue;
+
+                float seedX = popupX;
+                float seedY = popupY + seedData[i].offsetY;
+
+                float seedW = 100.0f;
+                float seedH = 100.0f;
+
+                bool isHovered =
+                    worldX >= seedX - seedW * 0.5f &&
+                    worldX <= seedX + seedW * 0.5f &&
+                    worldY >= seedY - seedH * 0.5f &&
+                    worldY <= seedY + seedH * 0.5f;
+
+                // ---- Highlight Background ----
+                if (isHovered)
+                {
+                    AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+                    AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+                    AEGfxSetColorToMultiply(1.0f, 0.9f, 0.3f, 0.5f);
+
+                    AEMtx33Scale(&scale, seedW + 20.0f, seedH + 20.0f);
+                    AEMtx33Trans(&trans, seedX, seedY);
+                    AEMtx33Concat(&transform, &trans, &scale);
+
+                    AEGfxSetTransform(transform.m);
+                    AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+                }
+
+                // ---- Draw Seed Texture ----
+                AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+                AEGfxSetColorToMultiply(1, 1, 1, 1);
+                AEGfxTextureSet(seedData[i].icon, 0, 0);
+
+                AEMtx33Scale(&scale, seedW, seedH);
+                AEMtx33Trans(&trans, seedX, seedY);
+                AEMtx33Concat(&transform, &trans, &scale);
+
+                AEGfxSetTransform(transform.m);
+                AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+            }
+        }
     }
-
-
-}
-
 
 void UI_Exit()
 {
@@ -336,6 +466,15 @@ void UI_Exit()
     AEGfxTextureUnload(collectionIcon);
     AEGfxTextureUnload(settingsIcon);
 
+
+    for (int i = 0; i < SEED_COUNT; i++)
+    {
+        if (seedData[i].icon)
+        {
+            AEGfxTextureUnload(seedData[i].icon);
+            seedData[i].icon = nullptr;
+        }
+    }
 }
 
 bool UI_IsMenuOpen()
