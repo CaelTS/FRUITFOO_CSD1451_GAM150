@@ -174,10 +174,11 @@ void UI_Draw()
             button.type == BUTTON_COLLECTION ? collectionIcon :
             settingsIcon, 0, 0);
 
-        AEGfxSetColorToMultiply(button.isHovered ? 1 : 1,
-            button.isHovered ? 0.9f : 1,
-            button.isHovered ? 0.9f : 1,
-            1);
+        AEGfxSetColorToMultiply(
+            1.0f,
+            button.isHovered ? 0.9f : 1.0f,
+            button.isHovered ? 0.9f : 1.0f,
+            1.0f);
 
         AEMtx33Scale(&scale, button.width, button.height);
         AEMtx33Trans(&trans, button.x, button.y);
