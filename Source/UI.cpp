@@ -194,7 +194,7 @@ void UI_Draw()
         float popupX = 0.0f;
         float popupY = 0.0f;
 
-        AEMtx33 scale, trans, transform;
+       
 
         // Draw dark background
         AEGfxSetRenderMode(AE_GFX_RM_COLOR);
@@ -302,7 +302,6 @@ void UI_Draw()
         float infoX = panelX;
         float infoY = seedY - 220.0f;   // positioned under the seed
 
-        AEMtx33 scale, trans, transform;
 
         AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
         AEGfxSetBlendMode(AE_GFX_BM_BLEND);
