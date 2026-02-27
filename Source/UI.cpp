@@ -1,5 +1,5 @@
 #include "UI.h" // Add this at the top to define FruitBasket and GetFruitBaskets
-
+#include "Farm.h"
 #include "AEEngine.h"
 #include <vector>
 
@@ -10,9 +10,12 @@ extern s8 fontId;
 
 static bool popupOpen = false;
 static int activePopupIndex = -1;
+static AEGfxTexture* inventoryIcon = nullptr;
+static AEGfxTexture* collectionIcon = nullptr;
+static AEGfxTexture* settingsIcon = nullptr;
+
 static bool seedsPopupOpen = false;
 static AEGfxTexture* seedsTexture = nullptr;
-
 
 struct FruitInfo
 {
@@ -29,6 +32,13 @@ static FruitInfo fruitInfo[3] =
     { "Banana", "Soft yellow fruit", "Price: 10 gold" }
 };
 
+enum ButtonType
+{
+    BUTTON_INVENTORY,
+    BUTTON_COLLECTION,
+    BUTTON_SETTINGS
+};
+
 struct MenuButton
 {
     float x;
@@ -36,6 +46,7 @@ struct MenuButton
     float width;
     float height;
     bool isHovered;
+    ButtonType type;
 };
 static std::vector<MenuButton> menuButtons;
 
@@ -57,6 +68,7 @@ void UI_Init()
     else
         printf("SeedsPanel.png loaded successfully!\n");
 
+
     //Menu Buttons 
     menuButtons.clear();
 
@@ -64,12 +76,14 @@ void UI_Init()
     float spacingX = 150.0f;  // horizontal space between buttons
     float startX = -675.0f; // leftmost button
 
+
     // Plot + button (adjust if needed)
     plotPlusButton.x = -630.0f;
     plotPlusButton.y = 150.0f;
     plotPlusButton.width = 120.0f;
     plotPlusButton.height = 120.0f;
     plotPlusButton.isHovered = false;
+
 
     for (int i = 0; i < 3; ++i)
     {
@@ -80,8 +94,17 @@ void UI_Init()
         button.height = 96.0f;
         button.isHovered = false;
 
+        if (i == 0) button.type = BUTTON_INVENTORY;
+        if (i == 1) button.type = BUTTON_COLLECTION;
+        if (i == 2) button.type = BUTTON_SETTINGS;
+
         menuButtons.push_back(button);
     }
+
+    inventoryIcon = AEGfxTextureLoad("Assets/Inventory.png");
+    collectionIcon = AEGfxTextureLoad("Assets/Collection.png");
+    settingsIcon = AEGfxTextureLoad("Assets/Settings.png");
+
 }
 
 
@@ -129,13 +152,13 @@ void UI_UpdateButtons()
         if (button.isHovered && AEInputCheckTriggered(AEVK_LBUTTON))
         {
             popupOpen = true;
-            activePopupIndex = i;
+            activePopupIndex = button.type;
         }
     }
 
     // -----------------------------
-// Plot + Button Click Detection
-// -----------------------------
+    // Plot + Button Click Detection
+    // -----------------------------
 
     plotPlusButton.isHovered =
         worldX >= plotPlusButton.x - plotPlusButton.width * 0.5f &&
@@ -154,6 +177,7 @@ void UI_UpdateButtons()
         seedsPopupOpen = false;
     }
 
+
 }
 
 void UI_Draw()
@@ -165,8 +189,8 @@ void UI_Draw()
     float menuWidth = 480.0f;
     float menuHeight = 830.0f;
 
-    // Center of screen in YOUR engine
-    float x = -760.0f + menuWidth / 2.0f;
+    // Center of screen in engine
+    float x = -770.0f + menuWidth / 2.0f;
     float y = 0.0f;
 
     AEMtx33 scale, trans, transform;
@@ -193,12 +217,30 @@ void UI_Draw()
         AEMtx33Trans(&trans, button.x, button.y);
         AEMtx33Concat(&transform, &trans, &scale);
 
-        AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+        AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+        AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+        AEGfxSetTransparency(1.0f);
 
+        switch (button.type)
+        {
+        case BUTTON_INVENTORY:
+            AEGfxTextureSet(inventoryIcon, 0, 0);
+            break;
+
+        case BUTTON_COLLECTION:
+            AEGfxTextureSet(collectionIcon, 0, 0);
+            break;
+
+        case BUTTON_SETTINGS:
+            AEGfxTextureSet(settingsIcon, 0, 0);
+            break;
+        }
+
+        // hover tint
         if (button.isHovered)
-            AEGfxSetColorToMultiply(1.0f, 0.0f, 0.0f, 1.0f); // red hover
+            AEGfxSetColorToMultiply(1.0f, 0.9f, 0.9f, 1.0f);
         else
-            AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 1.0f); // black normal
+            AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
 
         AEGfxSetTransform(transform.m);
         AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
@@ -226,31 +268,30 @@ void UI_Draw()
         float xText = (popupX - w * 0.45f) / 800.0f;
         float yText = (popupY + h * 0.25f) / 450.0f;
 
-        AEGfxPrint(fontId, "Fruit Info", xText, yText, 1.0f, 1, 1, 1, 1);
 
-        if (activePopupIndex >= 0 && activePopupIndex < 3)
+
+        switch (activePopupIndex)
         {
-            AEGfxPrint(fontId,
-                fruitInfo[activePopupIndex].name,
-                xText, yText - 0.1f,
-                0.9f, 1, 1, 1, 1);
+        case BUTTON_INVENTORY:
+            AEGfxPrint(fontId, "Inventory", xText, yText, 1.0f, 1, 1, 1, 1);
+            AEGfxPrint(fontId, "Your items appear here.", xText, yText - 0.1f, 0.8f, 1, 1, 1, 1);
+            break;
 
-            AEGfxPrint(fontId,
-                fruitInfo[activePopupIndex].line1,
-                xText, yText - 0.18f,
-                0.8f, 0.9f, 0.9f, 0.9f, 1);
+        case BUTTON_COLLECTION:
+            AEGfxPrint(fontId, "Collection", xText, yText, 1.0f, 1, 1, 1, 1);
+            AEGfxPrint(fontId, "Your discovered fruits.", xText, yText - 0.1f, 0.8f, 1, 1, 1, 1);
+            break;
 
-            AEGfxPrint(fontId,
-                fruitInfo[activePopupIndex].line2,
-                xText, yText - 0.26f,
-                0.8f, 0.9f, 0.9f, 0.9f, 1);
+        case BUTTON_SETTINGS:
+            AEGfxPrint(fontId, "Settings", xText, yText, 1.0f, 1, 1, 1, 1);
+            AEGfxPrint(fontId, "Game options here.", xText, yText - 0.1f, 0.8f, 1, 1, 1, 1);
+            break;
         }
     }
 
-
     // -----------------------------
-// Seeds Popup Panel
-// -----------------------------
+    // Seeds Popup Panel
+    // -----------------------------
     if (seedsPopupOpen)
     {
         float w = 400.0f;
@@ -272,6 +313,8 @@ void UI_Draw()
         AEGfxSetTransform(transform.m);
         AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
     }
+
+
 }
 
 
@@ -288,6 +331,11 @@ void UI_Exit()
         AEGfxTextureUnload(seedsTexture);
         seedsTexture = nullptr;
     }
+
+    AEGfxTextureUnload(inventoryIcon);
+    AEGfxTextureUnload(collectionIcon);
+    AEGfxTextureUnload(settingsIcon);
+
 }
 
 bool UI_IsMenuOpen()
