@@ -1,6 +1,31 @@
 ﻿  UI.cpp
+C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(177,50): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(197,17): warning C4456: declaration of 'scale' hides previous local declaration
+      C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(155,13):
+      see declaration of 'scale'
+  
+C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(197,24): warning C4456: declaration of 'trans' hides previous local declaration
+      C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(155,20):
+      see declaration of 'trans'
+  
+C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(197,31): warning C4456: declaration of 'transform' hides previous local declaration
+      C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(155,27):
+      see declaration of 'transform'
+  
+C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(305,17): warning C4456: declaration of 'scale' hides previous local declaration
+      C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(155,13):
+      see declaration of 'scale'
+  
+C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(305,24): warning C4456: declaration of 'trans' hides previous local declaration
+      C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(155,20):
+      see declaration of 'trans'
+  
+C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(305,31): warning C4456: declaration of 'transform' hides previous local declaration
+      C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(155,27):
+      see declaration of 'transform'
+  
   FruitFoo.vcxproj -> C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\bin\Debug-x64\FruitFoo.exe
-  12 File(s) copied
+  13 File(s) copied
   1 File(s) copied
   1 File(s) copied
   1 File(s) copied
