@@ -1,46 +1,149 @@
-#include "UI.h" // Add this at the top to define FruitBasket and GetFruitBaskets
-
+#include "UI.h"
+#include "Farm.h"
 #include "AEEngine.h"
 #include <vector>
 
-static bool menuOpen = false;
-static AEGfxTexture* menuTexture = nullptr;
 extern AEGfxVertexList* g_pMeshFullScreen;
 extern s8 fontId;
 
-struct FruitInfo
+static bool menuOpen = false;
+static bool popupOpen = false;
+static bool seedsPopupOpen = false;
+
+static int activePopupIndex = -1;
+static int selectedSeed = -1;
+
+static AEGfxTexture* menuTexture = nullptr;
+static AEGfxTexture* seedsTexture = nullptr;
+static AEGfxTexture* inventoryIcon = nullptr;
+static AEGfxTexture* collectionIcon = nullptr;
+static AEGfxTexture* settingsIcon = nullptr;
+static AEGfxTexture* appleSeedIcon = nullptr;
+static AEGfxTexture* appleSeedInfo = nullptr;
+
+enum ButtonType
 {
-    const char* name;
-    const char* line1;
-    const char* line2;
+    BUTTON_INVENTORY,
+    BUTTON_COLLECTION,
+    BUTTON_SETTINGS
 };
 
-
-static FruitInfo fruitInfo[3] =
+enum SeedType
 {
-    { "Apple",  "Sweet red fruit",  "Price: 10 gold" },
-    { "Pear",   "Juicy green fruit", "Price: 10 gold" },
-    { "Banana", "Soft yellow fruit", "Price: 10 gold" }
+    SEED_APPLE = 0,
+    SEED_COUNT = 1
 };
 
+struct MenuButton
+{
+    float x, y;
+    float width, height;
+    bool isHovered;
+    ButtonType type;
+};
+
+static std::vector<MenuButton> menuButtons;
+static MenuButton plotPlusButton;
 
 
 void UI_Init()
 {
     menuTexture = AEGfxTextureLoad("Assets/MenuMockup.PNG");
-    if (!menuTexture)
-        printf("ERROR: MenuMockup.png failed to load!\n");
+    seedsTexture = AEGfxTextureLoad("Assets/SeedsPanel.png");
+    inventoryIcon = AEGfxTextureLoad("Assets/Inventory.png");
+    collectionIcon = AEGfxTextureLoad("Assets/Collection.png");
+    settingsIcon = AEGfxTextureLoad("Assets/Settings.png");
+    appleSeedIcon = AEGfxTextureLoad("Assets/AppleSeed.png");
+    appleSeedInfo = AEGfxTextureLoad("Assets/AppleSeedInfo.png");
 
-    else
-        printf("MenuMockup.png loaded successfully!\n");
+    menuButtons.clear();
+
+    float startX = -675.0f;
+    float spacing = 150.0f;
+    float buttonY = -350.0f;
+
+    for (int i = 0; i < 3; i++)
+    {
+        MenuButton b;
+        b.x = startX + i * spacing;
+        b.y = buttonY;
+        b.width = 96;
+        b.height = 96;
+        b.isHovered = false;
+        b.type = (ButtonType)i;
+        menuButtons.push_back(b);
+    }
+
+    plotPlusButton.x = -630.0f;
+    plotPlusButton.y = 150.0f;
+    plotPlusButton.width = 120.0f;
+    plotPlusButton.height = 120.0f;
 }
-
 
 void UI_Input()
 {
     if (AEInputCheckTriggered(AEVK_M))
-    {
         menuOpen = !menuOpen;
+
+    if (menuOpen)
+        UI_UpdateButtons();
+}
+
+
+void UI_UpdateButtons()
+{
+    int mx, my;
+    AEInputGetCursorPosition(&mx, &my);
+
+    float worldX = mx - 800.0f;
+    float worldY = 450.0f - my;
+
+    // Menu buttons
+    for (auto& button : menuButtons)
+    {
+        button.isHovered =
+            worldX >= button.x - button.width * 0.5f &&
+            worldX <= button.x + button.width * 0.5f &&
+            worldY >= button.y - button.height * 0.5f &&
+            worldY <= button.y + button.height * 0.5f;
+
+        if (button.isHovered && AEInputCheckTriggered(AEVK_LBUTTON))
+        {
+            popupOpen = true;
+            activePopupIndex = button.type;
+        }
+    }
+
+    // Plot +
+    plotPlusButton.isHovered =
+        worldX >= plotPlusButton.x - plotPlusButton.width * 0.5f &&
+        worldX <= plotPlusButton.x + plotPlusButton.width * 0.5f &&
+        worldY >= plotPlusButton.y - plotPlusButton.height * 0.5f &&
+        worldY <= plotPlusButton.y + plotPlusButton.height * 0.5f;
+
+    if (plotPlusButton.isHovered && AEInputCheckTriggered(AEVK_LBUTTON))
+        seedsPopupOpen = !seedsPopupOpen;
+
+    // Seed selection
+    if (seedsPopupOpen)
+    {
+        float panelX = -100.0f;
+        float panelY = 0.0f;
+        float seedY = panelY + 120.0f;
+        float seedW = 100.0f;
+        float seedH = 100.0f;
+
+        bool overSeed =
+            worldX >= panelX - seedW * 0.5f &&
+            worldX <= panelX + seedW * 0.5f &&
+            worldY >= seedY - seedH * 0.5f &&
+            worldY <= seedY + seedH * 0.5f;
+
+        if (overSeed && AEInputCheckTriggered(AEVK_LBUTTON))
+            selectedSeed = SEED_APPLE;
+
+        if (AEInputCheckTriggered(AEVK_LBUTTON) && !overSeed)
+            selectedSeed = -1;
     }
 }
 
@@ -49,47 +152,182 @@ void UI_Draw()
     if (!menuOpen)
         return;
 
-    float menuWidth = 300.0f;
-    float menuHeight = 660.0f;
-
-    // Center of screen in YOUR engine
-    float x = -800.0f + menuWidth / 2.0f;
-    float y = 0.0f;
-
     AEMtx33 scale, trans, transform;
 
+    // --- Menu Background ---
     AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
-    AEGfxSetBlendMode(AE_GFX_BM_BLEND);
-    AEGfxSetTransparency(1.0f);
+    AEGfxSetColorToMultiply(1, 1, 1, 1);
     AEGfxTextureSet(menuTexture, 0, 0);
 
-    AEMtx33Scale(&scale, menuWidth, menuHeight);
-    AEMtx33Trans(&trans, x, y);
+    AEMtx33Scale(&scale, 480, 830);
+    AEMtx33Trans(&trans, -770 + 240, 0);
     AEMtx33Concat(&transform, &trans, &scale);
 
     AEGfxSetTransform(transform.m);
     AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
-}
 
-
-void UI_Exit()
-{
-    if (menuTexture)
+    // --- Menu Buttons ---
+    for (auto& button : menuButtons)
     {
-        AEGfxTextureUnload(menuTexture);
-        menuTexture = nullptr;
-    }
-}
+        AEGfxTextureSet(
+            button.type == BUTTON_INVENTORY ? inventoryIcon :
+            button.type == BUTTON_COLLECTION ? collectionIcon :
+            settingsIcon, 0, 0);
 
+        AEGfxSetColorToMultiply(
+            1.0f,
+            button.isHovered ? 0.9f : 1.0f,
+            button.isHovered ? 0.9f : 1.0f,
+            1.0f);
+
+        AEMtx33Scale(&scale, button.width, button.height);
+        AEMtx33Trans(&trans, button.x, button.y);
+        AEMtx33Concat(&transform, &trans, &scale);
+
+        AEGfxSetTransform(transform.m);
+        AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+    }
+
+    if (popupOpen)
+    {
+        float popupW = 400.0f;
+        float popupH = 250.0f;
+        float popupX = 0.0f;
+        float popupY = 0.0f;
+
+       
+
+        // Draw dark background
+        AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+        AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+        AEGfxSetColorToMultiply(0.1f, 0.1f, 0.1f, 0.95f);
+
+        AEMtx33Scale(&scale, popupW, popupH);
+        AEMtx33Trans(&trans, popupX, popupY);
+        AEMtx33Concat(&transform, &trans, &scale);
+
+        AEGfxSetTransform(transform.m);
+        AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+        // Reset render state before printing text
+        AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+        AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+        AEGfxSetColorToMultiply(1, 1, 1, 1);
+
+        // Text position
+        float xText = (popupX - popupW * 0.45f) / 800.0f;
+        float yText = (popupY + popupH * 0.25f) / 450.0f;
+
+        switch (activePopupIndex)
+        {
+        case BUTTON_INVENTORY:
+            AEGfxPrint(fontId, "Inventory", xText, yText, 1.0f, 1, 1, 1, 1);
+            AEGfxPrint(fontId, "Your items appear here.",
+                xText, yText - 0.08f,
+                0.8f, 1, 1, 1, 1);
+            break;
+
+        case BUTTON_COLLECTION:
+            AEGfxPrint(fontId, "Collection", xText, yText, 1.0f, 1, 1, 1, 1);
+            AEGfxPrint(fontId, "Your discovered fruits.",
+                xText, yText - 0.08f,
+                0.8f, 1, 1, 1, 1);
+            break;
+
+        case BUTTON_SETTINGS:
+            AEGfxPrint(fontId, "Settings", xText, yText, 1.0f, 1, 1, 1, 1);
+            AEGfxPrint(fontId, "Game options here.",
+                xText, yText - 0.08f,
+                0.8f, 1, 1, 1, 1);
+            break;
+        }
+    }
+
+
+    if (popupOpen && AEInputCheckTriggered(AEVK_Q))
+    {
+        popupOpen = false;
+    }
+
+    // --- Seeds Panel ---
+    if (seedsPopupOpen)
+    {
+        float panelX = -100.0f;
+        float panelY = 0.0f;
+
+        AEGfxTextureSet(seedsTexture, 0, 0);
+        AEMtx33Scale(&scale, 400, 550);
+        AEMtx33Trans(&trans, panelX, panelY);
+        AEMtx33Concat(&transform, &trans, &scale);
+        AEGfxSetTransform(transform.m);
+        AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+        float seedY = panelY + 120.0f;
+
+        // Highlight
+        if (selectedSeed == SEED_APPLE)
+        {
+            AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+            AEGfxSetColorToMultiply(1.0f, 0.9f, 0.3f, 0.5f);
+
+            AEMtx33Scale(&scale, 120, 120);
+            AEMtx33Trans(&trans, panelX, seedY);
+            AEMtx33Concat(&transform, &trans, &scale);
+            AEGfxSetTransform(transform.m);
+            AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+        }
+
+        // Draw seed
+        AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+        AEGfxSetColorToMultiply(1, 1, 1, 1);
+        AEGfxTextureSet(appleSeedIcon, 0, 0);
+
+        AEMtx33Scale(&scale, 100, 100);
+        AEMtx33Trans(&trans, panelX, seedY);
+        AEMtx33Concat(&transform, &trans, &scale);
+        AEGfxSetTransform(transform.m);
+        AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+    }
+
+    // --- Apple Info ---
+    if (selectedSeed == SEED_APPLE)
+    {
+        float panelX = -100.0f;
+        float panelY = 0.0f;
+
+        float seedY = panelY + 120.0f;
+
+        float infoW = 380.0f;
+        float infoH = 340.0f;
+
+        float infoX = panelX;
+        float infoY = seedY - 220.0f;   // positioned under the seed
+
+
+        AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+        AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+        AEGfxSetColorToMultiply(1, 1, 1, 1);
+        AEGfxTextureSet(appleSeedInfo, 0, 0);
+
+        AEMtx33Scale(&scale, infoW, infoH);
+        AEMtx33Trans(&trans, infoX, infoY);
+        AEMtx33Concat(&transform, &trans, &scale);
+
+        AEGfxSetTransform(transform.m);
+        AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+    }
+
+
+
+}
 bool UI_IsMenuOpen()
 {
     return menuOpen;
 }
 
-
 static bool IsMouseOverBasket(const FruitBasket& basket)
 {
-    int mx, my; // Use int for AEInputGetCursorPosition
+    int mx, my;
     AEInputGetCursorPosition(&mx, &my);
 
     float worldX = static_cast<float>(mx) - 800.0f;
@@ -101,13 +339,13 @@ static bool IsMouseOverBasket(const FruitBasket& basket)
         worldY <= basket.y + basket.height * 0.5f;
 }
 
-static void DrawTooltip(float x, float y, const char* title, const char* line1, const char* line2)
-
+static void DrawTooltip(float x, float y, const char* text)
 {
-    float w = 300.0f;
-    float h = 100.0f;
+    float w = 250.0f;
+    float h = 80.0f;
 
     AEMtx33 scale, trans, transform;
+
     AEMtx33Scale(&scale, w, h);
     AEMtx33Trans(&trans, x, y);
     AEMtx33Concat(&transform, &trans, &scale);
@@ -115,23 +353,16 @@ static void DrawTooltip(float x, float y, const char* title, const char* line1, 
     AEGfxSetRenderMode(AE_GFX_RM_COLOR);
     AEGfxSetBlendMode(AE_GFX_BM_BLEND);
     AEGfxSetColorToMultiply(0.1f, 0.1f, 0.1f, 0.9f);
+
     AEGfxSetTransform(transform.m);
     AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
 
-    // ---- TEXT POSITION (THIS WAS MISSING) ----
     float xText = (x - w * 0.45f) / 800.0f;
     float yText = (y + h * 0.25f) / 450.0f;
 
-    // Title
-    AEGfxPrint(fontId, title, xText, yText, 1.0f, 1, 1, 1, 1);
-
-    // Line 1
-    AEGfxPrint(fontId, line1, xText, yText - 0.08f, 0.9f, 0.9f, 0.9f, 0.9f, 1);
-
-    // Line 2
-    AEGfxPrint(fontId, line2, xText, yText - 0.16f, 0.9f, 0.9f, 0.9f, 0.9f, 1);
-
+    AEGfxPrint(fontId, text, xText, yText, 1.0f, 1, 1, 1, 1);
 }
+
 
 void UI_DrawFruitBasketTooltips()
 {
@@ -144,21 +375,15 @@ void UI_DrawFruitBasketTooltips()
     {
         if (IsMouseOverBasket(basket))
         {
-            int mx, my; // Use int for AEInputGetCursorPosition
+            int mx, my;
             AEInputGetCursorPosition(&mx, &my);
 
             float worldX = static_cast<float>(mx) - 800.0f + 20.0f;
             float worldY = 450.0f - static_cast<float>(my) - 20.0f;
 
-            DrawTooltip(
-                worldX,
-                worldY,
-                fruitInfo[basket.fruitType].name,
-                fruitInfo[basket.fruitType].line1,
-                fruitInfo[basket.fruitType].line2
-            );
-
+            DrawTooltip(worldX, worldY, "Fruit Basket");
             break;
         }
     }
 }
+
