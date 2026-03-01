@@ -21,6 +21,49 @@ static const float NOTE_SIZE = 40.0f;
 static const int SCORE_PERFECT = 300;
 static const int SCORE_GOOD = 100;
 
+// Vertical offset to shift game upward (positive = up)
+static const float VERTICAL_OFFSET = 200.0f;
+
+// ================= TEXT POSITION CONSTANTS =================
+// Each text has its own X and Y position (normalized coordinates: -1.0 to 1.0)
+
+// Score display (top left)
+static const float SCORE_TEXT_X = -0.95f;
+static const float SCORE_TEXT_Y = 0.85f;
+
+// Combo number (center area)
+static const float COMBO_NUM_X = -0.20f;
+static const float COMBO_NUM_Y = 0.75f;
+
+// Combo label
+static const float COMBO_LABEL_X = -0.1f;
+static const float COMBO_LABEL_Y = 0.75f;
+
+// Hit feedback (PERFECT/GOOD/MISS)
+static const float FEEDBACK_TEXT_X = -0.15f;
+static const float FEEDBACK_TEXT_Y = 0.05f;
+
+// Stats (Perfect/Good/Miss count) - bottom left
+static const float STATS_TEXT_X = -0.95f;
+static const float STATS_TEXT_Y = -0.85f;
+
+// Song complete title
+static const float COMPLETE_TEXT_X = -0.3f;
+static const float COMPLETE_TEXT_Y = 0.20f;
+
+// Final score
+static const float FINAL_SCORE_X = -0.25f;
+static const float FINAL_SCORE_Y = 0.05f;
+
+// Return prompt
+static const float RETURN_TEXT_X = -0.25f;
+static const float RETURN_TEXT_Y = -0.05f;
+
+
+// Countdown
+static const float COUNTDOWN_TEXT_X = -0.3f;
+static const float COUNTDOWN_TEXT_Y = 0.20f;
+
 // Random spawn parameters
 static const float MIN_SPAWN_INTERVAL = 0.2f;   // Minimum time between notes
 static const float MAX_SPAWN_INTERVAL = 0.8f;   // Maximum time between notes
@@ -304,7 +347,7 @@ void Rhythm_Render() {
     AEGfxSetRenderMode(AE_GFX_RM_COLOR);
     AEGfxSetColorToMultiply(0.3f, 0.3f, 0.3f, 1.0f);
     AEMtx33Scale(&scale, 1600.0f, 2.0f);
-    AEMtx33Trans(&trans, 0.0f, 0.0f);
+    AEMtx33Trans(&trans, 0.0f, VERTICAL_OFFSET);
     AEMtx33Concat(&transform, &trans, &scale);
     AEGfxSetTransform(transform.m);
     AEGfxMeshDraw(g_pMeshNote, AE_GFX_MDM_TRIANGLES);
@@ -318,7 +361,7 @@ void Rhythm_Render() {
     }
     AEGfxSetColorToMultiply(lineR, lineG, lineB, 1.0f);
     AEMtx33Scale(&scale, 1.0f, 1.0f);
-    AEMtx33Trans(&trans, JUDGMENT_LINE_X, 0.0f);
+    AEMtx33Trans(&trans, JUDGMENT_LINE_X, VERTICAL_OFFSET);
     AEMtx33Concat(&transform, &trans, &scale);
     AEGfxSetTransform(transform.m);
     AEGfxMeshDraw(g_pMeshLine, AE_GFX_MDM_TRIANGLES);
@@ -326,12 +369,12 @@ void Rhythm_Render() {
     // Draw hit zone
     AEGfxSetColorToMultiply(0.5f, 0.5f, 0.5f, 0.3f);
     AEMtx33Scale(&scale, NOTE_SIZE * 2.0f, NOTE_SIZE * 2.0f);
-    AEMtx33Trans(&trans, JUDGMENT_LINE_X, 0.0f);
+    AEMtx33Trans(&trans, JUDGMENT_LINE_X, VERTICAL_OFFSET);
     AEMtx33Concat(&transform, &trans, &scale);
     AEGfxSetTransform(transform.m);
     AEGfxMeshDraw(g_pMeshNote, AE_GFX_MDM_TRIANGLES);
 
-    // Draw notes
+    // Draw notes (shifted up)
     for (const auto& note : g_activeNotes) {
         if (note.hit) continue;
 
@@ -356,7 +399,7 @@ void Rhythm_Render() {
 
         AEGfxSetColorToMultiply(r, g, b, note.missed ? 0.3f : 1.0f);
         AEMtx33Scale(&scale, size * 2.0f, size * 2.0f);
-        AEMtx33Trans(&trans, note.xPosition, 0.0f);
+        AEMtx33Trans(&trans, note.xPosition, VERTICAL_OFFSET);
         AEMtx33Concat(&transform, &trans, &scale);
         AEGfxSetTransform(transform.m);
         AEGfxMeshDraw(g_pMeshNote, AE_GFX_MDM_TRIANGLES);
@@ -364,7 +407,7 @@ void Rhythm_Render() {
         if (note.type == NOTE_NORMAL && !note.missed) {
             AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 0.8f);
             AEMtx33Scale(&scale, size, size);
-            AEMtx33Trans(&trans, note.xPosition, 0.0f);
+            AEMtx33Trans(&trans, note.xPosition, VERTICAL_OFFSET);
             AEMtx33Concat(&transform, &trans, &scale);
             AEGfxSetTransform(transform.m);
             AEGfxMeshDraw(g_pMeshNote, AE_GFX_MDM_TRIANGLES);
@@ -373,16 +416,19 @@ void Rhythm_Render() {
 
     // UI
     if (g_fontId >= 0) {
+        // Score
         sprintf_s(buffer, "Score: %d", g_score.totalScore);
-        AEGfxPrint(g_fontId, buffer, -0.95f, 0.9f, 1.0f, 1, 1, 1, 1);
+        AEGfxPrint(g_fontId, buffer, SCORE_TEXT_X, SCORE_TEXT_Y, 1.0f, 1, 1, 1, 1);
 
+        // Combo
         if (g_score.combo > 0) {
             sprintf_s(buffer, "%d", g_score.combo);
             float pulse = 1.0f + (g_hitFeedbackTimer * 0.5f);
-            AEGfxPrint(g_fontId, buffer, -0.05f, 0.6f, 1.5f * pulse, 1, 0.9f, 0.3f, 1);
-            AEGfxPrint(g_fontId, "COMBO", -0.1f, 0.5f, 0.8f, 1, 0.9f, 0.3f, 1);
+            AEGfxPrint(g_fontId, buffer, COMBO_NUM_X, COMBO_NUM_Y, 1.5f * pulse, 1, 0.9f, 0.3f, 1);
+            AEGfxPrint(g_fontId, "COMBO", COMBO_LABEL_X, COMBO_LABEL_Y, 1.5f, 1, 0.9f, 0.3f, 1);
         }
 
+        // Hit feedback
         if (g_hitFeedbackTimer > 0) {
             const char* text = "";
             float tr = 1, tg = 1, tb = 1;
@@ -392,24 +438,27 @@ void Rhythm_Render() {
             case HIT_MISS: text = "MISS"; tr = 1; tg = 0.3f; tb = 0.3f; break;
             default: break;
             }
-            AEGfxPrint(g_fontId, text, -0.15f, 0.3f, 1.2f, tr, tg, tb, 1);
+            AEGfxPrint(g_fontId, text, FEEDBACK_TEXT_X, FEEDBACK_TEXT_Y, 1.2f, tr, tg, tb, 1);
         }
 
+        // Stats
         sprintf_s(buffer, "Perfect: %d  Good: %d  Miss: %d",
             g_score.perfectHits, g_score.goodHits, g_score.misses);
-        AEGfxPrint(g_fontId, buffer, -0.95f, -0.9f, 0.7f, 0.8f, 0.8f, 0.8f, 1);
+        AEGfxPrint(g_fontId, buffer, STATS_TEXT_X, STATS_TEXT_Y, 0.7f, 0.8f, 0.8f, 0.8f, 1);
 
+        // Song finished
         if (g_songFinished) {
-            AEGfxPrint(g_fontId, "SONG COMPLETE!", -0.3f, 0.0f, 2.0f, 0.2f, 1.0f, 0.2f, 1);
+            AEGfxPrint(g_fontId, "SONG COMPLETE!", COMPLETE_TEXT_X, COMPLETE_TEXT_Y, 2.0f, 0.2f, 1.0f, 0.2f, 1);
             sprintf_s(buffer, "Final Score: %d", g_score.totalScore);
-            AEGfxPrint(g_fontId, buffer, -0.25f, -0.15f, 1.2f, 1, 1, 1, 1);
-            AEGfxPrint(g_fontId, "Press E to return", -0.25f, -0.3f, 0.8f, 0.8f, 0.8f, 0.8f, 1);
+            AEGfxPrint(g_fontId, buffer, FINAL_SCORE_X, FINAL_SCORE_Y, 1.2f, 1, 1, 1, 1);
+            AEGfxPrint(g_fontId, "Press E to return", RETURN_TEXT_X, RETURN_TEXT_Y, 0.8f, 0.8f, 0.8f, 0.8f, 1);
         }
 
+        // Countdown
         if (!g_audioStarted && !g_songFinished) {
             int countdown = (int)(g_audioOffset - g_preSongTimer) + 1;
             sprintf_s(buffer, "Starting in: %d", countdown);
-            AEGfxPrint(g_fontId, buffer, -0.2f, 0.0f, 2.0f, 1, 1, 0, 1);
+            AEGfxPrint(g_fontId, buffer, COUNTDOWN_TEXT_X, COUNTDOWN_TEXT_Y, 2.0f, 1, 1, 0, 1);
         }
     }
 }

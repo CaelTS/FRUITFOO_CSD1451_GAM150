@@ -622,7 +622,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		// RHYTHM GAME INPUT
 		if (current == GS_RHYTHM_SCREEN)
 		{
-			if (AEInputCheckTriggered(AEVK_SPACE))
+			if (AEInputCheckTriggered(AEVK_W))
 			{
 				Rhythm_Hit();  // Hit the note
 			}
