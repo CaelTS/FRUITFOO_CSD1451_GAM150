@@ -110,8 +110,8 @@ xcopy "$(SolutionDir)Extern\AlphaEngine\lib\fmod.dll" "$(OutDir)" /s /r /y /q</C
     <ClCompile Include="..\Source\Utilities.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\..\OneDrive\Documents\GitHub\FRUITFOO_CSD1451_GAM150\Source\Farm.h" />
     <ClInclude Include="..\Source\Economy.h" />
+    <ClInclude Include="..\Source\Farm.h" />
     <ClInclude Include="..\Source\GameStateManager.h" />
     <ClInclude Include="..\Source\Inventory.h" />
     <ClInclude Include="..\Source\Main.h" />

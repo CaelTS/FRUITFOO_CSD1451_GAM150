@@ -14,6 +14,7 @@
 #include "UI.h"
 #include "Rhythm.h"
 #include "Farm.h"
+#include <iostream>
 
 // ---------------------------------------------------------------------------
 // Game State Variables
@@ -127,12 +128,14 @@ void MainScreen_Load()
 	pTexPear = AEGfxTextureLoad("Assets/Pear.png");
 	pTexBanana = AEGfxTextureLoad("Assets/Banana.png");
 	pTexPlus = AEGfxTextureLoad("Assets/Plus.png");
+	Farm_Load();
+
 
 	if (!pTexStall) OutputDebugStringA("ERROR: Failed to load 'Assets/Stall_Empty_POT.png'.\n");
 	if (!pTexApple) OutputDebugStringA("ERROR: Failed to load 'Assets/Apple.png'.\n");
 	if (!pTexPear) OutputDebugStringA("ERROR: Failed to load 'Assets/Pear.png'.\n");
 	if (!pTexBanana) OutputDebugStringA("ERROR: Failed to load 'Assets/Banana.png'.\n");
-
+	
 }
 
 void MainScreen_Initialize()
@@ -148,8 +151,11 @@ void MainScreen_Initialize()
 
 	//Economy Init
 	Economy_Init();
+	
+	
 
 	UI_Init();
+	Farm_Initialize();
 	gFruitBaskets.clear();
 	gFruitBaskets.push_back({ 0, -350.0f, -250.0f, 120.0f, 120.0f }); // Apple
 	gFruitBaskets.push_back({ 1, -150.0f, -250.0f, 120.0f, 120.0f }); // Pear
@@ -337,6 +343,9 @@ void MainScreen_Render()
 	AEMtx33 scale, trans, transform;
 	char strBuffer[100];
 
+
+
+
 	// --- Draw Stall (Center) ---
 	if (pTexStall)
 	{
@@ -504,25 +513,15 @@ void MainScreen_Render()
 		AEGfxSetTransform(transform.m);
 		AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
 	}
+	
+	
 
 
-	// Draw Plot (+) if not planted AND menu closed
-	if (!Farm_IsPlanted() && !UI_IsMenuOpen())
-	{
-		AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
-		AEGfxSetBlendMode(AE_GFX_BM_BLEND);
-		AEGfxSetColorToMultiply(1, 1, 1, 1);
-		AEGfxTextureSet(pTexPlus, 0, 0);
-
-		AEMtx33Scale(&scale, 120.0f, 120.0f);
-		AEMtx33Trans(&trans, -630.0f, 150.0f);
-		AEMtx33Concat(&transform, &trans, &scale);
-
-		AEGfxSetTransform(transform.m);
-		AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
-	}
+	//std::cout << "Render Check - IsPlanted: " << Farm_IsPlanted() << "\n";
 	UI_Draw();
 	UI_DrawFruitBasketTooltips();
+	Farm_Render();
+
 
 	
 }

@@ -27,3 +27,5 @@ void UI_DrawFruitBasketTooltips();
 //bool UI_IsMouseOverAnyBasket();
 
 void UI_UpdateButtons();
+float UI_GetPlotSlotX(int index);
+float UI_GetPlotSlotY(int index);

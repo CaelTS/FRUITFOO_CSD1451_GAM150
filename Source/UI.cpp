@@ -15,6 +15,18 @@ static int activePopupIndex = -1;
 static int selectedSeed = -1;
 int hoveredSeed = -1;   // purely for highlight
 int infoSeed = -1;         // which seed info panel is showing
+static int hoveredPlotIndex = -1;
+static int activePlotIndex = -1;
+
+float UI_GetPlotCenterX();
+float UI_GetPlotCenterY();
+struct PlotSlot
+{
+    float x, y;
+    float width, height;
+};
+static std::vector<PlotSlot> plotSlots;
+static AEGfxTexture* plotSlotTexture = nullptr;
 
 static AEGfxTexture* menuTexture = nullptr;
 static AEGfxTexture* seedsTexture = nullptr;
@@ -58,29 +70,128 @@ void UI_Init()
     settingsIcon = AEGfxTextureLoad("Assets/Settings.png");
     appleSeedIcon = AEGfxTextureLoad("Assets/AppleSeed.png");
     appleSeedInfo = AEGfxTextureLoad("Assets/AppleSeedInfo.png");
+    plotSlotTexture = AEGfxTextureLoad("Assets/Plot1.png");
 
     menuButtons.clear();
+    float menuCenterX = -530.0f;
+    float buttonSize = 100.0f;
+    float buttonspacing = 140.0f;
+    float buttonY = -360.0f;
 
-    float startX = -675.0f;
-    float spacing = 150.0f;
-    float buttonY = -350.0f;
+    // Left
+    menuButtons.push_back({
+        menuCenterX - buttonspacing,
+        buttonY,
+        buttonSize,
+        buttonSize,
+        false,
+        BUTTON_INVENTORY
+        });
 
-    for (int i = 0; i < 3; i++)
+    // Center
+    menuButtons.push_back({
+        menuCenterX,
+        buttonY,
+        buttonSize,
+        buttonSize,
+        false,
+        BUTTON_COLLECTION
+        });
+
+    // Right
+    menuButtons.push_back({
+        menuCenterX + buttonspacing,
+        buttonY,
+        buttonSize,
+        buttonSize,
+        false,
+        BUTTON_SETTINGS
+        });
+    if (popupOpen)
     {
-        MenuButton b;
-        b.x = startX + i * spacing;
-        b.y = buttonY;
-        b.width = 96;
-        b.height = 96;
-        b.isHovered = false;
-        b.type = (ButtonType)i;
-        menuButtons.push_back(b);
-    }
+        float popupW = 400.0f;
+        float popupH = 250.0f;
 
+        AEMtx33 scale, trans, transform;
+
+        // Draw popup background
+        AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+        AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+        AEGfxSetColorToMultiply(0.1f, 0.1f, 0.1f, 0.95f);
+
+        AEMtx33Scale(&scale, popupW, popupH);
+        AEMtx33Trans(&trans, 0.0f, 0.0f);
+        AEMtx33Concat(&transform, &trans, &scale);
+
+        AEGfxSetTransform(transform.m);
+        AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+        // RESET for text
+        AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+        AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+        AEGfxSetColorToMultiply(1, 1, 1, 1);
+
+        float xText = -0.1f;
+        float yText = 0.1f;
+
+        switch (activePopupIndex)
+        {
+        case BUTTON_SETTINGS:
+            AEGfxPrint(fontId, "Settings", xText, yText, 1.0f, 1, 1, 1, 1);
+            AEGfxPrint(fontId, "Game options here.",
+                xText, yText - 0.08f,
+                0.8f, 1, 1, 1, 1);
+            break;
+
+        case BUTTON_INVENTORY:
+            AEGfxPrint(fontId, "Inventory", xText, yText, 1.0f, 1, 1, 1, 1);
+            break;
+
+        case BUTTON_COLLECTION:
+            AEGfxPrint(fontId, "Collection", xText, yText, 1.0f, 1, 1, 1, 1);
+            break;
+        }
+    }
+ 
     plotPlusButton.x = -630.0f;
     plotPlusButton.y = 150.0f;
     plotPlusButton.width = 120.0f;
     plotPlusButton.height = 120.0f;
+
+    plotSlots.clear();
+
+    //plot setup
+
+    float slotSize = 120.0f;
+    float spacing = 150.0f;
+
+    int cols = 2;
+    int rows = 2;
+
+    // Center of the Plot panel
+    float panelCenterX = -510.0f;   // tweak slightly if needed
+    float panelCenterY = 150.0f;    // tweak slightly if needed
+    float totalWidth = (cols - 1) * spacing + slotSize;
+    float totalHeight = (rows - 1) * spacing + slotSize;
+
+    float startX = panelCenterX - totalWidth * 0.5f + slotSize * 0.5f;
+    float startY = panelCenterY + totalHeight * 0.5f - slotSize * 0.5f;
+
+    plotSlots.clear();
+
+    for (int row = 0; row < rows; row++)
+    {
+        for (int col = 0; col < cols; col++)
+        {
+            PlotSlot slot;
+            slot.x = startX + col * spacing;
+            slot.y = startY - row * spacing;
+            slot.width = slotSize;
+            slot.height = slotSize;
+
+            plotSlots.push_back(slot);
+        }
+    }
 }
 
 void UI_Input()
@@ -161,20 +272,50 @@ void UI_UpdateButtons()
             hoveredSeed = -1;
         if (overSeed && AEInputCheckTriggered(AEVK_LBUTTON))
         {
-            if (selectedSeed != SEED_APPLE)
+            selectedSeed = SEED_APPLE;
+
+            if (activePlotIndex != -1)
             {
-                // First click = show info
-                selectedSeed = SEED_APPLE;
-            }
-            else
-            {
-                // Second click = plant
-                Farm_PlantSeed(SEED_APPLE);
+                int plotToPlant = activePlotIndex;
+
+                Farm_PlantSeed(plotToPlant, SEED_APPLE);
+
+                std::cout << "Planted on plot: " << plotToPlant << "\n";
 
                 seedsPopupOpen = false;
+                activePlotIndex = -1;
                 selectedSeed = -1;
-                std::cout << "Second click triggered\n";
             }
+        }
+    }
+
+    // -------------------------------------------------
+// PLOT SLOT HOVER
+// -------------------------------------------------
+
+    hoveredPlotIndex = -1;
+
+    for (int i = 0; i < plotSlots.size(); i++)
+    {
+        PlotSlot& slot = plotSlots[i];
+
+        bool isOver =
+            worldX >= slot.x - slot.width * 0.5f &&
+            worldX <= slot.x + slot.width * 0.5f &&
+            worldY >= slot.y - slot.height * 0.5f &&
+            worldY <= slot.y + slot.height * 0.5f;
+
+        if (isOver)
+        {
+            hoveredPlotIndex = i;
+
+            if (AEInputCheckTriggered(AEVK_LBUTTON))
+            {
+                seedsPopupOpen = true;
+                activePlotIndex = i;   // ADD THIS
+            }
+
+            break;
         }
     }
 }
@@ -303,13 +444,19 @@ void UI_Draw()
         if (hoveredSeed == SEED_APPLE)
         {
             AEGfxSetRenderMode(AE_GFX_RM_COLOR);
-            AEGfxSetColorToMultiply(1.0f, 0.9f, 0.3f, 0.5f);
+            AEGfxSetBlendMode(AE_GFX_BM_BLEND);   
+            AEGfxSetColorToMultiply(1.0f, 0.55f, 0.0f, 0.9f);
 
-            AEMtx33Scale(&scale, 120, 120);
+            AEMtx33Scale(&scale, 112, 112);   // slightly larger than icon
             AEMtx33Trans(&trans, panelX, seedY);
             AEMtx33Concat(&transform, &trans, &scale);
+
             AEGfxSetTransform(transform.m);
             AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+            // Reset after drawing
+            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+            AEGfxSetColorToMultiply(1, 1, 1, 1);
         }
 
         // Draw seed
@@ -324,8 +471,40 @@ void UI_Draw()
         AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
     }
 
+    AEGfxTextureSet(plotSlotTexture, 0, 0);
+    AEGfxTextureSet(plotSlotTexture, 0, 0);
 
+    for (int i = 0; i < plotSlots.size(); i++)
+    {
+        PlotSlot& slot = plotSlots[i];
 
+        // Draw slot texture
+        AEMtx33Scale(&scale, slot.width, slot.height);
+        AEMtx33Trans(&trans, slot.x, slot.y);
+        AEMtx33Concat(&transform, &trans, &scale);
+
+        AEGfxSetTransform(transform.m);
+        AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+        // Yellow hover overlay
+        if (i == hoveredPlotIndex)
+        {
+            AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+            AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+            AEGfxSetColorToMultiply(0.2f, 0.8f, 0.3f, 0.55f);
+
+            AEMtx33Scale(&scale, slot.width, slot.height);
+            AEMtx33Trans(&trans, slot.x, slot.y);
+            AEMtx33Concat(&transform, &trans, &scale);
+
+            AEGfxSetTransform(transform.m);
+            AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+            // Reset render mode after overlay
+            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+            AEGfxSetColorToMultiply(1, 1, 1, 1);
+        }
+    }
     // --- Apple Info ---
     if (selectedSeed == SEED_APPLE)
     {
@@ -424,3 +603,35 @@ void UI_DrawFruitBasketTooltips()
     }
 }
 
+//FARM PLOTS
+
+float UI_GetPlotCenterX()
+{
+    return plotPlusButton.x;
+}
+
+float UI_GetPlotCenterY()
+{
+    return plotPlusButton.y;
+}
+
+float UI_GetPlotSlotX(int index)
+{
+    if (index < 0 || index >= plotSlots.size())
+        return 0.0f;
+
+    return plotSlots[index].x;
+}
+
+float UI_GetPlotSlotY(int index)
+{
+    if (index < 0 || index >= plotSlots.size())
+        return 0.0f;
+
+    return plotSlots[index].y;
+}
+
+void UI_Exit()
+{
+    // Optional: free textures here
+}

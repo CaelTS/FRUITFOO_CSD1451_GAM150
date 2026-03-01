@@ -19,4 +19,4 @@ struct Plot
 };
 
 void Farm_PlantSeed(int plotIndex, int seedType);
-bool Farm_IsPlanted();
+bool Farm_IsPlotPlanted(int plotIndex);

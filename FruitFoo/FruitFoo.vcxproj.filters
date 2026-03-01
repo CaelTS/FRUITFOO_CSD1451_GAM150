@@ -65,9 +65,6 @@
     <ClInclude Include="..\Source\Transition.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\OneDrive\Documents\GitHub\FRUITFOO_CSD1451_GAM150\Source\Farm.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\Source\Economy.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -87,6 +84,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\Source\Utilities.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\Farm.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

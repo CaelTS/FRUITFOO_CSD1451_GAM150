@@ -1,27 +1,30 @@
 #include "Farm.h"
 #include "AEEngine.h"
+#include "UI.h"
 #include <iostream>
 #include <vector>
 
 extern AEGfxVertexList* g_pMeshFullScreen;
-extern AEGfxVertexList* pMeshFruit;
+
 // ------------------------------------------------------------
-// FARM STATE
+// FARM DATA STRUCTURE
 // ------------------------------------------------------------
 
-static float growTimer = 0.0f;
-static bool isPlanted = false;
-static bool isReady = false;
-static int plantedSeedType = -1;
+struct FarmPlot
+{
+    bool isPlanted = false;
+    bool isReady = false;
+    float growTimer = 0.0f;
+    int seedType = -1;
+};
 
-AEGfxTexture* plantedTexture = nullptr;
+static std::vector<FarmPlot> farmPlots;
+static AEGfxTexture* plantedTexture = nullptr;
 
-const float GROW_TIME = 3.0f; // seconds
-static const float plotX = -630.0f;
-static const float plotY = 150.0f;
-static std::vector<Plot> plots;
+const float GROW_TIME = 3.0f;
 
-
+// ------------------------------------------------------------
+// LOAD / INITIALIZE
 // ------------------------------------------------------------
 
 void Farm_Load()
@@ -31,80 +34,99 @@ void Farm_Load()
     plantedTexture = AEGfxTextureLoad("Assets/PlotPlant.png");
 
     if (!plantedTexture)
-        std::cout << "ERROR: Plant texture failed to load\n";
+        std::cout << "FAILED TO LOAD PlotPlant.png\n";
+    else
+        std::cout << "PlotPlant.png loaded successfully\n";
 }
 
 void Farm_Initialize()
 {
     std::cout << "Farm_Initialize\n";
 
-    growTimer = 0.0f;
-    isPlanted = false;     // IMPORTANT: start empty
-    isReady = false;
-    plantedSeedType = -1;
+    farmPlots.clear();
+    farmPlots.resize(4);   // 4 plot slots
 }
+
+// ------------------------------------------------------------
+// UPDATE
+// ------------------------------------------------------------
 
 void Farm_Update()
 {
     float dt = (float)AEFrameRateControllerGetFrameTime();
 
-    // Growing logic
-    if (isPlanted && !isReady)
+    for (auto& plot : farmPlots)
     {
-        growTimer += dt;
+        if (!plot.isPlanted || plot.isReady)
+            continue;
 
-        static int lastSecond = -1;
-        int currentSecond = (int)growTimer;
+        plot.growTimer += dt;
 
-        if (currentSecond != lastSecond)
+        if (plot.growTimer >= GROW_TIME)
         {
-            lastSecond = currentSecond;
-            std::cout << "Growing... " << currentSecond << "s\n";
-        }
-
-        if (growTimer >= GROW_TIME)
-        {
-            isReady = true;
-            std::cout << "Crop ready to harvest!\n";
+            plot.isReady = true;
+            std::cout << "Plot ready!\n";
         }
     }
 
-    // Harvest with SPACE
-    if (isReady && AEInputCheckTriggered(AEVK_SPACE))
+    // Harvest all ready plots with SPACE
+    if (AEInputCheckTriggered(AEVK_SPACE))
     {
-        std::cout << "Harvested crop!\n";
+        for (auto& plot : farmPlots)
+        {
+            if (plot.isReady)
+            {
+                plot.isPlanted = false;
+                plot.isReady = false;
+                plot.seedType = -1;
+                plot.growTimer = 0.0f;
 
-        isPlanted = false;
-        isReady = false;
-        plantedSeedType = -1;
-        growTimer = 0.0f;
+                std::cout << "Harvested plot\n";
+            }
+        }
     }
 }
 
+// ------------------------------------------------------------
+// RENDER
+// ------------------------------------------------------------
+
 void Farm_Render()
 {
-    if (!isPlanted)
+    if (!plantedTexture)
         return;
-
-    float width = 120.0f;
-    float height = 120.0f;
 
     AEMtx33 scale, trans, transform;
 
     AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
     AEGfxSetBlendMode(AE_GFX_BM_BLEND);
     AEGfxSetTransparency(1.0f);
-    AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
+    AEGfxSetColorToMultiply(1, 1, 1, 1);
 
-    AEGfxTextureSet(plantedTexture, 0, 0);
+    for (int i = 0; i < farmPlots.size(); i++)
+    {
+        if (!farmPlots[i].isPlanted)
+            continue;
 
-    AEMtx33Scale(&scale, width, height);
-    AEMtx33Trans(&trans, plotX, plotY);
-    AEMtx33Concat(&transform, &trans, &scale);
+        float plotX = UI_GetPlotSlotX(i);
+        float plotY = UI_GetPlotSlotY(i);
 
-    AEGfxSetTransform(transform.m);
-    AEGfxMeshDraw(pMeshFruit, AE_GFX_MDM_TRIANGLES);
+        AEGfxTextureSet(plantedTexture, 0, 0);
+
+        AEMtx33Scale(&scale, 120.0f, 120.0f);
+        AEMtx33Trans(&trans, plotX, plotY);
+        AEMtx33Concat(&transform, &trans, &scale);
+
+        AEGfxSetTransform(transform.m);
+        AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+    }
+  //  std::cout << "Rendering farm...\n";
+ 
 }
+
+// ------------------------------------------------------------
+// FREE / UNLOAD
+// ------------------------------------------------------------
 
 void Farm_Free()
 {
@@ -123,23 +145,31 @@ void Farm_Unload()
 }
 
 // ------------------------------------------------------------
-// PUBLIC FUNCTION (Called from UI)
+// PUBLIC FUNCTIONS
 // ------------------------------------------------------------
 
-void Farm_PlantSeed(int seedType)
+void Farm_PlantSeed(int plotIndex, int seedType)
 {
-    if (isPlanted)
-        return; // already occupied
+    if (plotIndex < 0 || plotIndex >= farmPlots.size())
+        return;
 
-    plantedSeedType = seedType;
-    isPlanted = true;
-    isReady = false;
-    growTimer = 0.0f;
+    FarmPlot& plot = farmPlots[plotIndex];
 
-    std::cout << "Seed planted!\n";
+    if (plot.isPlanted)
+        return;
+
+    plot.isPlanted = true;
+    plot.isReady = false;
+    plot.seedType = seedType;
+    plot.growTimer = 0.0f;
+    std::cout << "Planting at plot: " << plotIndex << "\n";
 }
 
-bool Farm_IsPlanted()
+bool Farm_IsPlotPlanted(int plotIndex)
 {
-    return isPlanted;
+    if (plotIndex < 0 || plotIndex >= farmPlots.size())
+        return false;
+
+    return farmPlots[plotIndex].isPlanted;
 }
+
