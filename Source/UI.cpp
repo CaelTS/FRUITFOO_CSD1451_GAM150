@@ -2,6 +2,7 @@
 #include "Farm.h"
 #include "AEEngine.h"
 #include <vector>
+#include <iostream>
 
 extern AEGfxVertexList* g_pMeshFullScreen;
 extern s8 fontId;
@@ -12,6 +13,8 @@ static bool seedsPopupOpen = false;
 
 static int activePopupIndex = -1;
 static int selectedSeed = -1;
+int hoveredSeed = -1;   // purely for highlight
+int infoSeed = -1;         // which seed info panel is showing
 
 static AEGfxTexture* menuTexture = nullptr;
 static AEGfxTexture* seedsTexture = nullptr;
@@ -89,16 +92,17 @@ void UI_Input()
         UI_UpdateButtons();
 }
 
-
 void UI_UpdateButtons()
 {
     int mx, my;
     AEInputGetCursorPosition(&mx, &my);
 
-    float worldX = mx - 800.0f;
-    float worldY = 450.0f - my;
+    float worldX = static_cast<float>(mx) - 800.0f;
+    float worldY = 450.0f - static_cast<float>(my);
 
-    // Menu buttons
+    // -------------------------------------------------
+    // MENU BUTTONS
+    // -------------------------------------------------
     for (auto& button : menuButtons)
     {
         button.isHovered =
@@ -114,7 +118,9 @@ void UI_UpdateButtons()
         }
     }
 
-    // Plot +
+    // -------------------------------------------------
+    // PLOT "+" BUTTON (TOGGLE PANEL)
+    // -------------------------------------------------
     plotPlusButton.isHovered =
         worldX >= plotPlusButton.x - plotPlusButton.width * 0.5f &&
         worldX <= plotPlusButton.x + plotPlusButton.width * 0.5f &&
@@ -122,9 +128,17 @@ void UI_UpdateButtons()
         worldY <= plotPlusButton.y + plotPlusButton.height * 0.5f;
 
     if (plotPlusButton.isHovered && AEInputCheckTriggered(AEVK_LBUTTON))
+    {
         seedsPopupOpen = !seedsPopupOpen;
 
-    // Seed selection
+        // If closing the panel, reset selection
+        if (!seedsPopupOpen)
+            selectedSeed = -1;
+    }
+
+    // -------------------------------------------------
+    // SEED SELECTION (ONLY IF PANEL OPEN)
+    // -------------------------------------------------
     if (seedsPopupOpen)
     {
         float panelX = -100.0f;
@@ -139,13 +153,32 @@ void UI_UpdateButtons()
             worldY >= seedY - seedH * 0.5f &&
             worldY <= seedY + seedH * 0.5f;
 
-        if (overSeed && AEInputCheckTriggered(AEVK_LBUTTON))
-            selectedSeed = SEED_APPLE;
 
-        if (AEInputCheckTriggered(AEVK_LBUTTON) && !overSeed)
-            selectedSeed = -1;
+        // Hover detection
+        if (overSeed)
+            hoveredSeed = SEED_APPLE;
+        else
+            hoveredSeed = -1;
+        if (overSeed && AEInputCheckTriggered(AEVK_LBUTTON))
+        {
+            if (selectedSeed != SEED_APPLE)
+            {
+                // First click = show info
+                selectedSeed = SEED_APPLE;
+            }
+            else
+            {
+                // Second click = plant
+                Farm_PlantSeed(SEED_APPLE);
+
+                seedsPopupOpen = false;
+                selectedSeed = -1;
+                std::cout << "Second click triggered\n";
+            }
+        }
     }
 }
+
 
 void UI_Draw()
 {
@@ -153,6 +186,8 @@ void UI_Draw()
         return;
 
     AEMtx33 scale, trans, transform;
+
+
 
     // --- Menu Background ---
     AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
@@ -265,7 +300,7 @@ void UI_Draw()
         float seedY = panelY + 120.0f;
 
         // Highlight
-        if (selectedSeed == SEED_APPLE)
+        if (hoveredSeed == SEED_APPLE)
         {
             AEGfxSetRenderMode(AE_GFX_RM_COLOR);
             AEGfxSetColorToMultiply(1.0f, 0.9f, 0.3f, 0.5f);
@@ -288,6 +323,8 @@ void UI_Draw()
         AEGfxSetTransform(transform.m);
         AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
     }
+
+
 
     // --- Apple Info ---
     if (selectedSeed == SEED_APPLE)

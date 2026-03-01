@@ -13,6 +13,7 @@
 #include "Economy.h"
 #include "UI.h"
 #include "Rhythm.h"
+#include "Farm.h"
 
 // ---------------------------------------------------------------------------
 // Game State Variables
@@ -63,6 +64,7 @@ AEGfxTexture* pTexBanana = NULL;
 AEGfxVertexList* pMeshStall = NULL;
 AEGfxVertexList* pMeshFruit = NULL;
 AEGfxVertexList* g_pMeshFullScreen = NULL;
+AEGfxTexture* pTexPlus = nullptr;
 
 // Random number generator
 std::random_device rd;
@@ -124,11 +126,13 @@ void MainScreen_Load()
 	pTexApple = AEGfxTextureLoad("Assets/Apple.png");
 	pTexPear = AEGfxTextureLoad("Assets/Pear.png");
 	pTexBanana = AEGfxTextureLoad("Assets/Banana.png");
+	pTexPlus = AEGfxTextureLoad("Assets/Plus.png");
 
 	if (!pTexStall) OutputDebugStringA("ERROR: Failed to load 'Assets/Stall_Empty_POT.png'.\n");
 	if (!pTexApple) OutputDebugStringA("ERROR: Failed to load 'Assets/Apple.png'.\n");
 	if (!pTexPear) OutputDebugStringA("ERROR: Failed to load 'Assets/Pear.png'.\n");
 	if (!pTexBanana) OutputDebugStringA("ERROR: Failed to load 'Assets/Banana.png'.\n");
+
 }
 
 void MainScreen_Initialize()
@@ -179,6 +183,8 @@ void MainScreen_Update()
 	// Economy Update
 	Economy_Update(dt);
 	UI_Input();
+
+	Farm_Update();
 
 	// Energy Regeneration Logic
 	if (energy < MAX_ENERGY)
@@ -308,11 +314,6 @@ void MainScreen_Update()
 			return;
 	}
 
-	if (AEInputCheckTriggered(AEVK_F))
-	{
-		OutputDebugStringA("Switching to FARM state\n");
-		next = GS_FARM_SCREEN;
-	}
 
 
 	if (AEInputCheckTriggered(AEVK_N)) {
@@ -364,6 +365,8 @@ void MainScreen_Render()
 	AEGfxSetBlendMode(AE_GFX_BM_BLEND);
 	AEGfxSetTransparency(1.0f);
 
+
+	
 	for (const auto& fruit : fruits)
 	{
 		if (!fruit.active) continue;
@@ -386,6 +389,7 @@ void MainScreen_Render()
 			AEGfxMeshDraw(pMeshFruit, AE_GFX_MDM_TRIANGLES);
 		}
 	}
+
 
 	// --- Draw UI Borders ---
 	float uiX = -700.0f;
@@ -501,8 +505,26 @@ void MainScreen_Render()
 		AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
 	}
 
+
+	// Draw Plot (+) if not planted AND menu closed
+	if (!Farm_IsPlanted() && !UI_IsMenuOpen())
+	{
+		AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+		AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+		AEGfxSetColorToMultiply(1, 1, 1, 1);
+		AEGfxTextureSet(pTexPlus, 0, 0);
+
+		AEMtx33Scale(&scale, 120.0f, 120.0f);
+		AEMtx33Trans(&trans, -630.0f, 150.0f);
+		AEMtx33Concat(&transform, &trans, &scale);
+
+		AEGfxSetTransform(transform.m);
+		AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+	}
 	UI_Draw();
 	UI_DrawFruitBasketTooltips();
+
+	
 }
 
 void MainScreen_Free()

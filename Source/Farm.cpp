@@ -1,8 +1,10 @@
 #include "Farm.h"
 #include "AEEngine.h"
 #include <iostream>
+#include <vector>
 
-extern AEGfxVertexList* g_pMeshFullScreen;   
+extern AEGfxVertexList* g_pMeshFullScreen;
+extern AEGfxVertexList* pMeshFruit;
 // ------------------------------------------------------------
 // FARM STATE
 // ------------------------------------------------------------
@@ -17,6 +19,8 @@ AEGfxTexture* plantedTexture = nullptr;
 const float GROW_TIME = 3.0f; // seconds
 static const float plotX = -630.0f;
 static const float plotY = 150.0f;
+static std::vector<Plot> plots;
+
 
 // ------------------------------------------------------------
 
@@ -24,7 +28,7 @@ void Farm_Load()
 {
     std::cout << "Farm_Load\n";
 
-    plantedTexture = AEGfxTextureLoad("Assets/First Plot_Plant_v1_solo.png");
+    plantedTexture = AEGfxTextureLoad("Assets/PlotPlant.png");
 
     if (!plantedTexture)
         std::cout << "ERROR: Plant texture failed to load\n";
@@ -99,7 +103,7 @@ void Farm_Render()
     AEMtx33Concat(&transform, &trans, &scale);
 
     AEGfxSetTransform(transform.m);
-    AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+    AEGfxMeshDraw(pMeshFruit, AE_GFX_MDM_TRIANGLES);
 }
 
 void Farm_Free()
@@ -133,4 +137,9 @@ void Farm_PlantSeed(int seedType)
     growTimer = 0.0f;
 
     std::cout << "Seed planted!\n";
+}
+
+bool Farm_IsPlanted()
+{
+    return isPlanted;
 }

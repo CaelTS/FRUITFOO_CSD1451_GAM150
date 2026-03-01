@@ -4,6 +4,7 @@
 #include "Next.h"
 #include "Farm.h"
 #include "Rhythm.h"
+#include <iostream>
 
 
 // GSM state variables
@@ -26,6 +27,8 @@ void GSM_Initialize(int startingState)
 
 void GSM_Update()
 {
+
+    std::cout << "Current state: " << current << "\n";
     switch (current)
     {
     case GS_MAIN_SCREEN:
