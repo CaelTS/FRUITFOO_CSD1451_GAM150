@@ -268,7 +268,7 @@ void Rhythm_Load() {
     g_pTexNormalNote = AEGfxTextureLoad("Assets/normal_note.png");
     g_pTexPremiumNote = AEGfxTextureLoad("Assets/premium_note.png");
     g_pTexBackground = AEGfxTextureLoad("Assets/background.png");
-    g_pTexWateringCan = AEGfxTextureLoad("Assets/watering_can.jpg");
+    g_pTexWateringCan = AEGfxTextureLoad("Assets/watering_can.png");
 
     if (!g_pTexNormalNote) {
         printf("ERROR: Failed to load normal note texture!\n");
@@ -436,25 +436,25 @@ void Rhythm_Render() {
     }
 
     // ================= DRAW WATERING CAN =================
-    if (g_pTexWateringCan) {
+    if (g_pTexWateringCan)
+    {
         AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
-        AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
-        AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+        AEGfxSetBlendMode(AE_GFX_BM_BLEND);   // important
+        AEGfxSetTransparency(1.0f);
+        AEGfxSetColorToMultiply(1, 1, 1, 1);
+
         AEGfxTextureSet(g_pTexWateringCan, 0, 0);
 
-        // Position above the judgment line
-        float canSize = 40.0f;  // Size of watering can
-        float canX = JUDGMENT_LINE_X;  // Same X as judgment line
-        float canY = VERTICAL_OFFSET + 100.0f;  // Above the judgment line
+        float canSize = 80.0f;
 
-        // Build transform: scale -> rotate -> translate
-        // Use temp variables to avoid conflict with outer scope
+        float canX = JUDGMENT_LINE_X;
+        float canY = VERTICAL_OFFSET + 120.0f;
+
         AEMtx33 canScale, canRot, canTrans, canTemp, canTransform;
-        AEMtx33Scale(&canScale, canSize * 2.0f, canSize * 2.0f);
-        AEMtx33RotDeg(&canRot, g_wateringCanRotation);  // Apply rotation
+        AEMtx33Scale(&canScale, canSize, canSize);
+        AEMtx33RotDeg(&canRot, g_wateringCanRotation);
         AEMtx33Trans(&canTrans, canX, canY);
 
-        // Combine: trans * rot * scale
         AEMtx33Concat(&canTemp, &canRot, &canScale);
         AEMtx33Concat(&canTransform, &canTrans, &canTemp);
 
