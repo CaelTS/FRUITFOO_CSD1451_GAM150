@@ -191,6 +191,7 @@ void MainScreen_Update()
 	UI_Input();
 
 	Farm_Update();
+	
 
 	// Energy Regeneration Logic
 	if (energy < MAX_ENERGY)
@@ -519,9 +520,8 @@ void MainScreen_Render()
 
 	//std::cout << "Render Check - IsPlanted: " << Farm_IsPlanted() << "\n";
 	UI_Draw();
-	UI_DrawFruitBasketTooltips();
 	Farm_Render();
-
+	UI_DrawFruitBasketTooltips();
 
 	
 }

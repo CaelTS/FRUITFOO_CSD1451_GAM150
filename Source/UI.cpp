@@ -285,7 +285,7 @@ void UI_UpdateButtons()
 
                 seedsPopupOpen = false;
                 activePlotIndex = -1;
-                selectedSeed = -1;
+                //selectedSeed = 1;
             }
         }
     }
@@ -312,14 +312,23 @@ void UI_UpdateButtons()
 
             if (AEInputCheckTriggered(AEVK_LBUTTON))
             {
-                seedsPopupOpen = true;
-                activePlotIndex = i;   // ADD THIS
+                // Toggle panel if clicking same plot again
+                if (seedsPopupOpen && activePlotIndex == i)
+                {
+                    seedsPopupOpen = false;
+                    selectedSeed = -1;      // hide info
+                    activePlotIndex = -1;
+                }
+                else
+                {
+                    seedsPopupOpen = true;
+                    activePlotIndex = i;
+                    selectedSeed = SEED_APPLE;   // SHOW INFO IMMEDIATELY
+                }
             }
 
-            break;
+            break;  // stop checking other slots
         }
-        
-     
     }
 
     // DELETE SEED BUTTON (CLICK LOGIC ONLY)
@@ -348,9 +357,6 @@ void UI_UpdateButtons()
             break;
         }
     }
-
-  
-
 
 }
 
@@ -541,22 +547,23 @@ void UI_Draw()
     }
 
     // --- Apple Info ---
-    if (selectedSeed == SEED_APPLE)
+    if (seedsPopupOpen && selectedSeed == SEED_APPLE)
     {
-        float panelX = -100.0f;
-        float panelY = 0.0f;
-
-        float seedY = panelY + 120.0f;
+        float seedsCenterX = -100.0f;
+        float seedsCenterY = 0.0f;
 
         float infoW = 380.0f;
         float infoH = 340.0f;
 
-        float infoX = panelX;
-        float infoY = seedY - 220.0f;   // positioned under the seed
+        // PERFECT horizontal center
+        float infoX = seedsCenterX;
 
+        // Move it lower inside the seeds panel
+        float infoY = seedsCenterY - 110.0f;  // adjust this number
 
         AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
         AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+        AEGfxSetTransparency(1.0f);
         AEGfxSetColorToMultiply(1, 1, 1, 1);
         AEGfxTextureSet(appleSeedInfo, 0, 0);
 
@@ -567,7 +574,6 @@ void UI_Draw()
         AEGfxSetTransform(transform.m);
         AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
     }
-
 
 
 }
