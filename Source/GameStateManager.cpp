@@ -1,7 +1,7 @@
 #include "GameStateManager.h"
 #include "AEEngine.h"
 #include "Main.h"
-#include "Next.h"
+#include "Profile.h"
 #include "Farm.h"
 #include "Rhythm.h"
 #include <iostream>
@@ -41,12 +41,12 @@ void GSM_Update()
         break;
 
     case GS_NEXT_SCREEN:
-        fpLoad = NextScreen_Load;
-        fpInitialize = NextScreen_Initialize;
-        fpUpdate = NextScreen_Update;
-        fpDraw = NextScreen_Render;
-        fpFree = NextScreen_Free;
-        fpUnload = NextScreen_Unload;
+        fpLoad = ProfileScreen_Load;
+        fpInitialize = ProfileScreen_Initialize;
+        fpUpdate = ProfileScreen_Update;
+        fpDraw = ProfileScreen_Render;
+        fpFree = ProfileScreen_Free;
+        fpUnload = ProfileScreen_Unload;
         break;
 
     case GS_FARM_SCREEN:
