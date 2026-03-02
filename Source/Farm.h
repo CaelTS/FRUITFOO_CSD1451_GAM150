@@ -20,3 +20,5 @@ struct Plot
 
 void Farm_PlantSeed(int plotIndex, int seedType);
 bool Farm_IsPlotPlanted(int plotIndex);
+bool Farm_IsPlotPlanted(int index);
+void Farm_ClearPlot(int index);
