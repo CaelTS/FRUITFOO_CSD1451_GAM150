@@ -22,3 +22,6 @@ void Farm_PlantSeed(int plotIndex, int seedType);
 bool Farm_IsPlotPlanted(int plotIndex);
 bool Farm_IsPlotPlanted(int index);
 void Farm_ClearPlot(int index);
+bool Farm_ShouldStartRhythm();
+int  Farm_GetRhythmPlotIndex();
+void Farm_ClearRhythmRequest();
