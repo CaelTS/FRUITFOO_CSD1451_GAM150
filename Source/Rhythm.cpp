@@ -317,7 +317,11 @@ void Rhythm_Update() {
     if (!g_isPlaying) return;
 
     float dt = (float)AEFrameRateControllerGetFrameTime();
-
+    // Handle input
+    if (AEInputCheckTriggered(AEVK_W))
+    {
+        Rhythm_Hit();
+    }
     // Handle countdown
     if (!g_audioStarted) {
         g_preSongTimer += dt;
