@@ -177,7 +177,7 @@ void Farm_Render()
         // Green overlay
         AEGfxSetColorToMultiply(0.2f, 1.0f, 0.2f, 0.6f);
 
-        float overlayHeight = 120.0f * normalized;
+        float overlayHeight = 60.0f * normalized;
 
         // Scale only height
         AEMtx33Scale(&scale, 120.0f, overlayHeight);
