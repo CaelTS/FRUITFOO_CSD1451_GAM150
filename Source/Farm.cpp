@@ -1,106 +1,229 @@
 #include "Farm.h"
 #include "AEEngine.h"
+#include "UI.h"
 #include <iostream>
+#include <vector>
 
-extern AEGfxVertexList* g_pMeshFullScreen;   
+extern AEGfxVertexList* g_pMeshFullScreen;
+
 // ------------------------------------------------------------
-// FARM STATE
+// FARM DATA STRUCTURE
 // ------------------------------------------------------------
 
-static float growTimer = 0.0f;
-static bool isPlanted = false;
-static bool isReady = false;
-static int plantedSeedType = -1;
+struct FarmPlot
+{
+    bool isPlanted = false;
+    bool isReady = false;
+    float growTimer = 0.0f;
+    int seedType = -1;
 
-AEGfxTexture* plantedTexture = nullptr;
+    bool rhythmTriggered = false;
+    bool waitingForRhythm = false;
+};
 
-const float GROW_TIME = 3.0f; // seconds
-static const float plotX = -630.0f;
-static const float plotY = 150.0f;
+static bool g_requestRhythm = false;
+static int  g_rhythmPlotIndex = -1;
 
+static std::vector<FarmPlot> farmPlots;
+static AEGfxTexture* plantedTexture = nullptr;
+static AEGfxTexture* deleteIcon = nullptr;
+
+
+const float GROW_TIME = 3.0f;
+
+// ------------------------------------------------------------
+// LOAD / INITIALIZE
 // ------------------------------------------------------------
 
 void Farm_Load()
 {
     std::cout << "Farm_Load\n";
 
-    plantedTexture = AEGfxTextureLoad("Assets/First Plot_Plant_v1_solo.png");
+    plantedTexture = AEGfxTextureLoad("Assets/PlotPlant.png");
+    deleteIcon = AEGfxTextureLoad("Assets/X.png");
 
     if (!plantedTexture)
-        std::cout << "ERROR: Plant texture failed to load\n";
+        std::cout << "FAILED TO LOAD PlotPlant.png\n";
+    else
+        std::cout << "PlotPlant.png loaded successfully\n";
+
+    
+
+   
+
 }
 
 void Farm_Initialize()
 {
     std::cout << "Farm_Initialize\n";
 
-    growTimer = 0.0f;
-    isPlanted = false;     // IMPORTANT: start empty
-    isReady = false;
-    plantedSeedType = -1;
+    farmPlots.clear();
+    farmPlots.resize(4);   // 4 plot slots
 }
 
+// ------------------------------------------------------------
+// UPDATE
+// ------------------------------------------------------------
 void Farm_Update()
 {
     float dt = (float)AEFrameRateControllerGetFrameTime();
 
-    // Growing logic
-    if (isPlanted && !isReady)
+    for (int i = 0; i < farmPlots.size(); i++)
     {
-        growTimer += dt;
+        FarmPlot& plot = farmPlots[i];
 
-        static int lastSecond = -1;
-        int currentSecond = (int)growTimer;
+        if (!plot.isPlanted)
+            continue;
 
-        if (currentSecond != lastSecond)
+        if (plot.waitingForRhythm)
+            continue;
+
+        // Grow
+        plot.growTimer += dt;
+
+        float ratio = plot.growTimer / GROW_TIME;
+
+        // Trigger rhythm at 50%
+        if (ratio >= 0.5f && !plot.rhythmTriggered)
         {
-            lastSecond = currentSecond;
-            std::cout << "Growing... " << currentSecond << "s\n";
+            plot.rhythmTriggered = true;
+            plot.waitingForRhythm = true;
+
+            g_requestRhythm = true;
+            g_rhythmPlotIndex = i;
+
+            break;
         }
 
-        if (growTimer >= GROW_TIME)
+        if (ratio >= 1.0f)
         {
-            isReady = true;
-            std::cout << "Crop ready to harvest!\n";
+            plot.isReady = true;
         }
     }
 
-    // Harvest with SPACE
-    if (isReady && AEInputCheckTriggered(AEVK_SPACE))
+    // Harvest
+    if (AEInputCheckTriggered(AEVK_SPACE))
     {
-        std::cout << "Harvested crop!\n";
-
-        isPlanted = false;
-        isReady = false;
-        plantedSeedType = -1;
-        growTimer = 0.0f;
+        for (auto& plot : farmPlots)
+        {
+            if (plot.isReady)
+            {
+                plot.isPlanted = false;
+                plot.isReady = false;
+                plot.seedType = -1;
+                plot.growTimer = 0.0f;
+                plot.rhythmTriggered = false;
+                plot.waitingForRhythm = false;
+            }
+        }
     }
 }
+
+// ------------------------------------------------------------
+// RENDER
+// ------------------------------------------------------------
 
 void Farm_Render()
 {
-    if (!isPlanted)
+    if (!plantedTexture)
         return;
 
-    float width = 120.0f;
-    float height = 120.0f;
-
     AEMtx33 scale, trans, transform;
-
     AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
     AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+    AEGfxSetColorToMultiply(1, 1, 1, 1);
     AEGfxSetTransparency(1.0f);
-    AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
 
-    AEGfxTextureSet(plantedTexture, 0, 0);
+    for (int i = 0; i < farmPlots.size(); i++)
+    {
+        if (!farmPlots[i].isPlanted)
+            continue;
 
-    AEMtx33Scale(&scale, width, height);
-    AEMtx33Trans(&trans, plotX, plotY);
-    AEMtx33Concat(&transform, &trans, &scale);
+        // Get plot center once
+        float plotX = UI_GetPlotSlotX(i);
+        float plotY = UI_GetPlotSlotY(i);
 
-    AEGfxSetTransform(transform.m);
-    AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+        // --------------------------
+        // 1 Draw Apple FIRST
+        // --------------------------
+        float ratio = farmPlots[i].growTimer / GROW_TIME;
+        if (ratio > 1.0f) ratio = 1.0f;
+
+        // --------------------------
+        // Draw Apple (base)
+        // --------------------------
+        AEGfxTextureSet(plantedTexture, 0, 0);
+
+        AEMtx33Scale(&scale, 120.0f, 120.0f);
+        AEMtx33Trans(&trans, plotX, plotY);
+        AEMtx33Concat(&transform, &trans, &scale);
+
+        AEGfxSetTransform(transform.m);
+        AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+        // ---- Growth overlay ----
+        float growthRatio = ratio;
+
+        // Only show growth until rhythm triggers
+        if (growthRatio > 0.5f)
+            growthRatio = 0.5f;
+
+        // Normalize 0 to 0.5  into 0  1
+        float normalized = growthRatio / 0.5f;
+
+        AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+        AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+
+        // Green overlay
+        AEGfxSetColorToMultiply(0.2f, 1.0f, 0.2f, 0.6f);
+
+        float overlayHeight = 60.0f * normalized;
+
+        // Scale only height
+        AEMtx33Scale(&scale, 120.0f, overlayHeight);
+
+        // Anchor bottom of plot
+        AEMtx33Trans(&trans, plotX, plotY - (60.0f - overlayHeight * 0.5f));
+        AEMtx33Concat(&transform, &trans, &scale);
+
+        AEGfxSetTransform(transform.m);
+        AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+        // Reset
+        AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+        AEGfxSetColorToMultiply(1, 1, 1, 1);
+
+
+
+        // --------------------------
+        // 2 Draw Delete X AFTER
+        // --------------------------
+        if (deleteIcon)
+        {
+            float xSize = 25.0f;
+
+            // Move LEFT instead of right
+            float offsetX = -45.0f;
+            float offsetY = 45.0f;   // keep it at top
+
+            float xPos = plotX + offsetX;
+            float yPos = plotY + offsetY;
+
+            AEGfxTextureSet(deleteIcon, 0, 0);
+
+            AEMtx33Scale(&scale, xSize, xSize);
+            AEMtx33Trans(&trans, xPos, yPos);
+            AEMtx33Concat(&transform, &trans, &scale);
+
+            AEGfxSetTransform(transform.m);
+            AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+        }
+    }
 }
+
+// ------------------------------------------------------------
+// FREE / UNLOAD
+// ------------------------------------------------------------
 
 void Farm_Free()
 {
@@ -115,22 +238,90 @@ void Farm_Unload()
         plantedTexture = nullptr;
     }
 
+
+    if (deleteIcon)
+    {
+        AEGfxTextureUnload(deleteIcon);
+        deleteIcon = nullptr;
+    }
     std::cout << "Farm_Unload\n";
+
+
 }
 
 // ------------------------------------------------------------
-// PUBLIC FUNCTION (Called from UI)
+// PUBLIC FUNCTIONS
 // ------------------------------------------------------------
 
-void Farm_PlantSeed(int seedType)
+void Farm_PlantSeed(int plotIndex, int seedType)
 {
-    if (isPlanted)
-        return; // already occupied
+    if (plotIndex < 0 || plotIndex >= farmPlots.size())
+        return;
 
-    plantedSeedType = seedType;
-    isPlanted = true;
-    isReady = false;
-    growTimer = 0.0f;
+    FarmPlot& plot = farmPlots[plotIndex];
 
-    std::cout << "Seed planted!\n";
+    if (plot.isPlanted)
+        return;
+
+    plot.isPlanted = true;
+    plot.isReady = false;
+    plot.seedType = seedType;
+    plot.growTimer = 0.0f;
+    std::cout << "Planting at plot: " << plotIndex << "\n";
+}
+
+bool Farm_IsPlotPlanted(int plotIndex)
+{
+    if (plotIndex < 0 || plotIndex >= farmPlots.size())
+        return false;
+
+    return farmPlots[plotIndex].isPlanted;
+}
+
+void Farm_ClearPlot(int index)
+{
+    if (index < 0 || index >= farmPlots.size())
+        return;
+
+    farmPlots[index].isPlanted = false;
+    farmPlots[index].isReady = false;
+    farmPlots[index].growTimer = 0.0f;
+    farmPlots[index].seedType = -1;
+}
+
+void Farm_OnRhythmResult(bool success)
+{
+    for (auto& plot : farmPlots)
+    {
+        if (plot.waitingForRhythm)
+        {
+            plot.waitingForRhythm = false;
+
+            if (!success)
+            {
+                plot.growTimer -= 0.5f;
+                if (plot.growTimer < 0.0f)
+                    plot.growTimer = 0.0f;
+            }
+
+            break;
+        }
+    }
+}
+
+
+bool Farm_ShouldStartRhythm()
+{
+    return g_requestRhythm;
+}
+
+int Farm_GetRhythmPlotIndex()
+{
+    return g_rhythmPlotIndex;
+}
+
+void Farm_ClearRhythmRequest()
+{
+    g_requestRhythm = false;
+    g_rhythmPlotIndex = -1;
 }

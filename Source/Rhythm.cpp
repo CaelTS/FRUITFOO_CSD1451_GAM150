@@ -21,11 +21,54 @@ static const float NOTE_SIZE = 40.0f;
 static const int SCORE_PERFECT = 300;
 static const int SCORE_GOOD = 100;
 
+// Vertical offset to shift game upward (positive = up)
+static const float VERTICAL_OFFSET = 200.0f;
+
+// ================= TEXT POSITION CONSTANTS =================
+// Each text has its own X and Y position (normalized coordinates: -1.0 to 1.0)
+
+// Score display (top left)
+static const float SCORE_TEXT_X = -0.95f;
+static const float SCORE_TEXT_Y = 0.85f;
+
+// Combo number (center area)
+static const float COMBO_NUM_X = -0.20f;
+static const float COMBO_NUM_Y = 0.75f;
+
+// Combo label
+static const float COMBO_LABEL_X = -0.1f;
+static const float COMBO_LABEL_Y = 0.75f;
+
+// Hit feedback (PERFECT/GOOD/MISS)
+static const float FEEDBACK_TEXT_X = -0.15f;
+static const float FEEDBACK_TEXT_Y = 0.05f;
+
+// Stats (Perfect/Good/Miss count) - bottom left
+static const float STATS_TEXT_X = -0.95f;
+static const float STATS_TEXT_Y = -0.85f;
+
+// Song complete title
+static const float COMPLETE_TEXT_X = -0.3f;
+static const float COMPLETE_TEXT_Y = 0.20f;
+
+// Final score
+static const float FINAL_SCORE_X = -0.25f;
+static const float FINAL_SCORE_Y = 0.05f;
+
+// Return prompt
+static const float RETURN_TEXT_X = -0.25f;
+static const float RETURN_TEXT_Y = -0.05f;
+
+
+// Countdown
+static const float COUNTDOWN_TEXT_X = -0.3f;
+static const float COUNTDOWN_TEXT_Y = 0.20f;
+
 // Random spawn parameters
 static const float MIN_SPAWN_INTERVAL = 0.2f;   // Minimum time between notes
 static const float MAX_SPAWN_INTERVAL = 0.8f;   // Maximum time between notes
 static const float DOUBLE_NOTE_CHANCE = 0.15f;  // 15% chance for double notes
-static const float GOLD_NOTE_CHANCE = 0.25f;    // 25% chance for gold notes
+static const float PREMIUM_NOTE_CHANCE = 0.25f;    // 25% chance for premium notes
 
 // ================= STATE =================
 
@@ -57,6 +100,18 @@ static int g_nextSpawnIndex = 0;
 // Random seed initialization flag
 static bool g_randomInitialized = false;
 
+// Texture handles for notes
+static AEGfxTexture* g_pTexNormalNote = nullptr;
+static AEGfxTexture* g_pTexPremiumNote = nullptr;
+static AEGfxTexture* g_pTexBackground = nullptr;
+static AEGfxTexture* g_pTexWateringCan = nullptr;
+
+// Watering can state
+static float g_wateringCanRotation = 0.0f;  // Current rotation
+static float g_wateringCanAnimTimer = 0.0f;  // Animation timer
+static const float WATERING_CAN_ANIM_DURATION = 0.3f;  // Total animation time (up and back)
+static bool g_wateringCanIsAnimating = false;  // Whether animation is active
+
 // ================= HELPERS =================
 
 static s32 IsValidAudio(AEAudio audio) {
@@ -84,11 +139,17 @@ static void UpdateScore(HitRating rating) {
         g_score.perfectHits++;
         g_score.combo++;
         g_score.totalScore += SCORE_PERFECT + (g_score.combo * 10);
+        // Trigger watering can animation
+        g_wateringCanIsAnimating = true;
+        g_wateringCanAnimTimer = 0.0f;
         break;
     case HIT_GOOD:
         g_score.goodHits++;
         g_score.combo++;
         g_score.totalScore += SCORE_GOOD + (g_score.combo * 5);
+        // Trigger watering can animation
+        g_wateringCanIsAnimating = true;
+        g_wateringCanAnimTimer = 0.0f;
         break;
     case HIT_MISS:
         g_score.misses++;
@@ -116,8 +177,8 @@ static bool ShouldSpawnDouble() {
 // Helper function to get random note type
 static NoteType GetRandomNoteType() {
     float rng = RandomFloat(0.0f, 1.0f);
-    if (rng < GOLD_NOTE_CHANCE) {
-        return NOTE_GOLD;
+    if (rng < PREMIUM_NOTE_CHANCE) {
+        return NOTE_PREMIUM;
     }
     return NOTE_NORMAL;
 }
@@ -183,15 +244,17 @@ void Rhythm_Load() {
         printf("WARNING: Failed to create audio group!\n");
     }
 
+    // Create a simple square mesh for sprites (UV mapped)
     AEGfxMeshStart();
-    AEGfxTriAdd(-0.5f, -0.5f, 0xFFFFFFFF, 0.0f, 1.0f,
-        0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f,
-        -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
-    AEGfxTriAdd(0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f,
-        0.5f, 0.5f, 0xFFFFFFFF, 1.0f, 0.0f,
-        -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
+    AEGfxTriAdd(-0.5f, -0.5f, 0xFFFFFFFF, 0.0f, 1.0f,  // Bottom-left
+        0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f,   // Bottom-right
+        -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);  // Top-left
+    AEGfxTriAdd(0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f,   // Bottom-right
+        0.5f, 0.5f, 0xFFFFFFFF, 1.0f, 0.0f,    // Top-right
+        -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);  // Top-left
     g_pMeshNote = AEGfxMeshEnd();
 
+    // Judgment line mesh (unchanged)
     AEGfxMeshStart();
     AEGfxTriAdd(-4.0f, -60.0f, 0xFFFFFFFF, 0, 0,
         4.0f, -60.0f, 0xFFFFFFFF, 1, 0,
@@ -200,6 +263,25 @@ void Rhythm_Load() {
         4.0f, 60.0f, 0xFFFFFFFF, 1, 1,
         -4.0f, 60.0f, 0xFFFFFFFF, 0, 1);
     g_pMeshLine = AEGfxMeshEnd();
+
+    // NOTE SPRITES
+    g_pTexNormalNote = AEGfxTextureLoad("Assets/normal_note.png");
+    g_pTexPremiumNote = AEGfxTextureLoad("Assets/premium_note.png");
+    g_pTexBackground = AEGfxTextureLoad("Assets/background.png");
+    g_pTexWateringCan = AEGfxTextureLoad("Assets/watering_can.jpg");
+
+    if (!g_pTexNormalNote) {
+        printf("ERROR: Failed to load normal note texture!\n");
+    }
+    if (!g_pTexPremiumNote) {
+        printf("ERROR: Failed to load premium note texture!\n");
+    }
+    if (!g_pTexBackground) {
+        printf("WARNING: Failed to load background texture!\n");
+    }
+    if (!g_pTexWateringCan) {
+        printf("ERROR: Failed to load watering can texture!\n");
+    }
 
     g_fontId = AEGfxCreateFont("Assets/liberation-mono.ttf", 24);
 }
@@ -213,6 +295,11 @@ void Rhythm_Initialize() {
     g_hitFeedbackTimer = 0.0f;
     g_audioStarted = false;
     g_preSongTimer = 0.0f;
+
+    // Reset watering can
+    g_wateringCanRotation = 0.0f;
+    g_wateringCanAnimTimer = 0.0f;
+    g_wateringCanIsAnimating = false;
 
     // SET SONG PARAMETERS HERE
     g_audioOffset = 2.0f;
@@ -284,6 +371,35 @@ void Rhythm_Update() {
         }
     }
 
+    // Update watering can rotation animation
+    if (g_wateringCanIsAnimating) {
+        g_wateringCanAnimTimer += dt;
+
+        float halfDuration = WATERING_CAN_ANIM_DURATION / 2.0f;
+        float progress;
+
+        if (g_wateringCanAnimTimer <= halfDuration) {
+            // First half: rotate anticlockwise to 45 degrees
+            progress = g_wateringCanAnimTimer / halfDuration;
+            // Ease out
+            progress = progress * (2.0f - progress);
+            g_wateringCanRotation = 45.0f * progress;
+        }
+        else if (g_wateringCanAnimTimer <= WATERING_CAN_ANIM_DURATION) {
+            // Second half: rotate back to 0 degrees
+            progress = (g_wateringCanAnimTimer - halfDuration) / halfDuration;
+            // Ease in
+            progress = progress * progress;
+            g_wateringCanRotation = 45.0f * (1.0f - progress);
+        }
+        else {
+            // Animation complete
+            g_wateringCanRotation = 0.0f;
+            g_wateringCanIsAnimating = false;
+            g_wateringCanAnimTimer = 0.0f;
+        }
+    }
+
     // Song ends when time exceeds duration and all notes processed
     if (g_audioStarted && g_songTime >= g_songDuration && g_activeNotes.empty()) {
         if (!g_songFinished) {
@@ -300,11 +416,53 @@ void Rhythm_Render() {
     AEMtx33 scale, trans, transform;
     char buffer[64];
 
+    // ================= DRAW BACKGROUND FIRST =================
+    if (g_pTexBackground) {
+        AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+        AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);  // Full color, no tint
+        AEGfxSetBlendMode(AE_GFX_BM_NONE);  // No blending for opaque background
+        AEGfxTextureSet(g_pTexBackground, 0, 0);
+
+        // Scale to fill the screen (adjust 1600x900 to your resolution)
+        AEMtx33Scale(&scale, 1600.0f, 900.0f);
+        AEMtx33Trans(&trans, 0.0f, 0.0f);  // Center of screen
+        AEMtx33Concat(&transform, &trans, &scale);
+        AEGfxSetTransform(transform.m);
+        AEGfxMeshDraw(g_pMeshNote, AE_GFX_MDM_TRIANGLES);
+    }
+
+    // ================= DRAW WATERING CAN =================
+    if (g_pTexWateringCan) {
+        AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+        AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
+        AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+        AEGfxTextureSet(g_pTexWateringCan, 0, 0);
+
+        // Position above the judgment line
+        float canSize = 40.0f;  // Size of watering can
+        float canX = JUDGMENT_LINE_X;  // Same X as judgment line
+        float canY = VERTICAL_OFFSET + 100.0f;  // Above the judgment line
+
+        // Build transform: scale -> rotate -> translate
+        // Use temp variables to avoid conflict with outer scope
+        AEMtx33 canScale, canRot, canTrans, canTemp, canTransform;
+        AEMtx33Scale(&canScale, canSize * 2.0f, canSize * 2.0f);
+        AEMtx33RotDeg(&canRot, g_wateringCanRotation);  // Apply rotation
+        AEMtx33Trans(&canTrans, canX, canY);
+
+        // Combine: trans * rot * scale
+        AEMtx33Concat(&canTemp, &canRot, &canScale);
+        AEMtx33Concat(&canTransform, &canTrans, &canTemp);
+
+        AEGfxSetTransform(canTransform.m);
+        AEGfxMeshDraw(g_pMeshNote, AE_GFX_MDM_TRIANGLES);
+    }
+
     // Draw lane line
     AEGfxSetRenderMode(AE_GFX_RM_COLOR);
     AEGfxSetColorToMultiply(0.3f, 0.3f, 0.3f, 1.0f);
     AEMtx33Scale(&scale, 1600.0f, 2.0f);
-    AEMtx33Trans(&trans, 0.0f, 0.0f);
+    AEMtx33Trans(&trans, 0.0f, VERTICAL_OFFSET);
     AEMtx33Concat(&transform, &trans, &scale);
     AEGfxSetTransform(transform.m);
     AEGfxMeshDraw(g_pMeshNote, AE_GFX_MDM_TRIANGLES);
@@ -318,7 +476,7 @@ void Rhythm_Render() {
     }
     AEGfxSetColorToMultiply(lineR, lineG, lineB, 1.0f);
     AEMtx33Scale(&scale, 1.0f, 1.0f);
-    AEMtx33Trans(&trans, JUDGMENT_LINE_X, 0.0f);
+    AEMtx33Trans(&trans, JUDGMENT_LINE_X, VERTICAL_OFFSET);
     AEMtx33Concat(&transform, &trans, &scale);
     AEGfxSetTransform(transform.m);
     AEGfxMeshDraw(g_pMeshLine, AE_GFX_MDM_TRIANGLES);
@@ -326,63 +484,75 @@ void Rhythm_Render() {
     // Draw hit zone
     AEGfxSetColorToMultiply(0.5f, 0.5f, 0.5f, 0.3f);
     AEMtx33Scale(&scale, NOTE_SIZE * 2.0f, NOTE_SIZE * 2.0f);
-    AEMtx33Trans(&trans, JUDGMENT_LINE_X, 0.0f);
+    AEMtx33Trans(&trans, JUDGMENT_LINE_X, VERTICAL_OFFSET);
     AEMtx33Concat(&transform, &trans, &scale);
     AEGfxSetTransform(transform.m);
     AEGfxMeshDraw(g_pMeshNote, AE_GFX_MDM_TRIANGLES);
 
-    // Draw notes
+    // Draw notes (shifted up)
     for (const auto& note : g_activeNotes) {
         if (note.hit) continue;
 
-        float r = 1.0f, g = 1.0f, b = 1.0f;
+        AEGfxTexture* pTex = nullptr;
         float size = NOTE_SIZE;
+        float alpha = 1.0f;
+        float tintR = 1.0f, tintG = 1.0f, tintB = 1.0f;
 
+        // Select texture based on note type
         switch (note.type) {
         case NOTE_NORMAL:
-            r = 0.2f; g = 0.6f; b = 1.0f;
+            pTex = g_pTexNormalNote;
             break;
-        case NOTE_GOLD:
-            r = 1.0f; g = 0.8f; b = 0.2f;
+        case NOTE_PREMIUM:
+            pTex = g_pTexPremiumNote;
             size = NOTE_SIZE * 1.2f;
             break;
         default:
             break;
         }
 
+        // Handle missed notes (grayed out)
         if (note.missed) {
-            r = 0.5f; g = 0.5f; b = 0.5f;
+            alpha = 0.3f;
+            tintR = tintG = tintB = 0.5f;
         }
 
-        AEGfxSetColorToMultiply(r, g, b, note.missed ? 0.3f : 1.0f);
+        // Draw the sprite
+        if (pTex) {
+            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+            AEGfxSetColorToMultiply(tintR, tintG, tintB, alpha);
+            AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+            AEGfxSetTransparency(alpha);
+            AEGfxTextureSet(pTex, 0, 0);
+        }
+        else {
+            // Fallback to colored square if texture failed to load
+            AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+            AEGfxSetColorToMultiply(tintR, tintG, tintB, alpha);
+        }
+
         AEMtx33Scale(&scale, size * 2.0f, size * 2.0f);
-        AEMtx33Trans(&trans, note.xPosition, 0.0f);
+        AEMtx33Trans(&trans, note.xPosition, VERTICAL_OFFSET);
         AEMtx33Concat(&transform, &trans, &scale);
         AEGfxSetTransform(transform.m);
         AEGfxMeshDraw(g_pMeshNote, AE_GFX_MDM_TRIANGLES);
-
-        if (note.type == NOTE_NORMAL && !note.missed) {
-            AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 0.8f);
-            AEMtx33Scale(&scale, size, size);
-            AEMtx33Trans(&trans, note.xPosition, 0.0f);
-            AEMtx33Concat(&transform, &trans, &scale);
-            AEGfxSetTransform(transform.m);
-            AEGfxMeshDraw(g_pMeshNote, AE_GFX_MDM_TRIANGLES);
-        }
     }
 
     // UI
     if (g_fontId >= 0) {
+        // Score
         sprintf_s(buffer, "Score: %d", g_score.totalScore);
-        AEGfxPrint(g_fontId, buffer, -0.95f, 0.9f, 1.0f, 1, 1, 1, 1);
+        AEGfxPrint(g_fontId, buffer, SCORE_TEXT_X, SCORE_TEXT_Y, 1.0f, 1, 1, 1, 1);
 
+        // Combo
         if (g_score.combo > 0) {
             sprintf_s(buffer, "%d", g_score.combo);
             float pulse = 1.0f + (g_hitFeedbackTimer * 0.5f);
-            AEGfxPrint(g_fontId, buffer, -0.05f, 0.6f, 1.5f * pulse, 1, 0.9f, 0.3f, 1);
-            AEGfxPrint(g_fontId, "COMBO", -0.1f, 0.5f, 0.8f, 1, 0.9f, 0.3f, 1);
+            AEGfxPrint(g_fontId, buffer, COMBO_NUM_X, COMBO_NUM_Y, 1.5f * pulse, 1, 0.9f, 0.3f, 1);
+            AEGfxPrint(g_fontId, "COMBO", COMBO_LABEL_X, COMBO_LABEL_Y, 1.5f, 1, 0.9f, 0.3f, 1);
         }
 
+        // Hit feedback
         if (g_hitFeedbackTimer > 0) {
             const char* text = "";
             float tr = 1, tg = 1, tb = 1;
@@ -392,24 +562,27 @@ void Rhythm_Render() {
             case HIT_MISS: text = "MISS"; tr = 1; tg = 0.3f; tb = 0.3f; break;
             default: break;
             }
-            AEGfxPrint(g_fontId, text, -0.15f, 0.3f, 1.2f, tr, tg, tb, 1);
+            AEGfxPrint(g_fontId, text, FEEDBACK_TEXT_X, FEEDBACK_TEXT_Y, 1.2f, tr, tg, tb, 1);
         }
 
+        // Stats
         sprintf_s(buffer, "Perfect: %d  Good: %d  Miss: %d",
             g_score.perfectHits, g_score.goodHits, g_score.misses);
-        AEGfxPrint(g_fontId, buffer, -0.95f, -0.9f, 0.7f, 0.8f, 0.8f, 0.8f, 1);
+        AEGfxPrint(g_fontId, buffer, STATS_TEXT_X, STATS_TEXT_Y, 0.7f, 0.8f, 0.8f, 0.8f, 1);
 
+        // Song finished
         if (g_songFinished) {
-            AEGfxPrint(g_fontId, "SONG COMPLETE!", -0.3f, 0.0f, 2.0f, 0.2f, 1.0f, 0.2f, 1);
+            AEGfxPrint(g_fontId, "SONG COMPLETE!", COMPLETE_TEXT_X, COMPLETE_TEXT_Y, 2.0f, 0.2f, 1.0f, 0.2f, 1);
             sprintf_s(buffer, "Final Score: %d", g_score.totalScore);
-            AEGfxPrint(g_fontId, buffer, -0.25f, -0.15f, 1.2f, 1, 1, 1, 1);
-            AEGfxPrint(g_fontId, "Press E to return", -0.25f, -0.3f, 0.8f, 0.8f, 0.8f, 0.8f, 1);
+            AEGfxPrint(g_fontId, buffer, FINAL_SCORE_X, FINAL_SCORE_Y, 1.2f, 1, 1, 1, 1);
+            AEGfxPrint(g_fontId, "Press E to return", RETURN_TEXT_X, RETURN_TEXT_Y, 0.8f, 0.8f, 0.8f, 0.8f, 1);
         }
 
+        // Countdown
         if (!g_audioStarted && !g_songFinished) {
             int countdown = (int)(g_audioOffset - g_preSongTimer) + 1;
             sprintf_s(buffer, "Starting in: %d", countdown);
-            AEGfxPrint(g_fontId, buffer, -0.2f, 0.0f, 2.0f, 1, 1, 0, 1);
+            AEGfxPrint(g_fontId, buffer, COUNTDOWN_TEXT_X, COUNTDOWN_TEXT_Y, 2.0f, 1, 1, 0, 1);
         }
     }
 }
@@ -422,6 +595,17 @@ void Rhythm_Free() {
 }
 
 void Rhythm_Unload() {
+
+    // Free textures
+    if (g_pTexNormalNote) AEGfxTextureUnload(g_pTexNormalNote);
+    if (g_pTexPremiumNote) AEGfxTextureUnload(g_pTexPremiumNote);
+    if (g_pTexBackground) AEGfxTextureUnload(g_pTexBackground);
+    if (g_pTexWateringCan) AEGfxTextureUnload(g_pTexWateringCan);
+    g_pTexNormalNote = nullptr;
+    g_pTexPremiumNote = nullptr;
+    g_pTexBackground = nullptr;
+    g_pTexWateringCan = nullptr;
+
     if (g_pMeshNote) AEGfxMeshFree(g_pMeshNote);
     if (g_pMeshLine) AEGfxMeshFree(g_pMeshLine);
     if (g_fontId >= 0) AEGfxDestroyFont(g_fontId);

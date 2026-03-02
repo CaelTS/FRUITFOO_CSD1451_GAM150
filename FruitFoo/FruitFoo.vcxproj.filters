@@ -27,9 +27,6 @@
     <ClCompile Include="..\Source\Transition.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\Source\Farm.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\Source\Economy.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -51,7 +48,11 @@
     <ClCompile Include="..\Source\Utilities.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+<<<<<<< HEAD
     <ClCompile Include="..\Source\ProfileMenu.cpp">
+=======
+    <ClCompile Include="..\Source\Farm.cpp">
+>>>>>>> main
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
