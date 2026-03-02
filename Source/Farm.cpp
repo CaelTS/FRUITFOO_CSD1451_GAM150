@@ -1,19 +1,33 @@
 #include "Farm.h"
-#include <Windows.h>
 #include "AEEngine.h"
 #include <iostream>
 
-// ---------- FARM STATE (PROPOSAL-ALIGNED) ----------
+extern AEGfxVertexList* g_pMeshFullScreen;   
+// ------------------------------------------------------------
+// FARM STATE
+// ------------------------------------------------------------
 
 static float growTimer = 0.0f;
 static bool isPlanted = false;
 static bool isReady = false;
+static int plantedSeedType = -1;
 
-const float GROW_TIME = 3.0f; // seconds to grow (short for testing)
+AEGfxTexture* plantedTexture = nullptr;
+
+const float GROW_TIME = 3.0f; // seconds
+static const float plotX = -630.0f;
+static const float plotY = 150.0f;
+
+// ------------------------------------------------------------
 
 void Farm_Load()
 {
     std::cout << "Farm_Load\n";
+
+    plantedTexture = AEGfxTextureLoad("Assets/First Plot_Plant_v1_solo.png");
+
+    if (!plantedTexture)
+        std::cout << "ERROR: Plant texture failed to load\n";
 }
 
 void Farm_Initialize()
@@ -21,30 +35,27 @@ void Farm_Initialize()
     std::cout << "Farm_Initialize\n";
 
     growTimer = 0.0f;
-    isPlanted = true;
+    isPlanted = false;     // IMPORTANT: start empty
     isReady = false;
-
-    std::cout << "Planting seed...\n";
+    plantedSeedType = -1;
 }
 
 void Farm_Update()
 {
     float dt = (float)AEFrameRateControllerGetFrameTime();
 
+    // Growing logic
     if (isPlanted && !isReady)
     {
         growTimer += dt;
 
-        // Print once per second (clean output)
         static int lastSecond = -1;
         int currentSecond = (int)growTimer;
 
         if (currentSecond != lastSecond)
         {
             lastSecond = currentSecond;
-            char buffer[64];
-            sprintf_s(buffer, "Growing... %ds\n", currentSecond);
-            std::cout << (buffer);
+            std::cout << "Growing... " << currentSecond << "s\n";
         }
 
         if (growTimer >= GROW_TIME)
@@ -54,23 +65,41 @@ void Farm_Update()
         }
     }
 
-    // Simulate harvest with SPACE
+    // Harvest with SPACE
     if (isReady && AEInputCheckTriggered(AEVK_SPACE))
     {
         std::cout << "Harvested crop!\n";
 
-        // Reset cycle
-        growTimer = 0.0f;
-        isPlanted = true;
+        isPlanted = false;
         isReady = false;
-
-        std::cout << "Planting seed...\n";
+        plantedSeedType = -1;
+        growTimer = 0.0f;
     }
 }
 
 void Farm_Render()
 {
-    // No visuals yet (by design)
+    if (!isPlanted)
+        return;
+
+    float width = 120.0f;
+    float height = 120.0f;
+
+    AEMtx33 scale, trans, transform;
+
+    AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+    AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+    AEGfxSetTransparency(1.0f);
+    AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
+
+    AEGfxTextureSet(plantedTexture, 0, 0);
+
+    AEMtx33Scale(&scale, width, height);
+    AEMtx33Trans(&trans, plotX, plotY);
+    AEMtx33Concat(&transform, &trans, &scale);
+
+    AEGfxSetTransform(transform.m);
+    AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
 }
 
 void Farm_Free()
@@ -80,5 +109,28 @@ void Farm_Free()
 
 void Farm_Unload()
 {
+    if (plantedTexture)
+    {
+        AEGfxTextureUnload(plantedTexture);
+        plantedTexture = nullptr;
+    }
+
     std::cout << "Farm_Unload\n";
+}
+
+// ------------------------------------------------------------
+// PUBLIC FUNCTION (Called from UI)
+// ------------------------------------------------------------
+
+void Farm_PlantSeed(int seedType)
+{
+    if (isPlanted)
+        return; // already occupied
+
+    plantedSeedType = seedType;
+    isPlanted = true;
+    isReady = false;
+    growTimer = 0.0f;
+
+    std::cout << "Seed planted!\n";
 }

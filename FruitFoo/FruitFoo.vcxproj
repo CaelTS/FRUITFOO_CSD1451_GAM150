@@ -103,6 +103,7 @@ xcopy "$(SolutionDir)Extern\AlphaEngine\lib\fmod.dll" "$(OutDir)" /s /r /y /q</C
     <ClCompile Include="..\Source\Inventory.cpp" />
     <ClCompile Include="..\Source\Main.cpp" />
     <ClCompile Include="..\Source\Next.cpp" />
+    <ClCompile Include="..\Source\ProfileMenu.cpp" />
     <ClCompile Include="..\Source\Rhythm.cpp" />
     <ClCompile Include="..\Source\SaveLoad.cpp" />
     <ClCompile Include="..\Source\ShopUpgrade.cpp" />
@@ -118,6 +119,7 @@ xcopy "$(SolutionDir)Extern\AlphaEngine\lib\fmod.dll" "$(OutDir)" /s /r /y /q</C
     <ClInclude Include="..\Source\Inventory.h" />
     <ClInclude Include="..\Source\Main.h" />
     <ClInclude Include="..\Source\Next.h" />
+    <ClInclude Include="..\Source\ProfileMenu.h" />
     <ClInclude Include="..\Source\Rhythm.h" />
     <ClInclude Include="..\Source\ShopUpgrade.h" />
     <ClInclude Include="..\Source\Transition.h" />

@@ -7,3 +7,5 @@ void Farm_Update();
 void Farm_Render();
 void Farm_Free();
 void Farm_Unload();
+
+void Farm_PlantSeed(int seedType);

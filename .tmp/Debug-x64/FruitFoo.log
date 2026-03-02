@@ -1,6 +1,5 @@
 ﻿  Economy.cpp
   Farm.cpp
-C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\Economy.cpp(17,12): warning C4211: nonstandard extension used: redefined extern to static
   GameStateManager.cpp
   Inventory.cpp
   Main.cpp
@@ -13,7 +12,7 @@ C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\Economy.
   Utilities.cpp
   Generating Code...
   FruitFoo.vcxproj -> C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\bin\Debug-x64\FruitFoo.exe
-  9 File(s) copied
+  13 File(s) copied
   1 File(s) copied
   1 File(s) copied
   1 File(s) copied

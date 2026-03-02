@@ -24,5 +24,6 @@ const std::vector<FruitBasket>& GetFruitBaskets();
 void UI_DrawFruitBasketTooltips();
 
 // Debug helper
-bool UI_IsMouseOverAnyBasket();
+//bool UI_IsMouseOverAnyBasket();
 
+void UI_UpdateButtons();
