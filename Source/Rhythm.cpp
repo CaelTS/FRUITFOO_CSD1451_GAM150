@@ -444,16 +444,17 @@ void Rhythm_Render() {
         float canY = VERTICAL_OFFSET + 100.0f;  // Above the judgment line
 
         // Build transform: scale -> rotate -> translate
-        AEMtx33 scale, rot, trans, temp, transform;
-        AEMtx33Scale(&scale, canSize * 2.0f, canSize * 2.0f);
-        AEMtx33RotDeg(&rot, g_wateringCanRotation);  // Apply rotation
-        AEMtx33Trans(&trans, canX, canY);
+        // Use temp variables to avoid conflict with outer scope
+        AEMtx33 canScale, canRot, canTrans, canTemp, canTransform;
+        AEMtx33Scale(&canScale, canSize * 2.0f, canSize * 2.0f);
+        AEMtx33RotDeg(&canRot, g_wateringCanRotation);  // Apply rotation
+        AEMtx33Trans(&canTrans, canX, canY);
 
         // Combine: trans * rot * scale
-        AEMtx33Concat(&temp, &rot, &scale);
-        AEMtx33Concat(&transform, &trans, &temp);
+        AEMtx33Concat(&canTemp, &canRot, &canScale);
+        AEMtx33Concat(&canTransform, &canTrans, &canTemp);
 
-        AEGfxSetTransform(transform.m);
+        AEGfxSetTransform(canTransform.m);
         AEGfxMeshDraw(g_pMeshNote, AE_GFX_MDM_TRIANGLES);
     }
 
