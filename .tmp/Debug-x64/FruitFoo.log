@@ -1,6 +1,32 @@
-﻿  Farm.cpp
-  FruitFoo.vcxproj -> C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\bin\Debug-x64\FruitFoo.exe
-  21 File(s) copied
-  1 File(s) copied
-  1 File(s) copied
-  1 File(s) copied
+﻿  Economy.cpp
+  Farm.cpp
+  GameStateManager.cpp
+  Inventory.cpp
+  Main.cpp
+  Next.cpp
+  Rhythm.cpp
+C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\Rhythm.cpp(181,16): error C2065: 'NOTE_PREMIUM': undeclared identifier
+C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\Rhythm.cpp(447,17): warning C4456: declaration of 'scale' hides previous local declaration
+      C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\Rhythm.cpp(416,13):
+      see declaration of 'scale'
+  
+C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\Rhythm.cpp(447,29): warning C4456: declaration of 'trans' hides previous local declaration
+      C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\Rhythm.cpp(416,20):
+      see declaration of 'trans'
+  
+C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\Rhythm.cpp(447,42): warning C4456: declaration of 'transform' hides previous local declaration
+      C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\Rhythm.cpp(416,27):
+      see declaration of 'transform'
+  
+C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\Rhythm.cpp(505,14): error C2065: 'NOTE_PREMIUM': undeclared identifier
+C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\Rhythm.cpp(505,14): error C2131: expression did not evaluate to a constant
+      C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\Rhythm.cpp(505,14):
+      a non-constant (sub-)expression was encountered
+  
+C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\Rhythm.cpp(505,14): error C2051: case expression not constant
+  SaveLoad.cpp
+  ShopUpgrade.cpp
+  Transition.cpp
+  UI.cpp
+  Utilities.cpp
+  Generating Code...
