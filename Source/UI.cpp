@@ -465,9 +465,16 @@ void UI_Draw()
         popupOpen = false;
     }
 
+
+    
     // --- Seeds Panel ---
     if (seedsPopupOpen)
     {
+
+        AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+        AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+        AEGfxSetColorToMultiply(1, 1, 1, 1);
+        AEGfxSetTransparency(1.0f);
         float panelX = -100.0f;
         float panelY = 0.0f;
 

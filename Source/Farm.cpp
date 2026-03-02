@@ -129,11 +129,10 @@ void Farm_Render()
         return;
 
     AEMtx33 scale, trans, transform;
-
     AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
     AEGfxSetBlendMode(AE_GFX_BM_BLEND);
-    AEGfxSetTransparency(1.0f);
     AEGfxSetColorToMultiply(1, 1, 1, 1);
+    AEGfxSetTransparency(1.0f);
 
     for (int i = 0; i < farmPlots.size(); i++)
     {
@@ -161,6 +160,39 @@ void Farm_Render()
 
         AEGfxSetTransform(transform.m);
         AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+        // ---- Growth overlay ----
+        float growthRatio = ratio;
+
+        // Only show growth until rhythm triggers
+        if (growthRatio > 0.5f)
+            growthRatio = 0.5f;
+
+        // Normalize 0 to 0.5  into 0  1
+        float normalized = growthRatio / 0.5f;
+
+        AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+        AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+
+        // Green overlay
+        AEGfxSetColorToMultiply(0.2f, 1.0f, 0.2f, 0.6f);
+
+        float overlayHeight = 120.0f * normalized;
+
+        // Scale only height
+        AEMtx33Scale(&scale, 120.0f, overlayHeight);
+
+        // Anchor bottom of plot
+        AEMtx33Trans(&trans, plotX, plotY - (60.0f - overlayHeight * 0.5f));
+        AEMtx33Concat(&transform, &trans, &scale);
+
+        AEGfxSetTransform(transform.m);
+        AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+        // Reset
+        AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+        AEGfxSetColorToMultiply(1, 1, 1, 1);
+
 
 
         // --------------------------

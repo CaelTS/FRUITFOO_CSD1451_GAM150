@@ -152,10 +152,12 @@ void MainScreen_Initialize()
 	//Economy Init
 	Economy_Init();
 	
-	
 
 	UI_Init();
-	Farm_Initialize();
+	if (previous != GS_RHYTHM_SCREEN)
+	{
+		Farm_Initialize();
+	}
 	gFruitBaskets.clear();
 	gFruitBaskets.push_back({ 0, -350.0f, -250.0f, 120.0f, 120.0f }); // Apple
 	gFruitBaskets.push_back({ 1, -150.0f, -250.0f, 120.0f, 120.0f }); // Pear
@@ -186,12 +188,18 @@ void MainScreen_Update()
 	// Get Delta Time
 	float dt = (float)AEFrameRateControllerGetFrameTime();
 
-	// Economy Update
-	Economy_Update(dt);
 	UI_Input();
-
 	Farm_Update();
+	Economy_Update(dt);
 	
+	// ---- Check if farm triggered rhythm ----
+	if (Farm_ShouldStartRhythm())
+	{
+		OutputDebugStringA("Farm requested rhythm game\n");
+
+		Farm_ClearRhythmRequest();
+		next = GS_RHYTHM_SCREEN;
+	}
 
 	// Energy Regeneration Logic
 	if (energy < MAX_ENERGY)
@@ -515,13 +523,10 @@ void MainScreen_Render()
 		AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
 	}
 	
-	
-
-
-	//std::cout << "Render Check - IsPlanted: " << Farm_IsPlanted() << "\n";
 	UI_Draw();
 	Farm_Render();
 	UI_DrawFruitBasketTooltips();
+
 
 	
 }
@@ -619,27 +624,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		}
 
 		// RHYTHM GAME INPUT
-		if (current == GS_RHYTHM_SCREEN)
+		if (AEInputCheckTriggered(AEVK_E))
 		{
-			if (AEInputCheckTriggered(AEVK_W))
-			{
-				Rhythm_Hit();  // Hit the note
-			}
+			bool success = true; // replace with your real score check
 
-			//// Check if song finished - ADD THIS HERE
-			//if (Rhythm_IsSongFinished()) {
-			//	// Option 1: Auto-return to main screen after delay
-			//	next = GS_MAIN_SCREEN;
+			Farm_OnRhythmResult(success);
 
-			//	// Option 2: Wait for player to press E
-			//	// (don't auto-exit, let them see final score)
-			//}
-
-			// Exit rhythm game with E key
-			if (AEInputCheckTriggered(AEVK_E))
-			{
-				next = GS_MAIN_SCREEN;
-			}
+			next = GS_MAIN_SCREEN;
 		}
 
 

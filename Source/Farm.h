@@ -25,3 +25,4 @@ void Farm_ClearPlot(int index);
 bool Farm_ShouldStartRhythm();
 int  Farm_GetRhythmPlotIndex();
 void Farm_ClearRhythmRequest();
+void Farm_OnRhythmResult(bool success);

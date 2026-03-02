@@ -1,5 +1,15 @@
-﻿  Main.cpp
+﻿  Economy.cpp
+  Farm.cpp
+  GameStateManager.cpp
+  Inventory.cpp
+  Main.cpp
+  Next.cpp
+  Rhythm.cpp
+  SaveLoad.cpp
+  ShopUpgrade.cpp
+  Transition.cpp
   UI.cpp
+  Utilities.cpp
   Generating Code...
   FruitFoo.vcxproj -> C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\bin\Debug-x64\FruitFoo.exe
   27 File(s) copied
