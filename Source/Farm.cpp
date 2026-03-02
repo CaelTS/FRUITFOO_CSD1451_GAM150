@@ -132,8 +132,10 @@ void Farm_Render()
         if (deleteIcon)
         {
             float xSize = 25.0f;
-            float offsetX = 45.0f;
-            float offsetY = 45.0f;
+
+            // Move LEFT instead of right
+            float offsetX = -45.0f;
+            float offsetY = 45.0f;   // keep it at top
 
             float xPos = plotX + offsetX;
             float yPos = plotY + offsetY;

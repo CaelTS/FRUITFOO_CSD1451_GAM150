@@ -328,11 +328,13 @@ void UI_UpdateButtons()
         if (!Farm_IsPlotPlanted(i))
             continue;
 
-        float xSize = 30.0f;
-        float offset = 40.0f;
+        float xSize = 25.0f;
 
-        float xPos = plotSlots[i].x + offset;
-        float yPos = plotSlots[i].y + offset;
+        float offsetX = -45.0f;   // SAME as Farm_Render
+        float offsetY = 45.0f;
+
+        float xPos = plotSlots[i].x + offsetX;
+        float yPos = plotSlots[i].y + offsetY;
 
         bool overDelete =
             worldX >= xPos - xSize * 0.5f &&
