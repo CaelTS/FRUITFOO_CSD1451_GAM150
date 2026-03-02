@@ -68,7 +68,7 @@ static const float COUNTDOWN_TEXT_Y = 0.20f;
 static const float MIN_SPAWN_INTERVAL = 0.2f;   // Minimum time between notes
 static const float MAX_SPAWN_INTERVAL = 0.8f;   // Maximum time between notes
 static const float DOUBLE_NOTE_CHANCE = 0.15f;  // 15% chance for double notes
-static const float GOLD_NOTE_CHANCE = 0.25f;    // 25% chance for gold notes
+static const float PREMIUM_NOTE_CHANCE = 0.25f;    // 25% chance for premium notes
 
 // ================= STATE =================
 
@@ -100,6 +100,18 @@ static int g_nextSpawnIndex = 0;
 // Random seed initialization flag
 static bool g_randomInitialized = false;
 
+// Texture handles for notes
+static AEGfxTexture* g_pTexNormalNote = nullptr;
+static AEGfxTexture* g_pTexPremiumNote = nullptr;
+static AEGfxTexture* g_pTexBackground = nullptr;
+static AEGfxTexture* g_pTexWateringCan = nullptr;
+
+// Watering can state
+static float g_wateringCanRotation = 0.0f;  // Current rotation
+static float g_wateringCanAnimTimer = 0.0f;  // Animation timer
+static const float WATERING_CAN_ANIM_DURATION = 0.3f;  // Total animation time (up and back)
+static bool g_wateringCanIsAnimating = false;  // Whether animation is active
+
 // ================= HELPERS =================
 
 static s32 IsValidAudio(AEAudio audio) {
@@ -127,11 +139,17 @@ static void UpdateScore(HitRating rating) {
         g_score.perfectHits++;
         g_score.combo++;
         g_score.totalScore += SCORE_PERFECT + (g_score.combo * 10);
+        // Trigger watering can animation
+        g_wateringCanIsAnimating = true;
+        g_wateringCanAnimTimer = 0.0f;
         break;
     case HIT_GOOD:
         g_score.goodHits++;
         g_score.combo++;
         g_score.totalScore += SCORE_GOOD + (g_score.combo * 5);
+        // Trigger watering can animation
+        g_wateringCanIsAnimating = true;
+        g_wateringCanAnimTimer = 0.0f;
         break;
     case HIT_MISS:
         g_score.misses++;
@@ -159,8 +177,8 @@ static bool ShouldSpawnDouble() {
 // Helper function to get random note type
 static NoteType GetRandomNoteType() {
     float rng = RandomFloat(0.0f, 1.0f);
-    if (rng < GOLD_NOTE_CHANCE) {
-        return NOTE_GOLD;
+    if (rng < PREMIUM_NOTE_CHANCE) {
+        return NOTE_PREMIUM;
     }
     return NOTE_NORMAL;
 }
@@ -226,15 +244,17 @@ void Rhythm_Load() {
         printf("WARNING: Failed to create audio group!\n");
     }
 
+    // Create a simple square mesh for sprites (UV mapped)
     AEGfxMeshStart();
-    AEGfxTriAdd(-0.5f, -0.5f, 0xFFFFFFFF, 0.0f, 1.0f,
-        0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f,
-        -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
-    AEGfxTriAdd(0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f,
-        0.5f, 0.5f, 0xFFFFFFFF, 1.0f, 0.0f,
-        -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
+    AEGfxTriAdd(-0.5f, -0.5f, 0xFFFFFFFF, 0.0f, 1.0f,  // Bottom-left
+        0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f,   // Bottom-right
+        -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);  // Top-left
+    AEGfxTriAdd(0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f,   // Bottom-right
+        0.5f, 0.5f, 0xFFFFFFFF, 1.0f, 0.0f,    // Top-right
+        -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);  // Top-left
     g_pMeshNote = AEGfxMeshEnd();
 
+    // Judgment line mesh (unchanged)
     AEGfxMeshStart();
     AEGfxTriAdd(-4.0f, -60.0f, 0xFFFFFFFF, 0, 0,
         4.0f, -60.0f, 0xFFFFFFFF, 1, 0,
@@ -243,6 +263,25 @@ void Rhythm_Load() {
         4.0f, 60.0f, 0xFFFFFFFF, 1, 1,
         -4.0f, 60.0f, 0xFFFFFFFF, 0, 1);
     g_pMeshLine = AEGfxMeshEnd();
+
+    // NOTE SPRITES
+    g_pTexNormalNote = AEGfxTextureLoad("Assets/normal_note.png");
+    g_pTexPremiumNote = AEGfxTextureLoad("Assets/premium_note.png");
+    g_pTexBackground = AEGfxTextureLoad("Assets/background.png");
+    g_pTexWateringCan = AEGfxTextureLoad("Assets/watering_can.jpg");
+
+    if (!g_pTexNormalNote) {
+        printf("ERROR: Failed to load normal note texture!\n");
+    }
+    if (!g_pTexPremiumNote) {
+        printf("ERROR: Failed to load premium note texture!\n");
+    }
+    if (!g_pTexBackground) {
+        printf("WARNING: Failed to load background texture!\n");
+    }
+    if (!g_pTexWateringCan) {
+        printf("ERROR: Failed to load watering can texture!\n");
+    }
 
     g_fontId = AEGfxCreateFont("Assets/liberation-mono.ttf", 24);
 }
@@ -256,6 +295,11 @@ void Rhythm_Initialize() {
     g_hitFeedbackTimer = 0.0f;
     g_audioStarted = false;
     g_preSongTimer = 0.0f;
+
+    // Reset watering can
+    g_wateringCanRotation = 0.0f;
+    g_wateringCanAnimTimer = 0.0f;
+    g_wateringCanIsAnimating = false;
 
     // SET SONG PARAMETERS HERE
     g_audioOffset = 2.0f;
@@ -327,6 +371,35 @@ void Rhythm_Update() {
         }
     }
 
+    // Update watering can rotation animation
+    if (g_wateringCanIsAnimating) {
+        g_wateringCanAnimTimer += dt;
+
+        float halfDuration = WATERING_CAN_ANIM_DURATION / 2.0f;
+        float progress;
+
+        if (g_wateringCanAnimTimer <= halfDuration) {
+            // First half: rotate anticlockwise to 45 degrees
+            progress = g_wateringCanAnimTimer / halfDuration;
+            // Ease out
+            progress = progress * (2.0f - progress);
+            g_wateringCanRotation = 45.0f * progress;
+        }
+        else if (g_wateringCanAnimTimer <= WATERING_CAN_ANIM_DURATION) {
+            // Second half: rotate back to 0 degrees
+            progress = (g_wateringCanAnimTimer - halfDuration) / halfDuration;
+            // Ease in
+            progress = progress * progress;
+            g_wateringCanRotation = 45.0f * (1.0f - progress);
+        }
+        else {
+            // Animation complete
+            g_wateringCanRotation = 0.0f;
+            g_wateringCanIsAnimating = false;
+            g_wateringCanAnimTimer = 0.0f;
+        }
+    }
+
     // Song ends when time exceeds duration and all notes processed
     if (g_audioStarted && g_songTime >= g_songDuration && g_activeNotes.empty()) {
         if (!g_songFinished) {
@@ -342,6 +415,47 @@ void Rhythm_Render() {
 
     AEMtx33 scale, trans, transform;
     char buffer[64];
+
+    // ================= DRAW BACKGROUND FIRST =================
+    if (g_pTexBackground) {
+        AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+        AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);  // Full color, no tint
+        AEGfxSetBlendMode(AE_GFX_BM_NONE);  // No blending for opaque background
+        AEGfxTextureSet(g_pTexBackground, 0, 0);
+
+        // Scale to fill the screen (adjust 1600x900 to your resolution)
+        AEMtx33Scale(&scale, 1600.0f, 900.0f);
+        AEMtx33Trans(&trans, 0.0f, 0.0f);  // Center of screen
+        AEMtx33Concat(&transform, &trans, &scale);
+        AEGfxSetTransform(transform.m);
+        AEGfxMeshDraw(g_pMeshNote, AE_GFX_MDM_TRIANGLES);
+    }
+
+    // ================= DRAW WATERING CAN =================
+    if (g_pTexWateringCan) {
+        AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+        AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
+        AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+        AEGfxTextureSet(g_pTexWateringCan, 0, 0);
+
+        // Position above the judgment line
+        float canSize = 40.0f;  // Size of watering can
+        float canX = JUDGMENT_LINE_X;  // Same X as judgment line
+        float canY = VERTICAL_OFFSET + 100.0f;  // Above the judgment line
+
+        // Build transform: scale -> rotate -> translate
+        AEMtx33 scale, rot, trans, temp, transform;
+        AEMtx33Scale(&scale, canSize * 2.0f, canSize * 2.0f);
+        AEMtx33RotDeg(&rot, g_wateringCanRotation);  // Apply rotation
+        AEMtx33Trans(&trans, canX, canY);
+
+        // Combine: trans * rot * scale
+        AEMtx33Concat(&temp, &rot, &scale);
+        AEMtx33Concat(&transform, &trans, &temp);
+
+        AEGfxSetTransform(transform.m);
+        AEGfxMeshDraw(g_pMeshNote, AE_GFX_MDM_TRIANGLES);
+    }
 
     // Draw lane line
     AEGfxSetRenderMode(AE_GFX_RM_COLOR);
@@ -378,40 +492,49 @@ void Rhythm_Render() {
     for (const auto& note : g_activeNotes) {
         if (note.hit) continue;
 
-        float r = 1.0f, g = 1.0f, b = 1.0f;
+        AEGfxTexture* pTex = nullptr;
         float size = NOTE_SIZE;
+        float alpha = 1.0f;
+        float tintR = 1.0f, tintG = 1.0f, tintB = 1.0f;
 
+        // Select texture based on note type
         switch (note.type) {
         case NOTE_NORMAL:
-            r = 0.2f; g = 0.6f; b = 1.0f;
+            pTex = g_pTexNormalNote;
             break;
-        case NOTE_GOLD:
-            r = 1.0f; g = 0.8f; b = 0.2f;
+        case NOTE_PREMIUM:
+            pTex = g_pTexPremiumNote;
             size = NOTE_SIZE * 1.2f;
             break;
         default:
             break;
         }
 
+        // Handle missed notes (grayed out)
         if (note.missed) {
-            r = 0.5f; g = 0.5f; b = 0.5f;
+            alpha = 0.3f;
+            tintR = tintG = tintB = 0.5f;
         }
 
-        AEGfxSetColorToMultiply(r, g, b, note.missed ? 0.3f : 1.0f);
+        // Draw the sprite
+        if (pTex) {
+            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+            AEGfxSetColorToMultiply(tintR, tintG, tintB, alpha);
+            AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+            AEGfxSetTransparency(alpha);
+            AEGfxTextureSet(pTex, 0, 0);
+        }
+        else {
+            // Fallback to colored square if texture failed to load
+            AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+            AEGfxSetColorToMultiply(tintR, tintG, tintB, alpha);
+        }
+
         AEMtx33Scale(&scale, size * 2.0f, size * 2.0f);
         AEMtx33Trans(&trans, note.xPosition, VERTICAL_OFFSET);
         AEMtx33Concat(&transform, &trans, &scale);
         AEGfxSetTransform(transform.m);
         AEGfxMeshDraw(g_pMeshNote, AE_GFX_MDM_TRIANGLES);
-
-        if (note.type == NOTE_NORMAL && !note.missed) {
-            AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 0.8f);
-            AEMtx33Scale(&scale, size, size);
-            AEMtx33Trans(&trans, note.xPosition, VERTICAL_OFFSET);
-            AEMtx33Concat(&transform, &trans, &scale);
-            AEGfxSetTransform(transform.m);
-            AEGfxMeshDraw(g_pMeshNote, AE_GFX_MDM_TRIANGLES);
-        }
     }
 
     // UI
@@ -471,6 +594,17 @@ void Rhythm_Free() {
 }
 
 void Rhythm_Unload() {
+
+    // Free textures
+    if (g_pTexNormalNote) AEGfxTextureUnload(g_pTexNormalNote);
+    if (g_pTexPremiumNote) AEGfxTextureUnload(g_pTexPremiumNote);
+    if (g_pTexBackground) AEGfxTextureUnload(g_pTexBackground);
+    if (g_pTexWateringCan) AEGfxTextureUnload(g_pTexWateringCan);
+    g_pTexNormalNote = nullptr;
+    g_pTexPremiumNote = nullptr;
+    g_pTexBackground = nullptr;
+    g_pTexWateringCan = nullptr;
+
     if (g_pMeshNote) AEGfxMeshFree(g_pMeshNote);
     if (g_pMeshLine) AEGfxMeshFree(g_pMeshLine);
     if (g_fontId >= 0) AEGfxDestroyFont(g_fontId);
