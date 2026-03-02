@@ -20,6 +20,7 @@ struct FarmPlot
 
 static std::vector<FarmPlot> farmPlots;
 static AEGfxTexture* plantedTexture = nullptr;
+static AEGfxTexture* deleteIcon = nullptr;
 
 const float GROW_TIME = 3.0f;
 
@@ -32,6 +33,7 @@ void Farm_Load()
     std::cout << "Farm_Load\n";
 
     plantedTexture = AEGfxTextureLoad("Assets/PlotPlant.png");
+    deleteIcon = AEGfxTextureLoad("Assets/X.png");
 
     if (!plantedTexture)
         std::cout << "FAILED TO LOAD PlotPlant.png\n";
@@ -108,9 +110,13 @@ void Farm_Render()
         if (!farmPlots[i].isPlanted)
             continue;
 
+        // Get plot center once
         float plotX = UI_GetPlotSlotX(i);
         float plotY = UI_GetPlotSlotY(i);
 
+        // --------------------------
+        // 1 Draw Apple FIRST
+        // --------------------------
         AEGfxTextureSet(plantedTexture, 0, 0);
 
         AEMtx33Scale(&scale, 120.0f, 120.0f);
@@ -119,9 +125,29 @@ void Farm_Render()
 
         AEGfxSetTransform(transform.m);
         AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+        // --------------------------
+        // 2 Draw Delete X AFTER
+        // --------------------------
+        if (deleteIcon)
+        {
+            float xSize = 25.0f;
+            float offsetX = 45.0f;
+            float offsetY = 45.0f;
+
+            float xPos = plotX + offsetX;
+            float yPos = plotY + offsetY;
+
+            AEGfxTextureSet(deleteIcon, 0, 0);
+
+            AEMtx33Scale(&scale, xSize, xSize);
+            AEMtx33Trans(&trans, xPos, yPos);
+            AEMtx33Concat(&transform, &trans, &scale);
+
+            AEGfxSetTransform(transform.m);
+            AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+        }
     }
-  //  std::cout << "Rendering farm...\n";
- 
 }
 
 // ------------------------------------------------------------
@@ -141,7 +167,15 @@ void Farm_Unload()
         plantedTexture = nullptr;
     }
 
+
+    if (deleteIcon)
+    {
+        AEGfxTextureUnload(deleteIcon);
+        deleteIcon = nullptr;
+    }
     std::cout << "Farm_Unload\n";
+
+
 }
 
 // ------------------------------------------------------------
@@ -172,4 +206,19 @@ bool Farm_IsPlotPlanted(int plotIndex)
 
     return farmPlots[plotIndex].isPlanted;
 }
+
+void Farm_ClearPlot(int index)
+{
+    if (index < 0 || index >= farmPlots.size())
+        return;
+
+    farmPlots[index].isPlanted = false;
+    farmPlots[index].isReady = false;
+    farmPlots[index].growTimer = 0.0f;
+    farmPlots[index].seedType = -1;
+}
+
+
+
+
 

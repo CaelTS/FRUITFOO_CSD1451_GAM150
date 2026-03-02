@@ -72,6 +72,7 @@ void UI_Init()
     appleSeedInfo = AEGfxTextureLoad("Assets/AppleSeedInfo.png");
     plotSlotTexture = AEGfxTextureLoad("Assets/Plot1.png");
 
+
     menuButtons.clear();
     float menuCenterX = -530.0f;
     float buttonSize = 100.0f;
@@ -317,7 +318,38 @@ void UI_UpdateButtons()
 
             break;
         }
+        
+     
     }
+
+    // DELETE SEED BUTTON (CLICK LOGIC ONLY)
+    for (int i = 0; i < plotSlots.size(); i++)
+    {
+        if (!Farm_IsPlotPlanted(i))
+            continue;
+
+        float xSize = 30.0f;
+        float offset = 40.0f;
+
+        float xPos = plotSlots[i].x + offset;
+        float yPos = plotSlots[i].y + offset;
+
+        bool overDelete =
+            worldX >= xPos - xSize * 0.5f &&
+            worldX <= xPos + xSize * 0.5f &&
+            worldY >= yPos - xSize * 0.5f &&
+            worldY <= yPos + xSize * 0.5f;
+
+        if (overDelete && AEInputCheckTriggered(AEVK_LBUTTON))
+        {
+            Farm_ClearPlot(i);
+            break;
+        }
+    }
+
+  
+
+
 }
 
 
@@ -371,7 +403,7 @@ void UI_Draw()
         float popupX = 0.0f;
         float popupY = 0.0f;
 
-       
+
 
         // Draw dark background
         AEGfxSetRenderMode(AE_GFX_RM_COLOR);
@@ -444,7 +476,7 @@ void UI_Draw()
         if (hoveredSeed == SEED_APPLE)
         {
             AEGfxSetRenderMode(AE_GFX_RM_COLOR);
-            AEGfxSetBlendMode(AE_GFX_BM_BLEND);   
+            AEGfxSetBlendMode(AE_GFX_BM_BLEND);
             AEGfxSetColorToMultiply(1.0f, 0.55f, 0.0f, 0.9f);
 
             AEMtx33Scale(&scale, 112, 112);   // slightly larger than icon
@@ -478,15 +510,14 @@ void UI_Draw()
     {
         PlotSlot& slot = plotSlots[i];
 
-        // Draw slot texture
+        // Draw slot
         AEMtx33Scale(&scale, slot.width, slot.height);
         AEMtx33Trans(&trans, slot.x, slot.y);
         AEMtx33Concat(&transform, &trans, &scale);
-
         AEGfxSetTransform(transform.m);
         AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
 
-        // Yellow hover overlay
+        // Hover overlay
         if (i == hoveredPlotIndex)
         {
             AEGfxSetRenderMode(AE_GFX_RM_COLOR);
@@ -500,11 +531,13 @@ void UI_Draw()
             AEGfxSetTransform(transform.m);
             AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
 
-            // Reset render mode after overlay
             AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
             AEGfxSetColorToMultiply(1, 1, 1, 1);
         }
+
+  
     }
+
     // --- Apple Info ---
     if (selectedSeed == SEED_APPLE)
     {
