@@ -77,9 +77,6 @@
     <ClInclude Include="..\Source\Rhythm.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\Source\SaveLoad.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\Source\ShopUpgrade.h">
       <Filter>Header Files</Filter>
     </ClInclude>

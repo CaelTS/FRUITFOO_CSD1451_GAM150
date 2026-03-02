@@ -98,6 +98,7 @@ xcopy "$(SolutionDir)Extern\AlphaEngine\lib\fmod.dll" "$(OutDir)" /s /r /y /q</C
   <ItemGroup>
     <ClCompile Include="..\Source\Economy.cpp" />
     <ClCompile Include="..\Source\Farm.cpp" />
+    <ClCompile Include="..\Source\FruitSave.cpp" />
     <ClCompile Include="..\Source\GameStateManager.cpp" />
     <ClCompile Include="..\Source\Inventory.cpp" />
     <ClCompile Include="..\Source\Main.cpp" />
@@ -112,12 +113,12 @@ xcopy "$(SolutionDir)Extern\AlphaEngine\lib\fmod.dll" "$(OutDir)" /s /r /y /q</C
   <ItemGroup>
     <ClInclude Include="..\Source\Economy.h" />
     <ClInclude Include="..\Source\Farm.h" />
+    <ClInclude Include="..\Source\FruitSave.h" />
     <ClInclude Include="..\Source\GameStateManager.h" />
     <ClInclude Include="..\Source\Inventory.h" />
     <ClInclude Include="..\Source\Main.h" />
     <ClInclude Include="..\Source\Next.h" />
     <ClInclude Include="..\Source\Rhythm.h" />
-    <ClInclude Include="..\Source\SaveLoad.h" />
     <ClInclude Include="..\Source\ShopUpgrade.h" />
     <ClInclude Include="..\Source\Transition.h" />
     <ClInclude Include="..\Source\UI.h" />
