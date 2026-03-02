@@ -11,10 +11,13 @@
 extern AEGfxVertexList* g_pMeshFullScreen;   // from Main.cpp
 extern s8 fontId;
 
+// NextScreen-specific resources
+static AEGfxVertexList* pMeshProfile = NULL;
+
 
 void ProfileScreen_Load() {
     // Load ProfileScreen-specific resources here
-    // Example: s_pMeshNextObject = CreateMesh();
+    // Example: s_pMeshProfile = CreateMesh();
 }
 
 void ProfileScreen_Initialize() {
@@ -54,9 +57,9 @@ void ProfileScreen_Render() {
 
 void ProfileScreen_Free() {
     // Free ProfileScreen-specific resources
-    if (pMeshNextObject) {
-        AEGfxMeshFree(pMeshNextObject);
-        pMeshNextObject = NULL;
+    if (pMeshProfile) {
+        AEGfxMeshFree(pMeshProfile);
+        pMeshProfile = NULL;
     }
 }
 
