@@ -48,11 +48,7 @@
     <ClCompile Include="..\Source\Utilities.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-<<<<<<< HEAD
-    <ClCompile Include="..\Source\ProfileMenu.cpp">
-=======
     <ClCompile Include="..\Source\Farm.cpp">
->>>>>>> main
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -78,6 +74,9 @@
     <ClInclude Include="..\Source\Rhythm.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\Source\SaveLoad.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="..\Source\ShopUpgrade.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -88,12 +87,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\Source\Farm.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\SaveLoad.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\ProfileMenu.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
