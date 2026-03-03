@@ -60,6 +60,18 @@ struct MenuButton
 static std::vector<MenuButton> menuButtons;
 static MenuButton plotPlusButton;
 
+// ------------------------
+// Upgrades
+// ------------------------
+struct Upgrade { std::string name; int cost; bool purchased; };
+static std::vector<Upgrade> upgrades;
+static int upgradesStartIndex = 0;
+static const int MAX_VISIBLE_UPGRADES = 3;
+static const float UPGRADES_PANEL_W = 450.0f;
+static const float UPGRADES_PANEL_H = 280.0f;
+static const float UPGRADES_PANEL_X = -530.0f;
+static const float UPGRADES_PANEL_Y = -160.0f;
+
 
 void UI_Init()
 {
@@ -72,86 +84,17 @@ void UI_Init()
     appleSeedInfo = AEGfxTextureLoad("Assets/AppleSeedInfo.png");
     plotSlotTexture = AEGfxTextureLoad("Assets/Plot1.png");
 
-
+    // --- Menu Buttons ---
     menuButtons.clear();
     float menuCenterX = -530.0f;
     float buttonSize = 100.0f;
-    float buttonspacing = 140.0f;
+    float buttonSpacing = 140.0f;
     float buttonY = -360.0f;
 
-    // Left
-    menuButtons.push_back({
-        menuCenterX - buttonspacing,
-        buttonY,
-        buttonSize,
-        buttonSize,
-        false,
-        BUTTON_INVENTORY
-        });
-
-    // Center
-    menuButtons.push_back({
-        menuCenterX,
-        buttonY,
-        buttonSize,
-        buttonSize,
-        false,
-        BUTTON_COLLECTION
-        });
-
-    // Right
-    menuButtons.push_back({
-        menuCenterX + buttonspacing,
-        buttonY,
-        buttonSize,
-        buttonSize,
-        false,
-        BUTTON_SETTINGS
-        });
-    if (popupOpen)
+    ButtonType buttonOrder[] = { BUTTON_INVENTORY, BUTTON_COLLECTION, BUTTON_SETTINGS };
+    for (int i = 0; i < 3; ++i)
     {
-        float popupW = 400.0f;
-        float popupH = 250.0f;
-
-        AEMtx33 scale, trans, transform;
-
-        // Draw popup background
-        AEGfxSetRenderMode(AE_GFX_RM_COLOR);
-        AEGfxSetBlendMode(AE_GFX_BM_BLEND);
-        AEGfxSetColorToMultiply(0.1f, 0.1f, 0.1f, 0.95f);
-
-        AEMtx33Scale(&scale, popupW, popupH);
-        AEMtx33Trans(&trans, 0.0f, 0.0f);
-        AEMtx33Concat(&transform, &trans, &scale);
-
-        AEGfxSetTransform(transform.m);
-        AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
-
-        // RESET for text
-        AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
-        AEGfxSetBlendMode(AE_GFX_BM_BLEND);
-        AEGfxSetColorToMultiply(1, 1, 1, 1);
-
-        float xText = -0.1f;
-        float yText = 0.1f;
-
-        switch (activePopupIndex)
-        {
-        case BUTTON_SETTINGS:
-            AEGfxPrint(fontId, "Settings", xText, yText, 1.0f, 1, 1, 1, 1);
-            AEGfxPrint(fontId, "Game options here.",
-                xText, yText - 0.08f,
-                0.8f, 1, 1, 1, 1);
-            break;
-
-        case BUTTON_INVENTORY:
-            AEGfxPrint(fontId, "Inventory", xText, yText, 1.0f, 1, 1, 1, 1);
-            break;
-
-        case BUTTON_COLLECTION:
-            AEGfxPrint(fontId, "Collection", xText, yText, 1.0f, 1, 1, 1, 1);
-            break;
-        }
+        menuButtons.push_back({ menuCenterX + (i - 1) * buttonSpacing, buttonY, buttonSize, buttonSize, false, buttonOrder[i] });
     }
  
     plotPlusButton.x = -630.0f;
@@ -193,6 +136,11 @@ void UI_Init()
             plotSlots.push_back(slot);
         }
     }
+
+    // --- Upgrades ---
+    upgrades = { {"Speed Boost", 100, false}, {"Crate Storage", 150, false}, {"Faster Growth", 200, false}, {"Quality Fruits", 300, false}, {"Stall Revamp", 500, false} };
+
+
 }
 
 void UI_Input()
@@ -358,6 +306,53 @@ void UI_UpdateButtons()
         }
     }
 
+    // --- Upgrades ---
+    float upgradesPanelW = UPGRADES_PANEL_W;
+    float upgradesPanelH = UPGRADES_PANEL_H;
+    float panelX = UPGRADES_PANEL_X;
+    float panelY = UPGRADES_PANEL_Y;
+
+    float spacingUp = 70.0f;
+    float startYUp = panelY + 60.0f;   // SAME AS DRAW
+
+    int endIndex = upgradesStartIndex + MAX_VISIBLE_UPGRADES;
+    if (endIndex > upgrades.size())
+        endIndex = upgrades.size();
+
+    int shownUp = 0;
+    for (int i = upgradesStartIndex; i < upgrades.size() && shownUp < MAX_VISIBLE_UPGRADES; ++i)
+    {
+        auto& u = upgrades[i];
+        if (u.purchased) continue;  // skip purchased upgrades
+
+        float y = startYUp - shownUp * spacingUp;
+
+        float boxW = upgradesPanelW - 40.0f;
+        float boxH = 50.0f;
+
+        bool over =
+            worldX >= panelX - boxW * 0.5f &&
+            worldX <= panelX + boxW * 0.5f &&
+            worldY >= y - boxH * 0.5f &&
+            worldY <= y + boxH * 0.5f;
+
+        if (over && AEInputCheckTriggered(AEVK_LBUTTON))
+        {
+            u.purchased = true;
+
+            // Only shift list if the last visible upgrade was clicked
+            if (shownUp == MAX_VISIBLE_UPGRADES - 1 &&
+                upgradesStartIndex < upgrades.size() - MAX_VISIBLE_UPGRADES)
+            {
+                upgradesStartIndex++;
+            }
+
+            break;  // stop after one click
+        }
+
+        ++shownUp;
+    }
+
 }
 
 
@@ -465,7 +460,85 @@ void UI_Draw()
         popupOpen = false;
     }
 
+    // --- Upgrades Panel ---
+    float upgradesPanelW = UPGRADES_PANEL_W;
+    float upgradesPanelH = UPGRADES_PANEL_H;
+    float panelX = UPGRADES_PANEL_X;
+    float panelY = UPGRADES_PANEL_Y;
+    AEMtx33Scale(&scale, upgradesPanelW, upgradesPanelH);
+    AEMtx33Trans(&trans, panelX, panelY);
+    AEMtx33Concat(&transform, &trans, &scale);
+    AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+    AEGfxSetColorToMultiply(0.2f, 0.2f, 0.2f, 1.0f);
+    AEGfxSetTransform(transform.m);
+    AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
 
+    // Draw Header
+    float headerX = (panelX - upgradesPanelW * 0.45f) / 800.0f;
+    float headerY = (panelY + upgradesPanelH * 0.5f - 40.0f) / 450.0f;
+
+    AEGfxPrint(fontId, "Upgrades", headerX, headerY, 1.0f, 1, 1, 1, 1);
+
+    // Draw upgrades text & hover highlight
+    int mx, my;
+    AEInputGetCursorPosition(&mx, &my);
+
+    float worldX = static_cast<float>(mx) - 800.0f;
+    float worldY = 450.0f - static_cast<float>(my);
+    float startYUp = panelY + 60.0f;
+    float spacingUp = 70.0f;
+
+
+    // --- Upgrades Text & Hover Highlight ---
+    int visibleSlot = 0;
+
+    for (int i = upgradesStartIndex;
+        i < upgrades.size() && visibleSlot < MAX_VISIBLE_UPGRADES;
+        ++i)
+    {
+        if (upgrades[i].purchased)
+            continue;  // skip purchased ones
+
+        float y = startYUp - visibleSlot * spacingUp;
+
+        float boxW = upgradesPanelW - 40.0f;
+        float boxH = 50.0f;
+
+        bool isHover =
+            worldX >= panelX - boxW * 0.5f &&
+            worldX <= panelX + boxW * 0.5f &&
+            worldY >= y - boxH * 0.5f &&
+            worldY <= y + boxH * 0.5f;
+
+        if (isHover)
+        {
+            AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+            AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+            AEGfxSetColorToMultiply(0.9f, 0.8f, 0.2f, 0.5f);
+
+            AEMtx33Scale(&scale, boxW, boxH);
+            AEMtx33Trans(&trans, panelX, y);
+            AEMtx33Concat(&transform, &trans, &scale);
+
+            AEGfxSetTransform(transform.m);
+            AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+            AEGfxSetColorToMultiply(1, 1, 1, 1);
+        }
+
+        char buf[128];
+        sprintf_s(buf, "%s - %d Gold",
+            upgrades[i].name.c_str(),
+            upgrades[i].cost);
+
+        float xText = (panelX - upgradesPanelW * 0.45f) / 800.0f;
+        float yText = (y + boxH * 0.1f) / 450.0f;
+
+        AEGfxPrint(fontId, buf, xText, yText, 0.8f, 1, 1, 1, 1);
+
+        visibleSlot++;
+    }
     
     // --- Seeds Panel ---
     if (seedsPopupOpen)
@@ -518,7 +591,9 @@ void UI_Draw()
         AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
     }
 
-    AEGfxTextureSet(plotSlotTexture, 0, 0);
+    AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+    AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+    AEGfxSetColorToMultiply(1, 1, 1, 1);
     AEGfxTextureSet(plotSlotTexture, 0, 0);
 
     for (int i = 0; i < plotSlots.size(); i++)
@@ -582,6 +657,7 @@ void UI_Draw()
         AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
     }
 
+    
 
 }
 bool UI_IsMenuOpen()
@@ -681,5 +757,13 @@ float UI_GetPlotSlotY(int index)
 
 void UI_Exit()
 {
-    // Optional: free textures here
+    // free textures here
+    AEGfxTextureUnload(menuTexture);
+    AEGfxTextureUnload(seedsTexture);
+    AEGfxTextureUnload(inventoryIcon);
+    AEGfxTextureUnload(collectionIcon);
+    AEGfxTextureUnload(settingsIcon);
+    AEGfxTextureUnload(appleSeedIcon);
+    AEGfxTextureUnload(appleSeedInfo);
+    AEGfxTextureUnload(plotSlotTexture);
 }
