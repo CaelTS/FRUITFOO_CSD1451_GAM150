@@ -9,9 +9,7 @@
 // Note types for visual variety
 enum NoteType {
     NOTE_NORMAL = 0,   // Regular note
-    NOTE_LONG_START,   // Start of long note
-    NOTE_LONG_END,     // End of long note
-    NOTE_GOLD          // Bonus note (worth more)
+    NOTE_PREMIUM          // Bonus note (worth more)
 };
 
 // Hit accuracy

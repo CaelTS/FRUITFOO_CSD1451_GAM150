@@ -27,6 +27,5 @@ std::pair<f32, f32> random_range_pair(f32 min1, f32 max1, f32 min2, f32 max2);
 extern u64 total_money;
 extern u64 max_money;
 extern f32 money_multiplier;
-extern f32 next_sale_time;
 
 #endif // ECONOMY_H

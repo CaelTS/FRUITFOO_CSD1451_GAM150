@@ -1,125 +1,170 @@
-#include "UI.h" // Add this at the top to define FruitBasket and GetFruitBaskets
-
+#include "UI.h"
+#include "Farm.h"
 #include "AEEngine.h"
 #include <vector>
+#include <iostream>
 
-static bool menuOpen = false;
-static AEGfxTexture* menuTexture = nullptr;
 extern AEGfxVertexList* g_pMeshFullScreen;
 extern s8 fontId;
 
+static bool menuOpen = false;
 static bool popupOpen = false;
-static int activePopupIndex = -1;
 static bool seedsPopupOpen = false;
-static AEGfxTexture* seedsTexture = nullptr;
 
+static int activePopupIndex = -1;
+static int selectedSeed = -1;
+int hoveredSeed = -1;   // purely for highlight
+int infoSeed = -1;         // which seed info panel is showing
+static int hoveredPlotIndex = -1;
+static int activePlotIndex = -1;
 
-struct FruitInfo
+float UI_GetPlotCenterX();
+float UI_GetPlotCenterY();
+struct PlotSlot
 {
-    const char* name;
-    const char* line1;
-    const char* line2;
+    float x, y;
+    float width, height;
+};
+static std::vector<PlotSlot> plotSlots;
+static AEGfxTexture* plotSlotTexture = nullptr;
+
+static AEGfxTexture* menuTexture = nullptr;
+static AEGfxTexture* seedsTexture = nullptr;
+static AEGfxTexture* inventoryIcon = nullptr;
+static AEGfxTexture* collectionIcon = nullptr;
+static AEGfxTexture* settingsIcon = nullptr;
+static AEGfxTexture* appleSeedIcon = nullptr;
+static AEGfxTexture* appleSeedInfo = nullptr;
+
+enum ButtonType
+{
+    BUTTON_INVENTORY,
+    BUTTON_COLLECTION,
+    BUTTON_SETTINGS
 };
 
-
-static FruitInfo fruitInfo[3] =
+enum SeedType
 {
-    { "Apple",  "Sweet red fruit",  "Price: 10 gold" },
-    { "Pear",   "Juicy green fruit", "Price: 10 gold" },
-    { "Banana", "Soft yellow fruit", "Price: 10 gold" }
+    SEED_APPLE = 0,
+    SEED_COUNT = 1
 };
 
 struct MenuButton
 {
-    float x;
-    float y;
-    float width;
-    float height;
+    float x, y;
+    float width, height;
     bool isHovered;
+    ButtonType type;
 };
-static std::vector<MenuButton> menuButtons;
 
+static std::vector<MenuButton> menuButtons;
 static MenuButton plotPlusButton;
+
+// ------------------------
+// Upgrades
+// ------------------------
+struct Upgrade { std::string name; int cost; bool purchased; };
+static std::vector<Upgrade> upgrades;
+static int upgradesStartIndex = 0;
+static const int MAX_VISIBLE_UPGRADES = 3;
+static const float UPGRADES_PANEL_W = 450.0f;
+static const float UPGRADES_PANEL_H = 280.0f;
+static const float UPGRADES_PANEL_X = -530.0f;
+static const float UPGRADES_PANEL_Y = -160.0f;
+
 
 void UI_Init()
 {
-    //Menu background
     menuTexture = AEGfxTextureLoad("Assets/MenuMockup.PNG");
-    if (!menuTexture)
-        printf("ERROR: MenuMockup.png failed to load!\n");
-
-    else
-        printf("MenuMockup.png loaded successfully!\n");
-
     seedsTexture = AEGfxTextureLoad("Assets/SeedsPanel.png");
-    if (!seedsTexture)
-        printf("ERROR: SeedsPanel.png failed to load!\n");
-    else
-        printf("SeedsPanel.png loaded successfully!\n");
+    inventoryIcon = AEGfxTextureLoad("Assets/Inventory.png");
+    collectionIcon = AEGfxTextureLoad("Assets/Collection.png");
+    settingsIcon = AEGfxTextureLoad("Assets/Settings.png");
+    appleSeedIcon = AEGfxTextureLoad("Assets/AppleSeed.png");
+    appleSeedInfo = AEGfxTextureLoad("Assets/AppleSeedInfo.png");
+    plotSlotTexture = AEGfxTextureLoad("Assets/Plot1.png");
 
-    //Menu Buttons 
+    // --- Menu Buttons ---
     menuButtons.clear();
+    float menuCenterX = -530.0f;
+    float buttonSize = 100.0f;
+    float buttonSpacing = 140.0f;
+    float buttonY = -360.0f;
 
-    float buttonY = -350.0f; // near bottom of window
-    float spacingX = 150.0f;  // horizontal space between buttons
-    float startX = -675.0f; // leftmost button
-
-    // Plot + button (adjust if needed)
+    ButtonType buttonOrder[] = { BUTTON_INVENTORY, BUTTON_COLLECTION, BUTTON_SETTINGS };
+    for (int i = 0; i < 3; ++i)
+    {
+        menuButtons.push_back({ menuCenterX + (i - 1) * buttonSpacing, buttonY, buttonSize, buttonSize, false, buttonOrder[i] });
+    }
+ 
     plotPlusButton.x = -630.0f;
     plotPlusButton.y = 150.0f;
     plotPlusButton.width = 120.0f;
     plotPlusButton.height = 120.0f;
-    plotPlusButton.isHovered = false;
 
-    for (int i = 0; i < 3; ++i)
+    plotSlots.clear();
+
+    //plot setup
+
+    float slotSize = 120.0f;
+    float spacing = 150.0f;
+
+    int cols = 2;
+    int rows = 2;
+
+    // Center of the Plot panel
+    float panelCenterX = -510.0f;   // tweak slightly if needed
+    float panelCenterY = 150.0f;    // tweak slightly if needed
+    float totalWidth = (cols - 1) * spacing + slotSize;
+    float totalHeight = (rows - 1) * spacing + slotSize;
+
+    float startX = panelCenterX - totalWidth * 0.5f + slotSize * 0.5f;
+    float startY = panelCenterY + totalHeight * 0.5f - slotSize * 0.5f;
+
+    plotSlots.clear();
+
+    for (int row = 0; row < rows; row++)
     {
-        MenuButton button;
-        button.x = startX + i * spacingX; // move right for each button
-        button.y = buttonY;
-        button.width = 96.0f;
-        button.height = 96.0f;
-        button.isHovered = false;
+        for (int col = 0; col < cols; col++)
+        {
+            PlotSlot slot;
+            slot.x = startX + col * spacing;
+            slot.y = startY - row * spacing;
+            slot.width = slotSize;
+            slot.height = slotSize;
 
-        menuButtons.push_back(button);
+            plotSlots.push_back(slot);
+        }
     }
-}
 
+    // --- Upgrades ---
+    upgrades = { {"Speed Boost", 100, false}, {"Crate Storage", 150, false}, {"Faster Growth", 200, false}, {"Quality Fruits", 300, false}, {"Stall Revamp", 500, false} };
+
+
+}
 
 void UI_Input()
 {
     if (AEInputCheckTriggered(AEVK_M))
-    {
         menuOpen = !menuOpen;
-    }
 
-    // Update buttons when menu is open
     if (menuOpen)
         UI_UpdateButtons();
-
-    // Close popup with ESC
-    if (popupOpen && AEInputCheckTriggered(AEVK_Q))
-    {
-        popupOpen = false;
-        activePopupIndex = -1;
-    }
-
 }
 
 void UI_UpdateButtons()
 {
-    if (!menuOpen)
-        return;
-
     int mx, my;
     AEInputGetCursorPosition(&mx, &my);
 
     float worldX = static_cast<float>(mx) - 800.0f;
     float worldY = 450.0f - static_cast<float>(my);
 
-    for (int i = 0; i < (int)menuButtons.size(); ++i)
+    // -------------------------------------------------
+    // MENU BUTTONS
+    // -------------------------------------------------
+    for (auto& button : menuButtons)
     {
-        auto& button = menuButtons[i];
-
         button.isHovered =
             worldX >= button.x - button.width * 0.5f &&
             worldX <= button.x + button.width * 0.5f &&
@@ -129,14 +174,13 @@ void UI_UpdateButtons()
         if (button.isHovered && AEInputCheckTriggered(AEVK_LBUTTON))
         {
             popupOpen = true;
-            activePopupIndex = i;
+            activePopupIndex = button.type;
         }
     }
 
-    // -----------------------------
-// Plot + Button Click Detection
-// -----------------------------
-
+    // -------------------------------------------------
+    // PLOT "+" BUTTON (TOGGLE PANEL)
+    // -------------------------------------------------
     plotPlusButton.isHovered =
         worldX >= plotPlusButton.x - plotPlusButton.width * 0.5f &&
         worldX <= plotPlusButton.x + plotPlusButton.width * 0.5f &&
@@ -145,60 +189,211 @@ void UI_UpdateButtons()
 
     if (plotPlusButton.isHovered && AEInputCheckTriggered(AEVK_LBUTTON))
     {
-        seedsPopupOpen = !seedsPopupOpen; // toggle
+        seedsPopupOpen = !seedsPopupOpen;
+
+        // If closing the panel, reset selection
+        if (!seedsPopupOpen)
+            selectedSeed = -1;
     }
 
-    // Close if clicking elsewhere
-    if (seedsPopupOpen && AEInputCheckTriggered(AEVK_LBUTTON) && !plotPlusButton.isHovered)
+    // -------------------------------------------------
+    // SEED SELECTION (ONLY IF PANEL OPEN)
+    // -------------------------------------------------
+    if (seedsPopupOpen)
     {
-        seedsPopupOpen = false;
+        float panelX = -100.0f;
+        float panelY = 0.0f;
+        float seedY = panelY + 120.0f;
+        float seedW = 100.0f;
+        float seedH = 100.0f;
+
+        bool overSeed =
+            worldX >= panelX - seedW * 0.5f &&
+            worldX <= panelX + seedW * 0.5f &&
+            worldY >= seedY - seedH * 0.5f &&
+            worldY <= seedY + seedH * 0.5f;
+
+
+        // Hover detection
+        if (overSeed)
+            hoveredSeed = SEED_APPLE;
+        else
+            hoveredSeed = -1;
+        if (overSeed && AEInputCheckTriggered(AEVK_LBUTTON))
+        {
+            selectedSeed = SEED_APPLE;
+
+            if (activePlotIndex != -1)
+            {
+                int plotToPlant = activePlotIndex;
+
+                Farm_PlantSeed(plotToPlant, SEED_APPLE);
+
+                std::cout << "Planted on plot: " << plotToPlant << "\n";
+
+                seedsPopupOpen = false;
+                activePlotIndex = -1;
+                //selectedSeed = 1;
+            }
+        }
+    }
+
+    // -------------------------------------------------
+// PLOT SLOT HOVER
+// -------------------------------------------------
+
+    hoveredPlotIndex = -1;
+
+    for (int i = 0; i < plotSlots.size(); i++)
+    {
+        PlotSlot& slot = plotSlots[i];
+
+        bool isOver =
+            worldX >= slot.x - slot.width * 0.5f &&
+            worldX <= slot.x + slot.width * 0.5f &&
+            worldY >= slot.y - slot.height * 0.5f &&
+            worldY <= slot.y + slot.height * 0.5f;
+
+        if (isOver)
+        {
+            hoveredPlotIndex = i;
+
+            if (AEInputCheckTriggered(AEVK_LBUTTON))
+            {
+                // Toggle panel if clicking same plot again
+                if (seedsPopupOpen && activePlotIndex == i)
+                {
+                    seedsPopupOpen = false;
+                    selectedSeed = -1;      // hide info
+                    activePlotIndex = -1;
+                }
+                else
+                {
+                    seedsPopupOpen = true;
+                    activePlotIndex = i;
+                    selectedSeed = SEED_APPLE;   // SHOW INFO IMMEDIATELY
+                }
+            }
+
+            break;  // stop checking other slots
+        }
+    }
+
+    // DELETE SEED BUTTON (CLICK LOGIC ONLY)
+    for (int i = 0; i < plotSlots.size(); i++)
+    {
+        if (!Farm_IsPlotPlanted(i))
+            continue;
+
+        float xSize = 25.0f;
+
+        float offsetX = -45.0f;   // SAME as Farm_Render
+        float offsetY = 45.0f;
+
+        float xPos = plotSlots[i].x + offsetX;
+        float yPos = plotSlots[i].y + offsetY;
+
+        bool overDelete =
+            worldX >= xPos - xSize * 0.5f &&
+            worldX <= xPos + xSize * 0.5f &&
+            worldY >= yPos - xSize * 0.5f &&
+            worldY <= yPos + xSize * 0.5f;
+
+        if (overDelete && AEInputCheckTriggered(AEVK_LBUTTON))
+        {
+            Farm_ClearPlot(i);
+            break;
+        }
+    }
+
+    // --- Upgrades ---
+    float upgradesPanelW = UPGRADES_PANEL_W;
+    float upgradesPanelH = UPGRADES_PANEL_H;
+    float panelX = UPGRADES_PANEL_X;
+    float panelY = UPGRADES_PANEL_Y;
+
+    float spacingUp = 70.0f;
+    float startYUp = panelY + 60.0f;   // SAME AS DRAW
+
+    int endIndex = upgradesStartIndex + MAX_VISIBLE_UPGRADES;
+    if (endIndex > upgrades.size())
+        endIndex = upgrades.size();
+
+    int shownUp = 0;
+    for (int i = upgradesStartIndex; i < upgrades.size() && shownUp < MAX_VISIBLE_UPGRADES; ++i)
+    {
+        auto& u = upgrades[i];
+        if (u.purchased) continue;  // skip purchased upgrades
+
+        float y = startYUp - shownUp * spacingUp;
+
+        float boxW = upgradesPanelW - 40.0f;
+        float boxH = 50.0f;
+
+        bool over =
+            worldX >= panelX - boxW * 0.5f &&
+            worldX <= panelX + boxW * 0.5f &&
+            worldY >= y - boxH * 0.5f &&
+            worldY <= y + boxH * 0.5f;
+
+        if (over && AEInputCheckTriggered(AEVK_LBUTTON))
+        {
+            u.purchased = true;
+
+            // Only shift list if the last visible upgrade was clicked
+            if (shownUp == MAX_VISIBLE_UPGRADES - 1 &&
+                upgradesStartIndex < upgrades.size() - MAX_VISIBLE_UPGRADES)
+            {
+                upgradesStartIndex++;
+            }
+
+            break;  // stop after one click
+        }
+
+        ++shownUp;
     }
 
 }
 
+
 void UI_Draw()
 {
-    // Menu background
     if (!menuOpen)
         return;
 
-    float menuWidth = 480.0f;
-    float menuHeight = 830.0f;
-
-    // Center of screen in YOUR engine
-    float x = -760.0f + menuWidth / 2.0f;
-    float y = 0.0f;
-
     AEMtx33 scale, trans, transform;
 
+
+
+    // --- Menu Background ---
     AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
-    AEGfxSetBlendMode(AE_GFX_BM_BLEND);
-    AEGfxSetTransparency(1.0f);
+    AEGfxSetColorToMultiply(1, 1, 1, 1);
     AEGfxTextureSet(menuTexture, 0, 0);
 
-    AEMtx33Scale(&scale, menuWidth, menuHeight);
-    AEMtx33Trans(&trans, x, y);
+    AEMtx33Scale(&scale, 480, 830);
+    AEMtx33Trans(&trans, -770 + 240, 0);
     AEMtx33Concat(&transform, &trans, &scale);
 
     AEGfxSetTransform(transform.m);
     AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
 
-
-    //Menu buttons
+    // --- Menu Buttons ---
     for (auto& button : menuButtons)
     {
-        AEMtx33 scale, trans, transform;
+        AEGfxTextureSet(
+            button.type == BUTTON_INVENTORY ? inventoryIcon :
+            button.type == BUTTON_COLLECTION ? collectionIcon :
+            settingsIcon, 0, 0);
+
+        AEGfxSetColorToMultiply(
+            1.0f,
+            button.isHovered ? 0.9f : 1.0f,
+            button.isHovered ? 0.9f : 1.0f,
+            1.0f);
 
         AEMtx33Scale(&scale, button.width, button.height);
         AEMtx33Trans(&trans, button.x, button.y);
         AEMtx33Concat(&transform, &trans, &scale);
-
-        AEGfxSetRenderMode(AE_GFX_RM_COLOR);
-
-        if (button.isHovered)
-            AEGfxSetColorToMultiply(1.0f, 0.0f, 0.0f, 1.0f); // red hover
-        else
-            AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 1.0f); // black normal
 
         AEGfxSetTransform(transform.m);
         AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
@@ -206,99 +401,273 @@ void UI_Draw()
 
     if (popupOpen)
     {
-        float w = 400.0f;
-        float h = 250.0f;
-
+        float popupW = 400.0f;
+        float popupH = 250.0f;
         float popupX = 0.0f;
         float popupY = 0.0f;
 
-        AEMtx33 scale, trans, transform;
-        AEMtx33Scale(&scale, w, h);
+
+
+        // Draw dark background
+        AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+        AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+        AEGfxSetColorToMultiply(0.1f, 0.1f, 0.1f, 0.95f);
+
+        AEMtx33Scale(&scale, popupW, popupH);
         AEMtx33Trans(&trans, popupX, popupY);
         AEMtx33Concat(&transform, &trans, &scale);
-
-        AEGfxSetRenderMode(AE_GFX_RM_COLOR);
-        AEGfxSetColorToMultiply(0.15f, 0.15f, 0.15f, 0.95f);
 
         AEGfxSetTransform(transform.m);
         AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
 
-        float xText = (popupX - w * 0.45f) / 800.0f;
-        float yText = (popupY + h * 0.25f) / 450.0f;
+        // Reset render state before printing text
+        AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+        AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+        AEGfxSetColorToMultiply(1, 1, 1, 1);
 
-        AEGfxPrint(fontId, "Fruit Info", xText, yText, 1.0f, 1, 1, 1, 1);
+        // Text position
+        float xText = (popupX - popupW * 0.45f) / 800.0f;
+        float yText = (popupY + popupH * 0.25f) / 450.0f;
 
-        if (activePopupIndex >= 0 && activePopupIndex < 3)
+        switch (activePopupIndex)
         {
-            AEGfxPrint(fontId,
-                fruitInfo[activePopupIndex].name,
-                xText, yText - 0.1f,
-                0.9f, 1, 1, 1, 1);
+        case BUTTON_INVENTORY:
+            AEGfxPrint(fontId, "Inventory", xText, yText, 1.0f, 1, 1, 1, 1);
+            AEGfxPrint(fontId, "Your items appear here.",
+                xText, yText - 0.08f,
+                0.8f, 1, 1, 1, 1);
+            break;
 
-            AEGfxPrint(fontId,
-                fruitInfo[activePopupIndex].line1,
-                xText, yText - 0.18f,
-                0.8f, 0.9f, 0.9f, 0.9f, 1);
+        case BUTTON_COLLECTION:
+            AEGfxPrint(fontId, "Collection", xText, yText, 1.0f, 1, 1, 1, 1);
+            AEGfxPrint(fontId, "Your discovered fruits.",
+                xText, yText - 0.08f,
+                0.8f, 1, 1, 1, 1);
+            break;
 
-            AEGfxPrint(fontId,
-                fruitInfo[activePopupIndex].line2,
-                xText, yText - 0.26f,
-                0.8f, 0.9f, 0.9f, 0.9f, 1);
+        case BUTTON_SETTINGS:
+            AEGfxPrint(fontId, "Settings", xText, yText, 1.0f, 1, 1, 1, 1);
+            AEGfxPrint(fontId, "Game options here.",
+                xText, yText - 0.08f,
+                0.8f, 1, 1, 1, 1);
+            break;
         }
     }
 
 
-    // -----------------------------
-// Seeds Popup Panel
-// -----------------------------
+    if (popupOpen && AEInputCheckTriggered(AEVK_Q))
+    {
+        popupOpen = false;
+    }
+
+    // --- Upgrades Panel ---
+    float upgradesPanelW = UPGRADES_PANEL_W;
+    float upgradesPanelH = UPGRADES_PANEL_H;
+    float panelX = UPGRADES_PANEL_X;
+    float panelY = UPGRADES_PANEL_Y;
+    AEMtx33Scale(&scale, upgradesPanelW, upgradesPanelH);
+    AEMtx33Trans(&trans, panelX, panelY);
+    AEMtx33Concat(&transform, &trans, &scale);
+    AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+    AEGfxSetColorToMultiply(0.2f, 0.2f, 0.2f, 1.0f);
+    AEGfxSetTransform(transform.m);
+    AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+    // Draw Header
+    float headerX = (panelX - upgradesPanelW * 0.45f) / 800.0f;
+    float headerY = (panelY + upgradesPanelH * 0.5f - 40.0f) / 450.0f;
+
+    AEGfxPrint(fontId, "Upgrades", headerX, headerY, 1.0f, 1, 1, 1, 1);
+
+    // Draw upgrades text & hover highlight
+    int mx, my;
+    AEInputGetCursorPosition(&mx, &my);
+
+    float worldX = static_cast<float>(mx) - 800.0f;
+    float worldY = 450.0f - static_cast<float>(my);
+    float startYUp = panelY + 60.0f;
+    float spacingUp = 70.0f;
+
+
+    // --- Upgrades Text & Hover Highlight ---
+    int visibleSlot = 0;
+
+    for (int i = upgradesStartIndex;
+        i < upgrades.size() && visibleSlot < MAX_VISIBLE_UPGRADES;
+        ++i)
+    {
+        if (upgrades[i].purchased)
+            continue;  // skip purchased ones
+
+        float y = startYUp - visibleSlot * spacingUp;
+
+        float boxW = upgradesPanelW - 40.0f;
+        float boxH = 50.0f;
+
+        bool isHover =
+            worldX >= panelX - boxW * 0.5f &&
+            worldX <= panelX + boxW * 0.5f &&
+            worldY >= y - boxH * 0.5f &&
+            worldY <= y + boxH * 0.5f;
+
+        if (isHover)
+        {
+            AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+            AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+            AEGfxSetColorToMultiply(0.9f, 0.8f, 0.2f, 0.5f);
+
+            AEMtx33Scale(&scale, boxW, boxH);
+            AEMtx33Trans(&trans, panelX, y);
+            AEMtx33Concat(&transform, &trans, &scale);
+
+            AEGfxSetTransform(transform.m);
+            AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+            AEGfxSetColorToMultiply(1, 1, 1, 1);
+        }
+
+        char buf[128];
+        sprintf_s(buf, "%s - %d Gold",
+            upgrades[i].name.c_str(),
+            upgrades[i].cost);
+
+        float xText = (panelX - upgradesPanelW * 0.45f) / 800.0f;
+        float yText = (y + boxH * 0.1f) / 450.0f;
+
+        AEGfxPrint(fontId, buf, xText, yText, 0.8f, 1, 1, 1, 1);
+
+        visibleSlot++;
+    }
+    
+    // --- Seeds Panel ---
     if (seedsPopupOpen)
     {
-        float w = 500.0f;
-        float h = 650.0f;
-
-        float popupX = -200.0f; // adjust position
-        float popupY = 0.0f;
-
-        AEMtx33 scale, trans, transform;
 
         AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
         AEGfxSetBlendMode(AE_GFX_BM_BLEND);
-        AEGfxTextureSet(seedsTexture, 0, 0);
+        AEGfxSetColorToMultiply(1, 1, 1, 1);
+        AEGfxSetTransparency(1.0f);
+        float panelX = -100.0f;
+        float panelY = 0.0f;
 
-        AEMtx33Scale(&scale, w, h);
-        AEMtx33Trans(&trans, popupX, popupY);
+        AEGfxTextureSet(seedsTexture, 0, 0);
+        AEMtx33Scale(&scale, 400, 550);
+        AEMtx33Trans(&trans, panelX, panelY);
+        AEMtx33Concat(&transform, &trans, &scale);
+        AEGfxSetTransform(transform.m);
+        AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+        float seedY = panelY + 120.0f;
+
+        // Highlight
+        if (hoveredSeed == SEED_APPLE)
+        {
+            AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+            AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+            AEGfxSetColorToMultiply(1.0f, 0.55f, 0.0f, 0.9f);
+
+            AEMtx33Scale(&scale, 112, 112);   // slightly larger than icon
+            AEMtx33Trans(&trans, panelX, seedY);
+            AEMtx33Concat(&transform, &trans, &scale);
+
+            AEGfxSetTransform(transform.m);
+            AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+            // Reset after drawing
+            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+            AEGfxSetColorToMultiply(1, 1, 1, 1);
+        }
+
+        // Draw seed
+        AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+        AEGfxSetColorToMultiply(1, 1, 1, 1);
+        AEGfxTextureSet(appleSeedIcon, 0, 0);
+
+        AEMtx33Scale(&scale, 100, 100);
+        AEMtx33Trans(&trans, panelX, seedY);
+        AEMtx33Concat(&transform, &trans, &scale);
+        AEGfxSetTransform(transform.m);
+        AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+    }
+
+    AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+    AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+    AEGfxSetColorToMultiply(1, 1, 1, 1);
+    AEGfxTextureSet(plotSlotTexture, 0, 0);
+
+    for (int i = 0; i < plotSlots.size(); i++)
+    {
+        PlotSlot& slot = plotSlots[i];
+
+        // Draw slot
+        AEMtx33Scale(&scale, slot.width, slot.height);
+        AEMtx33Trans(&trans, slot.x, slot.y);
+        AEMtx33Concat(&transform, &trans, &scale);
+        AEGfxSetTransform(transform.m);
+        AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+        // Hover overlay
+        if (i == hoveredPlotIndex)
+        {
+            AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+            AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+            AEGfxSetColorToMultiply(0.2f, 0.8f, 0.3f, 0.55f);
+
+            AEMtx33Scale(&scale, slot.width, slot.height);
+            AEMtx33Trans(&trans, slot.x, slot.y);
+            AEMtx33Concat(&transform, &trans, &scale);
+
+            AEGfxSetTransform(transform.m);
+            AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+            AEGfxSetColorToMultiply(1, 1, 1, 1);
+        }
+
+  
+    }
+
+    // --- Apple Info ---
+    if (seedsPopupOpen && selectedSeed == SEED_APPLE)
+    {
+        float seedsCenterX = -100.0f;
+        float seedsCenterY = 0.0f;
+
+        float infoW = 380.0f;
+        float infoH = 340.0f;
+
+        // PERFECT horizontal center
+        float infoX = seedsCenterX;
+
+        // Move it lower inside the seeds panel
+        float infoY = seedsCenterY - 110.0f;  // adjust this number
+
+        AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+        AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+        AEGfxSetTransparency(1.0f);
+        AEGfxSetColorToMultiply(1, 1, 1, 1);
+        AEGfxTextureSet(appleSeedInfo, 0, 0);
+
+        AEMtx33Scale(&scale, infoW, infoH);
+        AEMtx33Trans(&trans, infoX, infoY);
         AEMtx33Concat(&transform, &trans, &scale);
 
         AEGfxSetTransform(transform.m);
         AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
     }
+
+    
+
 }
-
-
-void UI_Exit()
-{
-    if (menuTexture)
-    {
-        AEGfxTextureUnload(menuTexture);
-        menuTexture = nullptr;
-    }
-
-    if (seedsTexture)
-    {
-        AEGfxTextureUnload(seedsTexture);
-        seedsTexture = nullptr;
-    }
-}
-
 bool UI_IsMenuOpen()
 {
     return menuOpen;
 }
 
-
 static bool IsMouseOverBasket(const FruitBasket& basket)
 {
-    int mx, my; // Use int for AEInputGetCursorPosition
+    int mx, my;
     AEInputGetCursorPosition(&mx, &my);
 
     float worldX = static_cast<float>(mx) - 800.0f;
@@ -310,13 +679,13 @@ static bool IsMouseOverBasket(const FruitBasket& basket)
         worldY <= basket.y + basket.height * 0.5f;
 }
 
-static void DrawTooltip(float x, float y, const char* title, const char* line1, const char* line2)
-
+static void DrawTooltip(float x, float y, const char* text)
 {
-    float w = 300.0f;
-    float h = 100.0f;
+    float w = 250.0f;
+    float h = 80.0f;
 
     AEMtx33 scale, trans, transform;
+
     AEMtx33Scale(&scale, w, h);
     AEMtx33Trans(&trans, x, y);
     AEMtx33Concat(&transform, &trans, &scale);
@@ -324,23 +693,16 @@ static void DrawTooltip(float x, float y, const char* title, const char* line1, 
     AEGfxSetRenderMode(AE_GFX_RM_COLOR);
     AEGfxSetBlendMode(AE_GFX_BM_BLEND);
     AEGfxSetColorToMultiply(0.1f, 0.1f, 0.1f, 0.9f);
+
     AEGfxSetTransform(transform.m);
     AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
 
-    // ---- TEXT POSITION (THIS WAS MISSING) ----
     float xText = (x - w * 0.45f) / 800.0f;
     float yText = (y + h * 0.25f) / 450.0f;
 
-    // Title
-    AEGfxPrint(fontId, title, xText, yText, 1.0f, 1, 1, 1, 1);
-
-    // Line 1
-    AEGfxPrint(fontId, line1, xText, yText - 0.08f, 0.9f, 0.9f, 0.9f, 0.9f, 1);
-
-    // Line 2
-    AEGfxPrint(fontId, line2, xText, yText - 0.16f, 0.9f, 0.9f, 0.9f, 0.9f, 1);
-
+    AEGfxPrint(fontId, text, xText, yText, 1.0f, 1, 1, 1, 1);
 }
+
 
 void UI_DrawFruitBasketTooltips()
 {
@@ -353,25 +715,55 @@ void UI_DrawFruitBasketTooltips()
     {
         if (IsMouseOverBasket(basket))
         {
-            int mx, my; // Use int for AEInputGetCursorPosition
+            int mx, my;
             AEInputGetCursorPosition(&mx, &my);
 
             float worldX = static_cast<float>(mx) - 800.0f + 20.0f;
             float worldY = 450.0f - static_cast<float>(my) - 20.0f;
 
-            if (basket.fruitType >= 0 && basket.fruitType < 3)
-            {
-                DrawTooltip(
-                    worldX,
-                    worldY,
-                    fruitInfo[basket.fruitType].name,
-                    fruitInfo[basket.fruitType].line1,
-                    fruitInfo[basket.fruitType].line2
-                );
-            }
-
+            DrawTooltip(worldX, worldY, "Fruit Basket");
             break;
         }
     }
 }
 
+//FARM PLOTS
+
+float UI_GetPlotCenterX()
+{
+    return plotPlusButton.x;
+}
+
+float UI_GetPlotCenterY()
+{
+    return plotPlusButton.y;
+}
+
+float UI_GetPlotSlotX(int index)
+{
+    if (index < 0 || index >= plotSlots.size())
+        return 0.0f;
+
+    return plotSlots[index].x;
+}
+
+float UI_GetPlotSlotY(int index)
+{
+    if (index < 0 || index >= plotSlots.size())
+        return 0.0f;
+
+    return plotSlots[index].y;
+}
+
+void UI_Exit()
+{
+    // free textures here
+    AEGfxTextureUnload(menuTexture);
+    AEGfxTextureUnload(seedsTexture);
+    AEGfxTextureUnload(inventoryIcon);
+    AEGfxTextureUnload(collectionIcon);
+    AEGfxTextureUnload(settingsIcon);
+    AEGfxTextureUnload(appleSeedIcon);
+    AEGfxTextureUnload(appleSeedInfo);
+    AEGfxTextureUnload(plotSlotTexture);
+}
