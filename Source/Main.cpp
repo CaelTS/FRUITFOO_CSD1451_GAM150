@@ -15,6 +15,7 @@
 #include "Rhythm.h"
 #include "Farm.h"
 #include <iostream>
+#include "Profile.h"
 
 // ---------------------------------------------------------------------------
 // Game State Variables
@@ -135,7 +136,7 @@ void MainScreen_Load()
 	if (!pTexApple) OutputDebugStringA("ERROR: Failed to load 'Assets/Apple.png'.\n");
 	if (!pTexPear) OutputDebugStringA("ERROR: Failed to load 'Assets/Pear.png'.\n");
 	if (!pTexBanana) OutputDebugStringA("ERROR: Failed to load 'Assets/Banana.png'.\n");
-	
+
 }
 
 void MainScreen_Initialize()
@@ -151,7 +152,7 @@ void MainScreen_Initialize()
 
 	//Economy Init
 	Economy_Init();
-	
+
 
 	UI_Init();
 	if (previous != GS_RHYTHM_SCREEN)
@@ -191,7 +192,7 @@ void MainScreen_Update()
 	UI_Input();
 	Farm_Update();
 	Economy_Update(dt);
-	
+
 	// ---- Check if farm triggered rhythm ----
 	if (Farm_ShouldStartRhythm())
 	{
@@ -384,7 +385,7 @@ void MainScreen_Render()
 	AEGfxSetTransparency(1.0f);
 
 
-	
+
 	for (const auto& fruit : fruits)
 	{
 		if (!fruit.active) continue;
@@ -522,13 +523,13 @@ void MainScreen_Render()
 		AEGfxSetTransform(transform.m);
 		AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
 	}
-	
+
 	UI_Draw();
 	Farm_Render();
 	UI_DrawFruitBasketTooltips();
 
 
-	
+
 }
 
 void MainScreen_Free()
@@ -619,7 +620,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		AESysFrameStart();
 
 		// Check for ESCAPE key to exit
-		if (AEInputCheckTriggered(AEVK_ESCAPE) || 0 == AESysDoesWindowExist()) {
+		// Do NOT exit if the profile name popup is currently open
+		if ((AEInputCheckTriggered(AEVK_ESCAPE) && !ProfileScreen_IsPopupActive()) || 0 == AESysDoesWindowExist()) {
 			next = GS_EXIT;  // Set next state to exit
 		}
 
