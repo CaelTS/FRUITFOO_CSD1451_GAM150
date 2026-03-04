@@ -1,9 +1,9 @@
 #pragma once
 #include <vector>
 
-// Save/Load functions
-void SaveGame(int goldParam, int energyParam, int inventoryparam[3]);
-bool LoadGame(int goldParam, int energyParam, int inventoryparam[3]);
+//// Save/Load functions
+//void SaveGame(int goldParam, int energyParam, int inventoryparam[3]);
+//bool LoadGame(int goldParam, int energyParam, int inventoryparam[3]);
 
 // MainScreen lifecycle functions
 void MainScreen_Update();
@@ -13,11 +13,11 @@ void MainScreen_Initialize();
 void MainScreen_Free();
 void MainScreen_Unload();
 
-// Game state access functions
-int GetGold();
-int GetEnergy();
-int GetSelectedFruit();
-int GetInventory(int index);
-float GetEnergyTimer();
-float GetFruitGrowthTimer();
-const std::vector<struct Fruit>& GetFruits();
+//// Game state access functions
+//int GetGold();
+//int GetEnergy();
+//int GetSelectedFruit();
+//int GetInventory(int index);
+//float GetEnergyTimer();
+//float GetFruitGrowthTimer();
+//const std::vector<struct Fruit>& GetFruits();
