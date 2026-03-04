@@ -1,18 +1,5 @@
 #pragma once
 
-<<<<<<< HEAD
-struct GameProfile
-{
-    char name[32];
-    int gold;
-    int energy;
-    int inventory[3];  // Apple, Pear, Banana
-    bool exists;
-    time_t lastPlayed;
-};
-
-=======
->>>>>>> main
 // ProfileScreen lifecycle functions
 void ProfileScreen_Load();
 void ProfileScreen_Initialize();
@@ -21,15 +8,5 @@ void ProfileScreen_Render();
 void ProfileScreen_Free();
 void ProfileScreen_Unload();
 
-<<<<<<< HEAD
-// Profile management functions
-void Profile_Save(int slot, const GameProfile& profile);
-bool Profile_Load(int slot, GameProfile& profile);
-void Profile_Delete(int slot);
-int Profile_GetCount();
-void Profile_Select(int slot);
-int Profile_GetSelected();
-=======
 // Returns true when the name-entry popup is open
 bool ProfileScreen_IsPopupActive();
->>>>>>> main

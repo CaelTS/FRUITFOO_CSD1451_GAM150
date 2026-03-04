@@ -1,49 +1,3 @@
-<<<<<<< HEAD
-#include "AEEngine.h"
-#include "Transition.h"
-#include "GameStateManager.h"
-#include "Profile.h"
-#include <crtdbg.h>
-#include <stdio.h>
-#include <string.h>
-#include <time.h>
-
-
-extern AEGfxVertexList* g_pMeshFullScreen;   // from Main.cpp
-extern s8 fontId;
-
-// NextScreen-specific resources
-static AEGfxVertexList* pMeshProfile = NULL;
-
-
-void ProfileScreen_Load() {
-    // Load ProfileScreen-specific resources here
-    // Example: s_pMeshProfile = CreateMesh();
-}
-
-void ProfileScreen_Initialize() {
-  
-}
-
-void ProfileScreen_Update() {
-    if (AEInputCheckTriggered(AEVK_M)) {
-        next = GS_MAIN_SCREEN;
-    }
-}
-
-void ProfileScreen_Render() {
-    AEGfxSetBackgroundColor(0.1f, 0.3f, 0.2f);
-    if (fontId >= 0) {
-        AEGfxPrint(fontId, "NEXT SCREEN", -0.5f, 0.5f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f);
-        AEGfxPrint(fontId, "Press M to go back", -0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
-    }
-
-    if (TR_IsActive())
-    {
-        float alpha = TR_GetAlpha();
-
-        // full-screen black quad
-=======
 #include <crtdbg.h>
 #include "AEEngine.h"
 #include "Transition.h"
@@ -440,18 +394,13 @@ void ProfileScreen_Render() {
     if (TR_IsActive()) {
         float alpha = TR_GetAlpha();
 
->>>>>>> main
         AEGfxSetRenderMode(AE_GFX_RM_COLOR);
         AEGfxSetBlendMode(AE_GFX_BM_BLEND);
         AEGfxSetColorToMultiply(0, 0, 0, alpha);
 
         AEMtx33 trans, scale, transform;
-<<<<<<< HEAD
-        AEMtx33Scale(&scale, 1600.0f, 900.0f);
-=======
         // Fullscreen quad covers NDC space [-1,1], so scale = screen pixel size
         AEMtx33Scale(&scale, SCREEN_WIDTH, SCREEN_HEIGHT);
->>>>>>> main
         AEMtx33Trans(&trans, 0.0f, 0.0f);
         AEMtx33Concat(&transform, &trans, &scale);
         AEGfxSetTransform(transform.m);
@@ -461,11 +410,6 @@ void ProfileScreen_Render() {
 
 void ProfileScreen_Free() {
     // Free ProfileScreen-specific resources
-<<<<<<< HEAD
-    if (pMeshProfile) {
-        AEGfxMeshFree(pMeshProfile);
-        pMeshProfile = NULL;
-=======
     if (pMeshNextObject) {
         AEGfxMeshFree(pMeshNextObject);
         pMeshNextObject = NULL;
@@ -477,14 +421,10 @@ void ProfileScreen_Free() {
     if (pMeshButtonSquare) {
         AEGfxMeshFree(pMeshButtonSquare);
         pMeshButtonSquare = NULL;
->>>>>>> main
     }
 }
 
 void ProfileScreen_Unload() {
-<<<<<<< HEAD
-    // Unload ProfileScreen-specific resources
-=======
     // Unload textures
     if (pTexButtonLong) {
         AEGfxTextureUnload(pTexButtonLong);
@@ -510,5 +450,4 @@ void ProfileScreen_Unload() {
         AEGfxTextureUnload(pTexPanel);
         pTexPanel = NULL;
     }
->>>>>>> main
 }
