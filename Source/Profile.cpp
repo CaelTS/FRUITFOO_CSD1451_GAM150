@@ -25,7 +25,11 @@ typedef struct {
     int score;
 } Profile;
 
-static Profile profiles[MAX_PROFILES] = {};
+static Profile profiles[MAX_PROFILES] = {
+    { false, "", 0, 0 },
+    { false, "", 0, 0 },
+    { false, "", 0, 0 }
+};
 
 // Popup state
 static bool  popupActive = false;
@@ -45,10 +49,12 @@ bool ProfileScreen_IsPopupActive() { return popupActive; }
 // ---------------------------------------------------------------------------
 static const char* PROFILES_FILE = "profiles.txt";
 
-// File format (one line per slot, 3 lines total):
-//   exists|name|level|score
-// e.g.  1|Player 1|5|1250
-//        0|||0
+// File format - one block per profile slot separated by blank lines:
+//   [PROFILE_0]
+//   EXISTS=1
+//   NAME=dan
+//   LEVEL=5
+//   SCORE=1250
 
 static void Profiles_Save() {
     FILE* f = nullptr;
@@ -57,11 +63,11 @@ static void Profiles_Save() {
         return;
     }
     for (int i = 0; i < MAX_PROFILES; i++) {
-        fprintf(f, "%d,%s,%d,%d\n",
-            profiles[i].exists ? 1 : 0,
-            profiles[i].name,
-            profiles[i].level,
-            profiles[i].score);
+        fprintf(f, "[PROFILE_%d]\n", i);
+        fprintf(f, "EXISTS=%d\n", profiles[i].exists ? 1 : 0);
+        fprintf(f, "NAME=%s\n", profiles[i].name);
+        fprintf(f, "LEVEL=%d\n", profiles[i].level);
+        fprintf(f, "SCORE=%d\n\n", profiles[i].score);
     }
     fclose(f);
 }
@@ -69,40 +75,50 @@ static void Profiles_Save() {
 static void Profiles_Load() {
     FILE* f = nullptr;
     if (fopen_s(&f, PROFILES_FILE, "r") != 0 || !f)
-        return; // No save file yet – keep the defaults
+        return; // No save file yet - keep the defaults
 
-    for (int i = 0; i < MAX_PROFILES; i++) {
-        int  exists = 0;
-        char name[PROFILE_NAME_MAX_LEN] = "";
-        int  level = 0, score = 0;
+    int slotIndex = -1;
+    char line[128] = "";
 
-        // Read one line at a time 
-        char line[128] = "";
-        if (!fgets(line, sizeof(line), f)) break;
+    while (fgets(line, sizeof(line), f)) {
+        // Strip trailing newline/carriage return
+        int len = (int)strlen(line);
+        if (len > 0 && line[len - 1] == '\n') line[--len] = '\0';
+        if (len > 0 && line[len - 1] == '\r') line[--len] = '\0';
 
-        // Strip trailing newline
-        int lineLen = (int)strlen(line);
-        if (lineLen > 0 && line[lineLen - 1] == '\n') line[--lineLen] = '\0';
-        if (lineLen > 0 && line[lineLen - 1] == '\r') line[--lineLen] = '\0';
+        // Skip blank lines
+        if (len == 0) continue;
 
-        // Parse: exists,name,level,score
-        char* context = nullptr;
-        char* token = strtok_s(line, ",", &context);
-        if (token) exists = atoi(token);
+        // Section header e.g. [PROFILE_0]
+        if (line[0] == '[') {
+            sscanf_s(line, "[PROFILE_%d]", &slotIndex);
+            continue;
+        }
 
-        token = strtok_s(nullptr, ",", &context);
-        if (token) strncpy_s(name, PROFILE_NAME_MAX_LEN, token, _TRUNCATE);
+        // Must have a valid slot before reading keys
+        if (slotIndex < 0 || slotIndex >= MAX_PROFILES) continue;
 
-        token = strtok_s(nullptr, ",", &context);
-        if (token) level = atoi(token);
+        // Find '=' sign
+        char* eq = strchr(line, '=');
+        if (!eq) continue;
 
-        token = strtok_s(nullptr, ",", &context);
-        if (token) score = atoi(token);
+        // Split into key and value
+        *eq = '\0';
+        const char* key = line;
+        const char* value = eq + 1;
 
-        profiles[i].exists = (exists != 0);
-        strncpy_s(profiles[i].name, PROFILE_NAME_MAX_LEN, name, _TRUNCATE);
-        profiles[i].level = level;
-        profiles[i].score = score;
+        if (strcmp(key, "EXISTS") == 0) {
+            profiles[slotIndex].exists = (atoi(value) != 0);
+        }
+        else if (strcmp(key, "NAME") == 0) {
+            strncpy_s(profiles[slotIndex].name, PROFILE_NAME_MAX_LEN, value, _TRUNCATE);
+        }
+        else if (strcmp(key, "LEVEL") == 0) {
+            profiles[slotIndex].level = atoi(value);
+        }
+        else if (strcmp(key, "SCORE") == 0) {
+            profiles[slotIndex].score = atoi(value);
+        }
     }
     fclose(f);
 }
@@ -422,24 +438,24 @@ void ProfileScreen_Render() {
                 0.0f, yPos, buttonW, buttonH,
                 btnTint, btnTint, btnTint, 1.0f);
 
-            // Profile name - inside button, slightly above center
+            // Profile name - inside button, upper half
             if (fontId >= 0) {
                 AEGfxPrint(fontId, profiles[i].name,
-                    -0.10f, yPos + 0.020f,
+                    -0.10f, yPos + 0.02f,
                     0.75f, 1.0f, 0.95f, 0.8f, 1.0f);
 
-                // Level and score - inside button, slightly below name
+                // Level and score - inside button, lower half
                 char infoText[64];
                 sprintf_s(infoText, sizeof(infoText), "Lvl:%d  Score:%d",
                     profiles[i].level, profiles[i].score);
                 AEGfxPrint(fontId, infoText,
-                    -0.13f, yPos - 0.030f,
+                    -0.13f, yPos - 0.03f,
                     0.5f, 0.85f, 0.75f, 0.6f, 1.0f);
 
-                // Show edit hint on hover
+                // Show edit hint on hover (same row as name, to the right)
                 if (hoveredProfileSlot == i) {
                     AEGfxPrint(fontId, "[click to rename]",
-                        0.05f, yPos + 0.020f,
+                        0.05f, yPos + 0.045f,
                         0.45f, 1.0f, 0.9f, 0.5f, 1.0f);
                 }
             }
@@ -506,7 +522,7 @@ void ProfileScreen_Render() {
         if (fontId >= 0) {
             // Reset render state before text so prior DrawTexturedQuad/DrawColoredQuad
             // calls don't leave a stale color multiplier that hides the text
-            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);  // FIX: Changed from AE_GFX_RM_COLOR
+            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
             AEGfxSetBlendMode(AE_GFX_BM_BLEND);
             AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
 
@@ -523,7 +539,7 @@ void ProfileScreen_Render() {
                 1.0f, 1.0f, 1.0f, 1.0f);
 
             // Reset again after DrawTexturedQuad before printing typed text
-            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);  // FIX: Changed from AE_GFX_RM_COLOR
+            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
             AEGfxSetBlendMode(AE_GFX_BM_BLEND);
             AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
 
@@ -535,7 +551,7 @@ void ProfileScreen_Render() {
                 0.75f, 0.0f, 0.0f, 0.0f, 1.0f);
 
             // Reset before hint text too
-            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);  // FIX: Changed from AE_GFX_RM_COLOR
+            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
             AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
 
             // Hint text below input
