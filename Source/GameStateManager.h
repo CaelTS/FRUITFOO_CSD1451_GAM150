@@ -12,7 +12,7 @@ enum GameState {
 typedef void(*FP)(void);
 
 // GSM state variables
-extern int current, previous, next;
+extern int currentState, previousState, nextState;
 
 // Function pointers for current state
 extern FP fpLoad, fpInitialize, fpUpdate, fpDraw, fpFree, fpUnload;
