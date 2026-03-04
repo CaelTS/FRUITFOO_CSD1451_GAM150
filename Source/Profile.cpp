@@ -25,11 +25,7 @@ typedef struct {
     int score;
 } Profile;
 
-static Profile profiles[MAX_PROFILES] = {
-    { true, "Player 1", 5, 1250 },
-    { false, "", 0, 0 },
-    { false, "", 0, 0 }
-};
+static Profile profiles[MAX_PROFILES] = {};
 
 // Popup state
 static bool  popupActive = false;
