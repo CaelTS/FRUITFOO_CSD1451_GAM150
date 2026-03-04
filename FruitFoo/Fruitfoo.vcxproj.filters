@@ -21,7 +21,7 @@
     <ClCompile Include="..\Source\GameStateManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\Source\Next.cpp">
+    <ClCompile Include="..\Source\Profile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\Source\Transition.cpp">
@@ -59,7 +59,7 @@
     <ClInclude Include="..\Source\Main.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\Source\Next.h">
+    <ClInclude Include="..\Source\Profile.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\Source\Transition.h">
