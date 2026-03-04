@@ -310,7 +310,7 @@ void ProfileScreen_Update() {
     // --- Normal update: Escape to go back ---
     // Guard against popupActive so closing the popup's ESC never leaks through
     if (!popupActive && AEInputCheckTriggered(AEVK_ESCAPE)) {
-        next = GS_MAIN_SCREEN;
+        nextState = GS_MAIN_SCREEN;
     }
 
     // Mouse position in NDC

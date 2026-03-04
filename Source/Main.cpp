@@ -155,7 +155,7 @@ void MainScreen_Initialize()
 
 
 	UI_Init();
-	if (previous != GS_RHYTHM_SCREEN)
+	if (previousState != GS_RHYTHM_SCREEN)
 	{
 		Farm_Initialize();
 	}
@@ -199,7 +199,7 @@ void MainScreen_Update()
 		OutputDebugStringA("Farm requested rhythm game\n");
 
 		Farm_ClearRhythmRequest();
-		next = GS_RHYTHM_SCREEN;
+		nextState = GS_RHYTHM_SCREEN;
 	}
 
 	// Energy Regeneration Logic
@@ -333,14 +333,14 @@ void MainScreen_Update()
 
 
 	if (AEInputCheckTriggered(AEVK_N)) {
-		next = GS_NEXT_SCREEN;
+		nextState = GS_NEXT_SCREEN;
 	}
 
 	// Switch to Rhythm game when pressing R
 	if (AEInputCheckTriggered(AEVK_R))
 	{
 		OutputDebugStringA("Switching to RHYTHM state\n");
-		next = GS_RHYTHM_SCREEN;
+		nextState = GS_RHYTHM_SCREEN;
 	}
 }
 
@@ -621,37 +621,38 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 		// Check for ESCAPE key to exit
 		// Do NOT exit if the profile name popup is currently open
-		if ((AEInputCheckTriggered(AEVK_ESCAPE) && !ProfileScreen_IsPopupActive()) || 0 == AESysDoesWindowExist()) {
-			next = GS_EXIT;  // Set next state to exit
+		if ((AEInputCheckTriggered(AEVK_ESCAPE) && !ProfileScreen_IsPopupActive()
+			&& currentState != GS_NEXT_SCREEN) || 0 == AESysDoesWindowExist()) {
+			nextState = GS_EXIT;
 		}
 
 		// RHYTHM GAME INPUT
-		if (AEInputCheckTriggered(AEVK_E))
+		if (currentState == GS_RHYTHM_SCREEN && AEInputCheckTriggered(AEVK_E))
 		{
 			bool success = true; // replace with your real score check
 
 			Farm_OnRhythmResult(success);
 
-			next = GS_MAIN_SCREEN;
+			nextState = GS_MAIN_SCREEN;
 		}
 
 
 		// Check for state transition
-		if (next != current && !TR_IsActive())
+		if (nextState != currentState && !TR_IsActive())
 		{
-			TR_Start(current, next);
+			TR_Start(currentState, nextState);
 		}
 
 		if (TR_Update())
 		{
 			if (fpFree)   fpFree();
-			if (current != GS_EXIT && fpUnload) fpUnload();
+			if (currentState != GS_EXIT && fpUnload) fpUnload();
 
-			previous = current;
-			current = next;
+			previousState = currentState;
+			currentState = nextState;
 			GSM_Update();
 
-			if (current != GS_EXIT)
+			if (currentState != GS_EXIT)
 			{
 				if (fpLoad)       fpLoad();
 				if (fpInitialize) fpInitialize();
@@ -659,7 +660,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		}
 
 		// Update and draw current state
-		if (current != GS_EXIT) {
+		if (currentState != GS_EXIT) {
 			if (fpUpdate) fpUpdate();
 			if (fpDraw) fpDraw();
 		}
