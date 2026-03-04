@@ -352,7 +352,7 @@ void ProfileScreen_Render() {
         if (fontId >= 0) {
             // Reset render state before text so prior DrawTexturedQuad/DrawColoredQuad
             // calls don't leave a stale color multiplier that hides the text
-            AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);  // FIX: Changed from AE_GFX_RM_COLOR
             AEGfxSetBlendMode(AE_GFX_BM_BLEND);
             AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
 
@@ -369,7 +369,7 @@ void ProfileScreen_Render() {
                 1.0f, 1.0f, 1.0f, 1.0f);
 
             // Reset again after DrawTexturedQuad before printing typed text
-            AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);  // FIX: Changed from AE_GFX_RM_COLOR
             AEGfxSetBlendMode(AE_GFX_BM_BLEND);
             AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
 
@@ -378,9 +378,10 @@ void ProfileScreen_Render() {
             sprintf_s(displayText, sizeof(displayText), "%s|", popupInputBuf);
             AEGfxPrint(fontId, displayText,
                 -0.20f, 0.025f,
-                0.75f, 1.0f, 1.0f, 1.0f, 1.0f);
+                0.75f, 0.0f, 0.0f, 0.0f, 1.0f);
 
             // Reset before hint text too
+            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);  // FIX: Changed from AE_GFX_RM_COLOR
             AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
 
             // Hint text below input
