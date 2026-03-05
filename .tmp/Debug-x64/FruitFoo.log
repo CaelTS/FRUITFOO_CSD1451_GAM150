@@ -1,6 +1,21 @@
-﻿  Rhythm.cpp
-  FruitFoo.vcxproj -> C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\bin\Debug-x64\FruitFoo.exe
-  27 File(s) copied
+﻿  Economy.cpp
+  Farm.cpp
+  GameStateManager.cpp
+  Inventory.cpp
+  Main.cpp
+C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\Main.cpp(398,7): warning C4101: 'strBuffer': unreferenced local variable
+  Profile.cpp
+  Rhythm.cpp
+  SaveLoad.cpp
+  ShopUpgrade.cpp
+  SpawnFruits.cpp
+C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\SpawnFruits.cpp(21,24): warning C4305: 'initializing': truncation from 'double' to 'float'
+  Transition.cpp
+  UI.cpp
+  Utilities.cpp
+  Generating Code...
+  Fruitfoo.vcxproj -> C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\bin\Debug-x64\Fruitfoo.exe
+  46 File(s) copied
   1 File(s) copied
   1 File(s) copied
   1 File(s) copied
