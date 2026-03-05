@@ -13,8 +13,8 @@ static bool seedsPopupOpen = false;
 
 static int activePopupIndex = -1;
 static int selectedSeed = -1;
-int hoveredSeed = -1;   // purely for highlight
-int infoSeed = -1;         // which seed info panel is showing
+static int hoveredSeed = -1;   // purely for highlight
+static int infoSeed = -1;         // which seed info panel is showing
 static int hoveredPlotIndex = -1;
 static int activePlotIndex = -1;
 
@@ -97,6 +97,8 @@ void UI_Init()
         menuButtons.push_back({ menuCenterX + (i - 1) * buttonSpacing, buttonY, buttonSize, buttonSize, false, buttonOrder[i] });
     }
  
+
+ //plot setup
     plotPlusButton.x = -630.0f;
     plotPlusButton.y = 150.0f;
     plotPlusButton.width = 120.0f;
@@ -104,7 +106,7 @@ void UI_Init()
 
     plotSlots.clear();
 
-    //plot setup
+   
 
     float slotSize = 120.0f;
     float spacing = 150.0f;
@@ -127,7 +129,7 @@ void UI_Init()
     {
         for (int col = 0; col < cols; col++)
         {
-            PlotSlot slot;
+            PlotSlot slot{};
             slot.x = startX + col * spacing;
             slot.y = startY - row * spacing;
             slot.width = slotSize;
@@ -244,7 +246,7 @@ void UI_UpdateButtons()
 
     hoveredPlotIndex = -1;
 
-    for (int i = 0; i < plotSlots.size(); i++)
+    for (size_t i = 0; i < plotSlots.size(); i++)
     {
         PlotSlot& slot = plotSlots[i];
 
@@ -256,7 +258,7 @@ void UI_UpdateButtons()
 
         if (isOver)
         {
-            hoveredPlotIndex = i;
+            hoveredPlotIndex = static_cast<int>(i);
 
             if (AEInputCheckTriggered(AEVK_LBUTTON))
             {
@@ -270,7 +272,7 @@ void UI_UpdateButtons()
                 else
                 {
                     seedsPopupOpen = true;
-                    activePlotIndex = i;
+                    activePlotIndex = static_cast<int>(i);
                     selectedSeed = SEED_APPLE;   // SHOW INFO IMMEDIATELY
                 }
             }
@@ -280,9 +282,9 @@ void UI_UpdateButtons()
     }
 
     // DELETE SEED BUTTON (CLICK LOGIC ONLY)
-    for (int i = 0; i < plotSlots.size(); i++)
+    for (size_t i = 0; i < plotSlots.size(); i++)
     {
-        if (!Farm_IsPlotPlanted(i))
+        if (!Farm_IsPlotPlanted(static_cast<int>(i)))
             continue;
 
         float xSize = 25.0f;
@@ -301,28 +303,25 @@ void UI_UpdateButtons()
 
         if (overDelete && AEInputCheckTriggered(AEVK_LBUTTON))
         {
-            Farm_ClearPlot(i);
+            Farm_ClearPlot(static_cast<int>(i));
             break;
         }
     }
 
     // --- Upgrades ---
     float upgradesPanelW = UPGRADES_PANEL_W;
-    float upgradesPanelH = UPGRADES_PANEL_H;
+
     float panelX = UPGRADES_PANEL_X;
     float panelY = UPGRADES_PANEL_Y;
 
     float spacingUp = 70.0f;
-    float startYUp = panelY + 60.0f;   // SAME AS DRAW
+    float startYUp = panelY + 60.0f;  
 
-    int endIndex = upgradesStartIndex + MAX_VISIBLE_UPGRADES;
-    if (endIndex > upgrades.size())
-        endIndex = upgrades.size();
 
     int shownUp = 0;
-    for (int i = upgradesStartIndex; i < upgrades.size() && shownUp < MAX_VISIBLE_UPGRADES; ++i)
+    for (size_t i = upgradesStartIndex; i < upgrades.size() && shownUp < MAX_VISIBLE_UPGRADES; ++i)
     {
-        auto& u = upgrades[i];
+        auto& u = upgrades[static_cast<int>(i)];
         if (u.purchased) continue;  // skip purchased upgrades
 
         float y = startYUp - shownUp * spacingUp;
@@ -339,13 +338,6 @@ void UI_UpdateButtons()
         if (over && AEInputCheckTriggered(AEVK_LBUTTON))
         {
             u.purchased = true;
-
-            // Only shift list if the last visible upgrade was clicked
-            if (shownUp == MAX_VISIBLE_UPGRADES - 1 &&
-                upgradesStartIndex < upgrades.size() - MAX_VISIBLE_UPGRADES)
-            {
-                upgradesStartIndex++;
-            }
 
             break;  // stop after one click
         }
@@ -492,9 +484,7 @@ void UI_Draw()
     // --- Upgrades Text & Hover Highlight ---
     int visibleSlot = 0;
 
-    for (int i = upgradesStartIndex;
-        i < upgrades.size() && visibleSlot < MAX_VISIBLE_UPGRADES;
-        ++i)
+    for (size_t i = upgradesStartIndex;i < upgrades.size() && visibleSlot < MAX_VISIBLE_UPGRADES;++i)
     {
         if (upgrades[i].purchased)
             continue;  // skip purchased ones
@@ -548,17 +538,17 @@ void UI_Draw()
         AEGfxSetBlendMode(AE_GFX_BM_BLEND);
         AEGfxSetColorToMultiply(1, 1, 1, 1);
         AEGfxSetTransparency(1.0f);
-        float panelX = -100.0f;
-        float panelY = 0.0f;
+        float seedspanelX = -100.0f;
+        float seedspanelY = 0.0f;
 
         AEGfxTextureSet(seedsTexture, 0, 0);
         AEMtx33Scale(&scale, 400, 550);
-        AEMtx33Trans(&trans, panelX, panelY);
+        AEMtx33Trans(&trans, seedspanelX, seedspanelY);
         AEMtx33Concat(&transform, &trans, &scale);
         AEGfxSetTransform(transform.m);
         AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
 
-        float seedY = panelY + 120.0f;
+        float seedY = seedspanelY + 120.0f;
 
         // Highlight
         if (hoveredSeed == SEED_APPLE)
@@ -568,7 +558,7 @@ void UI_Draw()
             AEGfxSetColorToMultiply(1.0f, 0.55f, 0.0f, 0.9f);
 
             AEMtx33Scale(&scale, 112, 112);   // slightly larger than icon
-            AEMtx33Trans(&trans, panelX, seedY);
+            AEMtx33Trans(&trans, seedspanelX, seedY);
             AEMtx33Concat(&transform, &trans, &scale);
 
             AEGfxSetTransform(transform.m);
@@ -585,7 +575,7 @@ void UI_Draw()
         AEGfxTextureSet(appleSeedIcon, 0, 0);
 
         AEMtx33Scale(&scale, 100, 100);
-        AEMtx33Trans(&trans, panelX, seedY);
+        AEMtx33Trans(&trans, seedspanelX, seedY);
         AEMtx33Concat(&transform, &trans, &scale);
         AEGfxSetTransform(transform.m);
         AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
@@ -596,7 +586,7 @@ void UI_Draw()
     AEGfxSetColorToMultiply(1, 1, 1, 1);
     AEGfxTextureSet(plotSlotTexture, 0, 0);
 
-    for (int i = 0; i < plotSlots.size(); i++)
+    for (size_t i = 0; i < plotSlots.size(); i++)
     {
         PlotSlot& slot = plotSlots[i];
 
