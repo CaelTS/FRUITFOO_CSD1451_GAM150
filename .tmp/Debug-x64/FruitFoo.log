@@ -3,28 +3,18 @@
   GameStateManager.cpp
   Inventory.cpp
   Main.cpp
-C:\Github\FRUITFOO_CSD1451_GAM150\Source\Main.cpp(398,7): warning C4101: 'strBuffer': unreferenced local variable
+C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\Main.cpp(398,7): warning C4101: 'strBuffer': unreferenced local variable
   Profile.cpp
   Rhythm.cpp
   SaveLoad.cpp
   ShopUpgrade.cpp
   SpawnFruits.cpp
-C:\Github\FRUITFOO_CSD1451_GAM150\Source\SpawnFruits.cpp(21,24): warning C4305: 'initializing': truncation from 'double' to 'float'
+C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\SpawnFruits.cpp(21,24): warning C4305: 'initializing': truncation from 'double' to 'float'
   Transition.cpp
   UI.cpp
-C:\Github\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(320,33): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-C:\Github\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(311,11): warning C4189: 'upgradesPanelH': local variable is initialized but not referenced
-C:\Github\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(551,15): warning C4456: declaration of 'panelX' hides previous local declaration
-      C:\Github\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(466,11):
-      see declaration of 'panelX'
-  
-C:\Github\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(552,15): warning C4456: declaration of 'panelY' hides previous local declaration
-      C:\Github\FRUITFOO_CSD1451_GAM150\Source\UI.cpp(467,11):
-      see declaration of 'panelY'
-  
   Utilities.cpp
   Generating Code...
-  Fruitfoo.vcxproj -> C:\Github\FRUITFOO_CSD1451_GAM150\bin\Debug-x64\Fruitfoo.exe
+  Fruitfoo.vcxproj -> C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\bin\Debug-x64\Fruitfoo.exe
   46 File(s) copied
   1 File(s) copied
   1 File(s) copied
