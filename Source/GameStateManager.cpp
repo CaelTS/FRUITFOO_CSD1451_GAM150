@@ -8,7 +8,7 @@
 
 
 // GSM state variables
-int current = 0, previous = 0, next = 0;
+int currentState = 0, previousState = 0, nextState = 0;
 
 // Function pointers for current state
 FP fpLoad = nullptr, fpInitialize = nullptr, fpUpdate = nullptr,
@@ -16,8 +16,8 @@ fpDraw = nullptr, fpFree = nullptr, fpUnload = nullptr;
 
 void GSM_Initialize(int startingState)
 {
-    previous = current = -1;
-    next = startingState;
+    previousState = currentState = -1;
+    nextState = startingState;
 
     fpLoad = fpInitialize = fpUpdate =
         fpDraw = fpFree = fpUnload = nullptr;
@@ -28,8 +28,8 @@ void GSM_Initialize(int startingState)
 void GSM_Update()
 {
 
-    std::cout << "Current state: " << current << "\n";
-    switch (current)
+    std::cout << "Current state: " << currentState << "\n";
+    switch (currentState)
     {
     case GS_MAIN_SCREEN:
         fpLoad = MainScreen_Load;

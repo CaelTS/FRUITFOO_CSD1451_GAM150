@@ -26,18 +26,102 @@ typedef struct {
 } Profile;
 
 static Profile profiles[MAX_PROFILES] = {
-    { true, "Player 1", 5, 1250 },
+    { false, "", 0, 0 },
     { false, "", 0, 0 },
     { false, "", 0, 0 }
 };
 
 // Popup state
 static bool  popupActive = false;
-static int   popupSlotIndex = -1;           // which empty slot triggered the popup
+static bool  popupEditMode = false;         // true = editing existing profile name
+static int   popupSlotIndex = -1;           // which slot triggered the popup
 static char  popupInputBuf[PROFILE_NAME_MAX_LEN] = "";
 static int   popupInputLen = 0;
 
+// Hover state (-1 = none)
+static int   hoveredProfileSlot = -1;
+static int   hoveredDeleteSlot = -1;
+
 bool ProfileScreen_IsPopupActive() { return popupActive; }
+
+// ---------------------------------------------------------------------------
+// Persistence helpers
+// ---------------------------------------------------------------------------
+static const char* PROFILES_FILE = "profiles.txt";
+
+// File format - one block per profile slot separated by blank lines:
+//   [PROFILE_0]
+//   EXISTS=1
+//   NAME=dan
+//   LEVEL=5
+//   SCORE=1250
+
+static void Profiles_Save() {
+    FILE* f = nullptr;
+    if (fopen_s(&f, PROFILES_FILE, "w") != 0 || !f) {
+        OutputDebugStringA("ERROR: Could not open profiles.txt for writing.\n");
+        return;
+    }
+    for (int i = 0; i < MAX_PROFILES; i++) {
+        fprintf(f, "[PROFILE_%d]\n", i);
+        fprintf(f, "EXISTS=%d\n", profiles[i].exists ? 1 : 0);
+        fprintf(f, "NAME=%s\n", profiles[i].name);
+        fprintf(f, "LEVEL=%d\n", profiles[i].level);
+        fprintf(f, "SCORE=%d\n\n", profiles[i].score);
+    }
+    fclose(f);
+}
+
+static void Profiles_Load() {
+    FILE* f = nullptr;
+    if (fopen_s(&f, PROFILES_FILE, "r") != 0 || !f)
+        return; // No save file yet - keep the defaults
+
+    int slotIndex = -1;
+    char line[128] = "";
+
+    while (fgets(line, sizeof(line), f)) {
+        // Strip trailing newline/carriage return
+        int len = (int)strlen(line);
+        if (len > 0 && line[len - 1] == '\n') line[--len] = '\0';
+        if (len > 0 && line[len - 1] == '\r') line[--len] = '\0';
+
+        // Skip blank lines
+        if (len == 0) continue;
+
+        // Section header e.g. [PROFILE_0]
+        if (line[0] == '[') {
+            sscanf_s(line, "[PROFILE_%d]", &slotIndex);
+            continue;
+        }
+
+        // Must have a valid slot before reading keys
+        if (slotIndex < 0 || slotIndex >= MAX_PROFILES) continue;
+
+        // Find '=' sign
+        char* eq = strchr(line, '=');
+        if (!eq) continue;
+
+        // Split into key and value
+        *eq = '\0';
+        const char* key = line;
+        const char* value = eq + 1;
+
+        if (strcmp(key, "EXISTS") == 0) {
+            profiles[slotIndex].exists = (atoi(value) != 0);
+        }
+        else if (strcmp(key, "NAME") == 0) {
+            strncpy_s(profiles[slotIndex].name, PROFILE_NAME_MAX_LEN, value, _TRUNCATE);
+        }
+        else if (strcmp(key, "LEVEL") == 0) {
+            profiles[slotIndex].level = atoi(value);
+        }
+        else if (strcmp(key, "SCORE") == 0) {
+            profiles[slotIndex].score = atoi(value);
+        }
+    }
+    fclose(f);
+}
 
 // UI Layout constants - Centered
 static const float SCREEN_WIDTH = 1600.0f;
@@ -114,6 +198,9 @@ void ProfileScreen_Load() {
     if (!pTexInputRect) OutputDebugStringA("ERROR: Failed to load 'input_outline_rectangle.png'.\n");
     if (!pTexCrossIcon) OutputDebugStringA("ERROR: Failed to load 'iconCross_blue.png'.\n");
     if (!pTexPanel)     OutputDebugStringA("ERROR: Failed to load 'panel_brown.png'.\n");
+
+    // Load saved profile data (overwrites the hardcoded defaults if a save exists)
+    Profiles_Load();
 }
 
 void ProfileScreen_Initialize() {
@@ -158,11 +245,17 @@ void ProfileScreen_Update() {
             if (popupInputLen > 0 && popupSlotIndex >= 0 && popupSlotIndex < MAX_PROFILES) {
                 strncpy_s(profiles[popupSlotIndex].name, PROFILE_NAME_MAX_LEN,
                     popupInputBuf, _TRUNCATE);
-                profiles[popupSlotIndex].level = 1;
-                profiles[popupSlotIndex].score = 0;
-                profiles[popupSlotIndex].exists = true;
+                if (!popupEditMode) {
+                    // Creating a new profile
+                    profiles[popupSlotIndex].level = 1;
+                    profiles[popupSlotIndex].score = 0;
+                    profiles[popupSlotIndex].exists = true;
+                }
+                // In edit mode we only update the name; level/score stay intact
             }
+            Profiles_Save();
             popupActive = false;
+            popupEditMode = false;
             popupSlotIndex = -1;
             popupInputBuf[0] = '\0';
             popupInputLen = 0;
@@ -170,6 +263,7 @@ void ProfileScreen_Update() {
         // Cancel with Escape
         else if (AEInputCheckTriggered(AEVK_ESCAPE)) {
             popupActive = false;
+            popupEditMode = false;
             popupSlotIndex = -1;
             popupInputBuf[0] = '\0';
             popupInputLen = 0;
@@ -216,32 +310,93 @@ void ProfileScreen_Update() {
     // --- Normal update: Escape to go back ---
     // Guard against popupActive so closing the popup's ESC never leaks through
     if (!popupActive && AEInputCheckTriggered(AEVK_ESCAPE)) {
-        next = GS_MAIN_SCREEN;
+        nextState = GS_MAIN_SCREEN;
     }
 
-    // Mouse click detection for "New Profile" empty slots
+    // Mouse position in NDC
     s32 mouseX, mouseY;
     AEInputGetCursorPosition(&mouseX, &mouseY);
 
-    // Convert mouse from window pixels to NDC
     float mNDC_X = ((float)mouseX / (SCREEN_WIDTH * 0.5f)) - 1.0f;
     float mNDC_Y = 1.0f - ((float)mouseY / (SCREEN_HEIGHT * 0.5f));
 
     float buttonW = PixelsToNDC_X(BUTTON_WIDTH_PX);
     float buttonH = PixelsToNDC_Y(BUTTON_HEIGHT_PX);
+    float deleteSize = PixelsToNDC_X(DELETE_BUTTON_SIZE_PX);
+    float deleteH = deleteSize * (SCREEN_WIDTH / SCREEN_HEIGHT);
     float spacing = PixelsToNDC_Y(PROFILE_SPACING_PX);
     float startY = PixelsToNDC_Y(START_Y_PX);
 
+    // Reset hover state each frame
+    hoveredProfileSlot = -1;
+    hoveredDeleteSlot = -1;
+
+    for (int i = 0; i < MAX_PROFILES; i++) {
+        float yPos = startY - (i * spacing);
+        float halfW = buttonW * 0.5f;
+        float halfH = buttonH * 0.5f;
+
+        if (profiles[i].exists) {
+            // Check delete button hover
+            float deleteX = buttonW * 0.5f + deleteSize * 1.0f;
+            float dHalfW = deleteSize * 0.5f;
+            float dHalfH = deleteH * 0.5f;
+            if (mNDC_X >= deleteX - dHalfW && mNDC_X <= deleteX + dHalfW &&
+                mNDC_Y >= yPos - dHalfH && mNDC_Y <= yPos + dHalfH) {
+                hoveredDeleteSlot = i;
+            }
+            // Check profile button hover (excluding delete area)
+            else if (mNDC_X >= -halfW && mNDC_X <= halfW &&
+                mNDC_Y >= yPos - halfH && mNDC_Y <= yPos + halfH) {
+                hoveredProfileSlot = i;
+            }
+        }
+        else {
+            // Empty slot hover
+            if (mNDC_X >= -halfW && mNDC_X <= halfW &&
+                mNDC_Y >= yPos - halfH && mNDC_Y <= yPos + halfH) {
+                hoveredProfileSlot = i;
+            }
+        }
+    }
+
     if (AEInputCheckTriggered(VK_LBUTTON)) {
         for (int i = 0; i < MAX_PROFILES; i++) {
-            if (!profiles[i].exists) {
-                float yPos = startY - (i * spacing);
-                float halfW = buttonW * 0.5f;
-                float halfH = buttonH * 0.5f;
+            float yPos = startY - (i * spacing);
+            float halfW = buttonW * 0.5f;
+            float halfH = buttonH * 0.5f;
+
+            if (profiles[i].exists) {
+                // Delete button click
+                float deleteX = buttonW * 0.5f + deleteSize * 1.0f;
+                float dHalfW = deleteSize * 0.5f;
+                float dHalfH = deleteH * 0.5f;
+                if (mNDC_X >= deleteX - dHalfW && mNDC_X <= deleteX + dHalfW &&
+                    mNDC_Y >= yPos - dHalfH && mNDC_Y <= yPos + dHalfH) {
+                    profiles[i].exists = false;
+                    profiles[i].name[0] = '\0';
+                    profiles[i].level = 0;
+                    profiles[i].score = 0;
+                    Profiles_Save();
+                    break;
+                }
+                // Profile button click -> open edit popup pre-filled with current name
+                else if (mNDC_X >= -halfW && mNDC_X <= halfW &&
+                    mNDC_Y >= yPos - halfH && mNDC_Y <= yPos + halfH) {
+                    popupActive = true;
+                    popupEditMode = true;
+                    popupSlotIndex = i;
+                    strncpy_s(popupInputBuf, PROFILE_NAME_MAX_LEN, profiles[i].name, _TRUNCATE);
+                    popupInputLen = (int)strnlen_s(popupInputBuf, PROFILE_NAME_MAX_LEN);
+                    break;
+                }
+            }
+            else {
+                // Empty slot click -> open create popup
                 if (mNDC_X >= -halfW && mNDC_X <= halfW &&
                     mNDC_Y >= yPos - halfH && mNDC_Y <= yPos + halfH) {
-                    // Open popup for this slot
                     popupActive = true;
+                    popupEditMode = false;
                     popupSlotIndex = i;
                     popupInputBuf[0] = '\0';
                     popupInputLen = 0;
@@ -277,29 +432,40 @@ void ProfileScreen_Render() {
             DrawColoredQuad(0.0f, yPos - 0.005f, buttonW + 0.01f, buttonH + 0.01f,
                 0.0f, 0.0f, 0.0f, 0.5f);
 
-            // Brown long button - full brightness for existing profile
+            // Hover brightens the profile button
+            float btnTint = (hoveredProfileSlot == i) ? 1.35f : 1.0f;
             DrawTexturedQuad(pTexButtonLong, pMeshButtonLong,
                 0.0f, yPos, buttonW, buttonH,
-                1.0f, 1.0f, 1.0f, 1.0f);
+                btnTint, btnTint, btnTint, 1.0f);
 
-            // Profile name - inside button, slightly above center
+            // Profile name - inside button, upper half
             if (fontId >= 0) {
                 AEGfxPrint(fontId, profiles[i].name,
-                    -0.10f, yPos + 0.020f,
+                    -0.10f, yPos + 0.02f,
                     0.75f, 1.0f, 0.95f, 0.8f, 1.0f);
 
-                // Level and score - inside button, slightly below name
+                // Level and score - inside button, lower half
                 char infoText[64];
                 sprintf_s(infoText, sizeof(infoText), "Lvl:%d  Score:%d",
                     profiles[i].level, profiles[i].score);
                 AEGfxPrint(fontId, infoText,
-                    -0.13f, yPos - 0.030f,
+                    -0.13f, yPos - 0.03f,
                     0.5f, 0.85f, 0.75f, 0.6f, 1.0f);
+
+                // Show edit hint on hover (same row as name, to the right)
+                if (hoveredProfileSlot == i) {
+                    AEGfxPrint(fontId, "[click to rename]",
+                        0.05f, yPos + 0.045f,
+                        0.45f, 1.0f, 0.9f, 0.5f, 1.0f);
+                }
             }
 
             // Delete (X) square button - right of long button
             float deleteH = deleteSize * (SCREEN_WIDTH / SCREEN_HEIGHT);
             float deleteX = buttonW * 0.5f + deleteSize * 1.0f;
+
+            // Hover darkens the delete button
+            float delTint = (hoveredDeleteSlot == i) ? 0.65f : 1.0f;
 
             DrawColoredQuad(deleteX + 0.003f, yPos - 0.003f,
                 deleteSize + 0.006f, deleteH + 0.006f,
@@ -307,7 +473,7 @@ void ProfileScreen_Render() {
 
             DrawTexturedQuad(pTexButtonSquare, pMeshButtonSquare,
                 deleteX, yPos, deleteSize, deleteH,
-                1.0f, 1.0f, 1.0f, 1.0f);
+                delTint, delTint, delTint, 1.0f);
 
             DrawTexturedQuad(pTexCrossIcon, pMeshButtonSquare,
                 deleteX, yPos, deleteSize * 0.55f, deleteH * 0.55f,
@@ -318,9 +484,13 @@ void ProfileScreen_Render() {
             DrawColoredQuad(0.0f, yPos - 0.005f, buttonW + 0.01f, buttonH + 0.01f,
                 0.0f, 0.0f, 0.0f, 0.3f);
 
+            // Hover brightens the empty slot slightly
+            float emptyTint = (hoveredProfileSlot == i) ? 0.85f : 0.6f;
+            float emptyG = (hoveredProfileSlot == i) ? 0.70f : 0.5f;
+            float emptyB = (hoveredProfileSlot == i) ? 0.55f : 0.4f;
             DrawTexturedQuad(pTexButtonLong, pMeshButtonLong,
                 0.0f, yPos, buttonW, buttonH,
-                0.6f, 0.5f, 0.4f, 1.0f);
+                emptyTint, emptyG, emptyB, 1.0f);
 
             if (fontId >= 0) {
                 AEGfxPrint(fontId, "+ NEW PROFILE",
@@ -352,12 +522,12 @@ void ProfileScreen_Render() {
         if (fontId >= 0) {
             // Reset render state before text so prior DrawTexturedQuad/DrawColoredQuad
             // calls don't leave a stale color multiplier that hides the text
-            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);  // FIX: Changed from AE_GFX_RM_COLOR
+            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
             AEGfxSetBlendMode(AE_GFX_BM_BLEND);
             AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
 
             // Title inside panel
-            AEGfxPrint(fontId, "ENTER PROFILE NAME",
+            AEGfxPrint(fontId, popupEditMode ? "RENAME PROFILE" : "ENTER PROFILE NAME",
                 -0.22f, 0.22f,
                 0.75f, 1.0f, 0.9f, 0.6f, 1.0f);
 
@@ -369,7 +539,7 @@ void ProfileScreen_Render() {
                 1.0f, 1.0f, 1.0f, 1.0f);
 
             // Reset again after DrawTexturedQuad before printing typed text
-            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);  // FIX: Changed from AE_GFX_RM_COLOR
+            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
             AEGfxSetBlendMode(AE_GFX_BM_BLEND);
             AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
 
@@ -381,7 +551,7 @@ void ProfileScreen_Render() {
                 0.75f, 0.0f, 0.0f, 0.0f, 1.0f);
 
             // Reset before hint text too
-            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);  // FIX: Changed from AE_GFX_RM_COLOR
+            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
             AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
 
             // Hint text below input
