@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ﻿  Farm.cpp
   GameStateManager.cpp
   Main.cpp
@@ -22,3 +23,12 @@ C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\Main.cpp
 C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\Main.cpp(229,8): error C2065: 'current': undeclared identifier
 C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\Main.cpp(236,7): error C2065: 'current': undeclared identifier
   Generating Code...
+=======
+﻿  Main.cpp
+  Profile.cpp
+  Utilities.cpp
+  Generating Code...
+StartScreen.obj : error LNK2001: unresolved external symbol "float gScaleX" (?gScaleX@@3MA)
+StartScreen.obj : error LNK2001: unresolved external symbol "float gScaleY" (?gScaleY@@3MA)
+C:\Github\FRUITFOO_CSD1451_GAM150\bin\Debug-x64\Fruitfoo.exe : fatal error LNK1120: 2 unresolved externals
+>>>>>>> 1f3b0444ae524c55e1a2cd2480c4bccc61bbd87a
