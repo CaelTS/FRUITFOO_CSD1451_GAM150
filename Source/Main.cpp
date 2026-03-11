@@ -44,7 +44,7 @@ void MainScreen_Initialize()
 {
 	UI_Init();
 
-	if (previous != GS_RHYTHM_SCREEN)
+	if (previousState != GS_RHYTHM_SCREEN)
 	{
 		Farm_Initialize();
 	}
@@ -79,19 +79,19 @@ void MainScreen_Update()
 	{
 		OutputDebugStringA("Farm requested rhythm game\n");
 		Farm_ClearRhythmRequest();
-		next = GS_RHYTHM_SCREEN;
+		nextState = GS_RHYTHM_SCREEN;
 	}
 
 	if (AEInputCheckTriggered(AEVK_N))
 	{
-		next = GS_NEXT_SCREEN;
+		nextState = GS_NEXT_SCREEN;
 	}
 
 	// Switch to Rhythm game when pressing R (debug shortcut, main screen only)
-	if (AEInputCheckTriggered(AEVK_R) && current == GS_MAIN_SCREEN)
+	if (AEInputCheckTriggered(AEVK_R) && currentState == GS_MAIN_SCREEN)
 	{
 		OutputDebugStringA("Switching to RHYTHM state\n");
-		next = GS_RHYTHM_SCREEN;
+		nextState = GS_RHYTHM_SCREEN;
 	}
 }
 
@@ -200,40 +200,40 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		// Exit check
 		if ((AEInputCheckTriggered(AEVK_ESCAPE) && !ProfileScreen_IsPopupActive()) || 0 == AESysDoesWindowExist())
 		{
-			next = GS_EXIT;
+			nextState = GS_EXIT;
 		}
 
 		// Return from rhythm - only active while in the rhythm screen
-		if (current == GS_RHYTHM_SCREEN && AEInputCheckTriggered(AEVK_E))
+		if (currentState == GS_RHYTHM_SCREEN && AEInputCheckTriggered(AEVK_E))
 		{
 			bool success = (Rhythm_GetScore().misses < 3);
 			Farm_OnRhythmResult(success);
-			next = GS_MAIN_SCREEN;
+			nextState = GS_MAIN_SCREEN;
 		}
 
 		// State transition
-		if (next != current && !TR_IsActive())
+		if (nextState != currentState && !TR_IsActive())
 		{
-			TR_Start(current, next);
+			TR_Start(currentState, nextState);
 		}
 
 		if (TR_Update())
 		{
 			if (fpFree)   fpFree();
-			if (current != GS_EXIT && fpUnload) fpUnload();
+			if (currentState != GS_EXIT && fpUnload) fpUnload();
 
-			previous = current;
-			current = next;
+			previousState = currentState;
+			currentState = nextState;
 			GSM_Update();
 
-			if (current != GS_EXIT)
+			if (currentState != GS_EXIT)
 			{
 				if (fpLoad)       fpLoad();
 				if (fpInitialize) fpInitialize();
 			}
 		}
 
-		if (current != GS_EXIT)
+		if (currentState != GS_EXIT)
 		{
 			if (fpUpdate) fpUpdate();
 			if (fpDraw)   fpDraw();
