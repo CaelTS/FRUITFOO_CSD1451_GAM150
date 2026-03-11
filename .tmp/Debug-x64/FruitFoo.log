@@ -1,7 +1,10 @@
-﻿  Main.cpp
-  Profile.cpp
-  Utilities.cpp
+﻿  Farm.cpp
+  GameStateManager.cpp
+  Main.cpp
+  UI.cpp
   Generating Code...
-StartScreen.obj : error LNK2001: unresolved external symbol "float gScaleX" (?gScaleX@@3MA)
-StartScreen.obj : error LNK2001: unresolved external symbol "float gScaleY" (?gScaleY@@3MA)
-C:\Github\FRUITFOO_CSD1451_GAM150\bin\Debug-x64\Fruitfoo.exe : fatal error LNK1120: 2 unresolved externals
+  Fruitfoo.vcxproj -> C:\Github\FRUITFOO_CSD1451_GAM150\bin\Debug-x64\Fruitfoo.exe
+  46 File(s) copied
+  1 File(s) copied
+  1 File(s) copied
+  1 File(s) copied
