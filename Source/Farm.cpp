@@ -47,9 +47,9 @@ void Farm_Load()
     else
         std::cout << "PlotPlant.png loaded successfully\n";
 
+    
 
-
-
+   
 
 }
 
@@ -101,8 +101,22 @@ void Farm_Update()
         }
     }
 
-    // Harvest is triggered externally via Farm_HarvestReady(), not by SPACE here.
-    // SPACE in MainScreen sells fruit; use a UI button or separate key for harvest.
+    // Harvest
+    if (AEInputCheckTriggered(AEVK_SPACE))
+    {
+        for (auto& plot : farmPlots)
+        {
+            if (plot.isReady)
+            {
+                plot.isPlanted = false;
+                plot.isReady = false;
+                plot.seedType = -1;
+                plot.growTimer = 0.0f;
+                plot.rhythmTriggered = false;
+                plot.waitingForRhythm = false;
+            }
+        }
+    }
 }
 
 // ------------------------------------------------------------
@@ -310,21 +324,4 @@ void Farm_ClearRhythmRequest()
 {
     g_requestRhythm = false;
     g_rhythmPlotIndex = -1;
-}
-
-// Call this from UI when the player clicks a harvest button on a ready plot
-void Farm_HarvestReady()
-{
-    for (auto& plot : farmPlots)
-    {
-        if (plot.isReady)
-        {
-            plot.isPlanted = false;
-            plot.isReady = false;
-            plot.seedType = -1;
-            plot.growTimer = 0.0f;
-            plot.rhythmTriggered = false;
-            plot.waitingForRhythm = false;
-        }
-    }
 }
