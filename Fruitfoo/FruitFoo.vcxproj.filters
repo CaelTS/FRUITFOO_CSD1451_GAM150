@@ -33,9 +33,6 @@
     <ClCompile Include="..\Source\Rhythm.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\Source\SaveLoad.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\Source\ShopUpgrade.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
