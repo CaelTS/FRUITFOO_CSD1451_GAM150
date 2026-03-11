@@ -1,15 +1,30 @@
-﻿  GameStateManager.cpp
+﻿  Farm.cpp
+  GameStateManager.cpp
   Main.cpp
-C:\Github\FRUITFOO_CSD1451_GAM150\Source\Main.cpp(415,7): warning C4101: 'strBuffer': unreferenced local variable
-  SpawnFruits.cpp
-C:\Github\FRUITFOO_CSD1451_GAM150\Source\SpawnFruits.cpp(21,24): warning C4305: 'initializing': truncation from 'double' to 'float'
-  StartScreen.cpp
-C:\Github\FRUITFOO_CSD1451_GAM150\Source\StartScreen.cpp(108,13): warning C4505: 'CheckSaveExists': unreferenced function with internal linkage has been removed
   UI.cpp
-  Utilities.cpp
+C:\Github\FRUITFOO_CSD1451_GAM150\Source\Main.cpp(179,1): error C2059: syntax error: '<<'
+C:\Github\FRUITFOO_CSD1451_GAM150\Source\Main.cpp(192,1): error C2059: syntax error: '>>'
+C:\Github\FRUITFOO_CSD1451_GAM150\Source\Main.cpp(194,2): error C2143: syntax error: missing ';' before '{'
+C:\Github\FRUITFOO_CSD1451_GAM150\Source\Main.cpp(269,1): error C2059: syntax error: '<<'
+C:\Github\FRUITFOO_CSD1451_GAM150\Source\Main.cpp(271,2): error C2143: syntax error: missing ';' before '{'
+C:\Github\FRUITFOO_CSD1451_GAM150\Source\Main.cpp(277,1): error C2059: syntax error: '=='
+C:\Github\FRUITFOO_CSD1451_GAM150\Source\Main.cpp(408,37): error C2143: syntax error: missing ';' before '{'
+C:\Github\FRUITFOO_CSD1451_GAM150\Source\Main.cpp(414,1): error C2059: syntax error: '>>'
+C:\Github\FRUITFOO_CSD1451_GAM150\Source\Main.cpp(415,2): error C2143: syntax error: missing ';' before '{'
+C:\Github\FRUITFOO_CSD1451_GAM150\Source\Main.cpp(764,1): error C2059: syntax error: '<<'
+C:\Github\FRUITFOO_CSD1451_GAM150\Source\Main.cpp(767,3): error C2143: syntax error: missing ';' before '{'
+C:\Github\FRUITFOO_CSD1451_GAM150\Source\Main.cpp(772,1): error C2059: syntax error: '=='
+C:\Github\FRUITFOO_CSD1451_GAM150\Source\Main.cpp(776,71): error C2143: syntax error: missing ';' before '{'
+C:\Github\FRUITFOO_CSD1451_GAM150\Source\Main.cpp(781,1): error C2059: syntax error: '>>'
+C:\Github\FRUITFOO_CSD1451_GAM150\Source\Main.cpp(783,3): error C2143: syntax error: missing ';' before '{'
+C:\Github\FRUITFOO_CSD1451_GAM150\Source\Main.cpp(787,1): error C2059: syntax error: '<<'
+C:\Github\FRUITFOO_CSD1451_GAM150\Source\Main.cpp(792,1): error C2059: syntax error: '=='
+C:\Github\FRUITFOO_CSD1451_GAM150\Source\Main.cpp(799,1): error C2059: syntax error: '>>'
+C:\Github\FRUITFOO_CSD1451_GAM150\Source\Main.cpp(801,3): error C2143: syntax error: missing ';' before '{'
+C:\Github\FRUITFOO_CSD1451_GAM150\Source\Main.cpp(821,1): error C2059: syntax error: '<<'
+C:\Github\FRUITFOO_CSD1451_GAM150\Source\Main.cpp(823,3): error C2143: syntax error: missing ';' before '{'
+C:\Github\FRUITFOO_CSD1451_GAM150\Source\Main.cpp(824,1): error C2059: syntax error: '=='
+C:\Github\FRUITFOO_CSD1451_GAM150\Source\Main.cpp(826,32): error C2143: syntax error: missing ';' before '{'
+C:\Github\FRUITFOO_CSD1451_GAM150\Source\Main.cpp(827,1): error C2059: syntax error: '>>'
+C:\Github\FRUITFOO_CSD1451_GAM150\Source\Main.cpp(831,3): error C2181: illegal else without matching if
   Generating Code...
-  Fruitfoo.vcxproj -> C:\Github\FRUITFOO_CSD1451_GAM150\bin\Debug-x64\Fruitfoo.exe
-  56 File(s) copied
-  1 File(s) copied
-  1 File(s) copied
-  1 File(s) copied
