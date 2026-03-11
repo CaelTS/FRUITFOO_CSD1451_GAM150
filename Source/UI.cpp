@@ -127,7 +127,7 @@ void UI_Init()
     {
         for (int col = 0; col < cols; col++)
         {
-            PlotSlot slot;
+            PlotSlot slot = {};
             slot.x = startX + col * spacing;
             slot.y = startY - row * spacing;
             slot.width = slotSize;
@@ -314,7 +314,6 @@ void UI_UpdateButtons()
 
     // --- Upgrades ---
     float upgradesPanelW = UPGRADES_PANEL_W;
-    float upgradesPanelH = UPGRADES_PANEL_H;
     float panelX = UPGRADES_PANEL_X;
     float panelY = UPGRADES_PANEL_Y;
 
@@ -322,8 +321,8 @@ void UI_UpdateButtons()
     float startYUp = panelY + 60.0f;   // SAME AS DRAW
 
     int endIndex = upgradesStartIndex + MAX_VISIBLE_UPGRADES;
-    if (endIndex > upgrades.size())
-        endIndex = upgrades.size();
+    if (endIndex > (int)upgrades.size())
+        endIndex = (int)upgrades.size();
 
     int shownUp = 0;
     for (int i = upgradesStartIndex; i < upgrades.size() && shownUp < MAX_VISIBLE_UPGRADES; ++i)
@@ -544,22 +543,21 @@ void UI_Draw()
     // --- Seeds Panel ---
     if (seedsPopupOpen)
     {
-
         AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
         AEGfxSetBlendMode(AE_GFX_BM_BLEND);
         AEGfxSetColorToMultiply(1, 1, 1, 1);
         AEGfxSetTransparency(1.0f);
-        float panelX = -100.0f;
-        float panelY = 0.0f;
+        float seedsPanelX = -100.0f;
+        float seedsPanelY = 0.0f;
 
         AEGfxTextureSet(seedsTexture, 0, 0);
         AEMtx33Scale(&scale, 400, 550);
-        AEMtx33Trans(&trans, panelX, panelY);
+        AEMtx33Trans(&trans, seedsPanelX, seedsPanelY);
         AEMtx33Concat(&transform, &trans, &scale);
         AEGfxSetTransform(transform.m);
         AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
 
-        float seedY = panelY + 120.0f;
+        float seedY = seedsPanelY + 120.0f;
 
         // Highlight
         if (hoveredSeed == SEED_APPLE)
@@ -569,7 +567,7 @@ void UI_Draw()
             AEGfxSetColorToMultiply(1.0f, 0.55f, 0.0f, 0.9f);
 
             AEMtx33Scale(&scale, 112, 112);   // slightly larger than icon
-            AEMtx33Trans(&trans, panelX, seedY);
+            AEMtx33Trans(&trans, seedsPanelX, seedY);
             AEMtx33Concat(&transform, &trans, &scale);
 
             AEGfxSetTransform(transform.m);
@@ -586,7 +584,7 @@ void UI_Draw()
         AEGfxTextureSet(appleSeedIcon, 0, 0);
 
         AEMtx33Scale(&scale, 100, 100);
-        AEMtx33Trans(&trans, panelX, seedY);
+        AEMtx33Trans(&trans, seedsPanelX, seedY);
         AEMtx33Concat(&transform, &trans, &scale);
         AEGfxSetTransform(transform.m);
         AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
