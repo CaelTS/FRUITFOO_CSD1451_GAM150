@@ -13,6 +13,7 @@
 #include "Farm.h"
 #include <iostream>
 #include "Profile.h"
+#include "StartScreen.h"
 
 // ---------------------------------------------------------------------------
 // Graphics Resources
@@ -191,7 +192,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	AEGfxTriAdd(0.5f, -0.5f, 0xFFFFFFFF, 1, 1, 0.5f, 0.5f, 0xFFFFFFFF, 1, 0, -0.5f, 0.5f, 0xFFFFFFFF, 0, 0);
 	g_pMeshFullScreen = AEGfxMeshEnd();
 
-	GSM_Initialize(GS_MAIN_SCREEN);
+	GSM_Initialize(GS_START_SCREEN);
 
 	while (gGameRunning)
 	{

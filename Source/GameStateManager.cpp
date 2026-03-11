@@ -4,6 +4,7 @@
 #include "Profile.h"
 #include "Farm.h"
 #include "Rhythm.h"
+#include "StartScreen.h"
 #include <iostream>
 
 
@@ -25,13 +26,39 @@ void GSM_Initialize(int startingState)
 
 
 
+// ---------------------------------------------------------------------------
+// StartScreen GSM wrappers
+// StartScreen uses Init/Update/Draw — map them to the GSM lifecycle slots
+
+static void StartScreen_GSM_Load() { /* textures loaded in Init */ }
+static void StartScreen_GSM_Initialize() { StartScreen_Init(); }
+static void StartScreen_GSM_Update()
+{
+    float dt = (float)AEFrameRateControllerGetFrameTime();
+    StartScreen_Update(dt);
+    // When the exit animation finishes, move to main screen
+    if (!StartScreen_IsActive())
+        nextState = GS_MAIN_SCREEN;
+}
+static void StartScreen_GSM_Render() { StartScreen_Draw(); }
+static void StartScreen_GSM_Free() { /* nothing to free */ }
+static void StartScreen_GSM_Unload() { /* nothing to unload */ }
+
+// ---------------------------------------------------------------------------
+
 void GSM_Update()
 {
-
     std::cout << "Current state: " << currentState << "\n";
     switch (currentState)
     {
-    case GS_MAIN_SCREEN:
+    case GS_START_SCREEN:
+        fpLoad = StartScreen_GSM_Load;
+        fpInitialize = StartScreen_GSM_Initialize;
+        fpUpdate = StartScreen_GSM_Update;
+        fpDraw = StartScreen_GSM_Render;
+        fpFree = StartScreen_GSM_Free;
+        fpUnload = StartScreen_GSM_Unload;
+        break;
         fpLoad = MainScreen_Load;
         fpInitialize = MainScreen_Initialize;
         fpUpdate = MainScreen_Update;
