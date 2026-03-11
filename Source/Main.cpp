@@ -14,13 +14,34 @@
 #include <iostream>
 #include "Profile.h"
 #include "StartScreen.h"
+#include "Economy.h"
+#include "SpawnFruits.h"
 
 // ---------------------------------------------------------------------------
 // Graphics Resources
 
+// Scale factors (1920x1080 -> 1600x900) - referenced by StartScreen.cpp and others
+float gScaleX = 1600.0f / 1920.0f;
+float gScaleY = 900.0f / 1080.0f;
+
 s8 fontId = -1;
-AEGfxTexture* pTexStall = NULL;
+
+// Background textures from first Main.cpp
+AEGfxTexture* pBackground = NULL;
+AEGfxTexture* pGrass = NULL;
+AEGfxTexture* pBaseStall = NULL;
+
+// Fruit textures (kept for potential use)
+AEGfxTexture* pTexApple = NULL;
+AEGfxTexture* pTexPear = NULL;
+AEGfxTexture* pTexBanana = NULL;
+AEGfxTexture* pTexPlus = NULL;
+
+// Meshes
+AEGfxVertexList* pMeshBackground = NULL;
+AEGfxVertexList* pMeshGrass = NULL;
 AEGfxVertexList* pMeshStall = NULL;
+AEGfxVertexList* pMeshFruit = NULL;
 AEGfxVertexList* g_pMeshFullScreen = NULL;
 
 // Fruit basket (hover) - kept for UI tooltip system
@@ -35,8 +56,22 @@ const std::vector<FruitBasket>& GetFruitBaskets()
 
 void MainScreen_Load()
 {
-	pTexStall = AEGfxTextureLoad("Assets/Stall_Empty_POT.png");
-	if (!pTexStall) OutputDebugStringA("ERROR: Failed to load 'Assets/Stall_Empty_POT.png'.\n");
+	// Load background textures from first Main.cpp
+	pBackground = AEGfxTextureLoad("Assets/MainMenu_Background.png");
+	pGrass = AEGfxTextureLoad("Assets/MainMenu_Background_Grass.png");
+	pBaseStall = AEGfxTextureLoad("Assets/base level 1 with apple.png");
+
+	pTexApple = AEGfxTextureLoad("Assets/Apple.png");
+	pTexPear = AEGfxTextureLoad("Assets/Pear.png");
+	pTexBanana = AEGfxTextureLoad("Assets/Banana.png");
+	pTexPlus = AEGfxTextureLoad("Assets/Plus.png");
+
+	if (!pBackground) OutputDebugStringA("ERROR: Failed to load 'Assets/MainMenu_Background.png'.\n");
+	if (!pGrass) OutputDebugStringA("ERROR: Failed to load 'Assets/MainMenu_Background_Grass.png'.\n");
+	if (!pBaseStall) OutputDebugStringA("ERROR: Failed to load 'Assets/base level 1 with apple.png'.\n");
+	if (!pTexApple) OutputDebugStringA("ERROR: Failed to load 'Assets/Apple.png'.\n");
+	if (!pTexPear) OutputDebugStringA("ERROR: Failed to load 'Assets/Pear.png'.\n");
+	if (!pTexBanana) OutputDebugStringA("ERROR: Failed to load 'Assets/Banana.png'.\n");
 
 	Farm_Load();
 }
@@ -45,35 +80,70 @@ void MainScreen_Initialize()
 {
 	UI_Init();
 
+	// Economy Init
+	Economy_Init();
+
+	// Spawn Fruits Init
+	SpawnFruit_Init();
+
 	if (previousState != GS_RHYTHM_SCREEN)
 	{
 		Farm_Initialize();
 	}
 
 	// Load font
-	fontId = AEGfxCreateFont("Assets/liberation-mono.ttf", 26);
+	fontId = AEGfxCreateFont("Assets/Crayon pastel.otf", 26);
 	if (fontId < 0)
-		OutputDebugStringA("ERROR: Failed to load 'Assets/liberation-mono.ttf'.\n");
+		OutputDebugStringA("ERROR: Failed to load 'Assets/Crayon pastel.otf'.\n");
 
-	// Create stall mesh
+	// Create meshes (from first Main.cpp)
+	AEGfxMeshStart();
+	AEGfxTriAdd(-0.5f, -0.5f, 0xFFFFFFFF, 0.0f, 1.0f, 0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f, -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
+	AEGfxTriAdd(0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f, 0.5f, 0.5f, 0xFFFFFFFF, 1.0f, 0.0f, -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
+	pMeshBackground = AEGfxMeshEnd();
+
+	AEGfxMeshStart();
+	AEGfxTriAdd(-0.5f, -0.5f, 0xFFFFFFFF, 0.0f, 1.0f, 0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f, -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
+	AEGfxTriAdd(0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f, 0.5f, 0.5f, 0xFFFFFFFF, 1.0f, 0.0f, -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
+	pMeshGrass = AEGfxMeshEnd();
+
 	AEGfxMeshStart();
 	AEGfxTriAdd(-0.5f, -0.5f, 0xFFFFFFFF, 0.0f, 1.0f, 0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f, -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
 	AEGfxTriAdd(0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f, 0.5f, 0.5f, 0xFFFFFFFF, 1.0f, 0.0f, -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
 	pMeshStall = AEGfxMeshEnd();
+
+	AEGfxMeshStart();
+	AEGfxTriAdd(-0.5f, -0.5f, 0xFFFFFFFF, 0.0f, 1.0f, 0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f, -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
+	AEGfxTriAdd(0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f, 0.5f, 0.5f, 0xFFFFFFFF, 1.0f, 0.0f, -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
+	pMeshFruit = AEGfxMeshEnd();
 }
 
 void MainScreen_Update()
 {
+	// Get Delta Time
+	float dt = (float)AEFrameRateControllerGetFrameTime();
+
 	UI_Input();
 
 	// If the menu is open, skip all gameplay input so nothing fires underneath
 	if (UI_IsMenuOpen())
 	{
 		Farm_Update();
+		Economy_Update(dt);
 		return;
 	}
 
 	Farm_Update();
+	Economy_Update(dt);
+
+	// Update spawned fruits
+	UpdateSpawnFruits(dt);
+	UpdateFruitSpawner(dt);
+
+	// Get mouse position for fruit clicks
+	s32 mouseX, mouseY;
+	AEInputGetCursorPosition(&mouseX, &mouseY);
+	CheckForFruitClicks(mouseX, mouseY);
 
 	// ---- Check if farm triggered rhythm ----
 	if (Farm_ShouldStartRhythm())
@@ -102,26 +172,87 @@ void MainScreen_Render()
 
 	AEMtx33 scale, trans, transform;
 
-	// --- Draw Stall (Background) ---
-	if (pTexStall)
+	// --- Draw Background (Center) ---
+	if (pBackground)
 	{
 		AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
 		AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
 		AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
 		AEGfxSetBlendMode(AE_GFX_BM_BLEND);
 		AEGfxSetTransparency(1.0f);
-		AEGfxTextureSet(pTexStall, 0, 0);
+		AEGfxTextureSet(pBackground, 0, 0);
 	}
 	else
 	{
 		AEGfxSetRenderMode(AE_GFX_RM_COLOR);
 	}
 
-	AEMtx33Scale(&scale, 1600.0f, 900.0f);
+	// Scale: 1920x1080 pixels (Full Screen)
+	AEMtx33Scale(&scale, 1920.0f * gScaleX, 1080.0f * gScaleY);
 	AEMtx33Trans(&trans, 0.0f, 0.0f);
 	AEMtx33Concat(&transform, &trans, &scale);
+
 	AEGfxSetTransform(transform.m);
-	AEGfxMeshDraw(pMeshStall, AE_GFX_MDM_TRIANGLES);
+	AEGfxMeshDraw(pMeshBackground, AE_GFX_MDM_TRIANGLES);
+
+	// Draw Base Stall
+	if (pBaseStall)
+	{
+		AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+		AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
+		AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
+		AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+		AEGfxSetTransparency(1.0f);
+
+		// Set the texture
+		AEGfxTextureSet(pBaseStall, 0, 0);
+
+		// Scale (size of stall)
+		AEMtx33Scale(&scale, 702.0f * gScaleX, 716.0f * gScaleY);
+
+		// Position
+		AEMtx33Trans(&trans, 330.0f * gScaleX, -15.0f * gScaleY);
+
+		// Combine scale and translation
+		AEMtx33Concat(&transform, &trans, &scale);
+
+		// Apply transformation
+		AEGfxSetTransform(transform.m);
+
+		// Draw mesh
+		AEGfxMeshDraw(pMeshStall, AE_GFX_MDM_TRIANGLES);
+	}
+
+	// Draw Grass
+	if (pGrass)
+	{
+		AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+		AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
+		AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
+		AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+		AEGfxSetTransparency(1.0f);
+
+		// Set the texture
+		AEGfxTextureSet(pGrass, 0, 0);
+
+		// Scale (size of grass)
+		AEMtx33Scale(&scale, 1920.0f * gScaleX, 1080.0f * gScaleY);
+
+		// Position (center of screen)
+		AEMtx33Trans(&trans, 0.0f, 0.0f);
+
+		// Combine scale and translation
+		AEMtx33Concat(&transform, &trans, &scale);
+
+		// Apply transformation
+		AEGfxSetTransform(transform.m);
+
+		// Draw mesh
+		AEGfxMeshDraw(pMeshGrass, AE_GFX_MDM_TRIANGLES);
+	}
+
+	// Draw spawned fruits
+	RenderSpawnFruits();
 
 	// --- Transition overlay ---
 	if (TR_IsActive())
@@ -144,17 +275,31 @@ void MainScreen_Render()
 
 void MainScreen_Free()
 {
+	// Free meshes
+	if (pMeshBackground) AEGfxMeshFree(pMeshBackground);
+	if (pMeshGrass) AEGfxMeshFree(pMeshGrass);
 	if (pMeshStall) AEGfxMeshFree(pMeshStall);
-	if (pTexStall)  AEGfxTextureUnload(pTexStall);
+	if (pMeshFruit) AEGfxMeshFree(pMeshFruit);
 
+	// Free textures
+	if (pBackground)  AEGfxTextureUnload(pBackground);
+	if (pGrass)       AEGfxTextureUnload(pGrass);
+	if (pBaseStall)   AEGfxTextureUnload(pBaseStall);
+	if (pTexApple)    AEGfxTextureUnload(pTexApple);
+	if (pTexPear)     AEGfxTextureUnload(pTexPear);
+	if (pTexBanana)   AEGfxTextureUnload(pTexBanana);
+	if (pTexPlus)     AEGfxTextureUnload(pTexPlus);
+
+	// Free font
 	if (fontId >= 0)
 	{
 		AEGfxDestroyFont(fontId);
 		fontId = -1;
 	}
 
-	pMeshStall = nullptr;
-	pTexStall = nullptr;
+	// Reset pointers
+	pMeshBackground = pMeshGrass = pMeshStall = pMeshFruit = nullptr;
+	pBackground = pGrass = pBaseStall = pTexApple = pTexPear = pTexBanana = pTexPlus = nullptr;
 }
 
 void MainScreen_Unload()

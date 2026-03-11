@@ -3,8 +3,11 @@
 
 #include "AEEngine.h"
 
-//extern variables
+// Scale factors defined in Main.cpp
+extern float gScaleX;
+extern float gScaleY;
 
+//extern variables
 extern bool startScreenActive;
 
 // ------------------------------------------------------------
