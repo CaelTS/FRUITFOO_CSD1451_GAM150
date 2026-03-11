@@ -17,6 +17,7 @@
 #include "Farm.h"
 #include <iostream>
 #include "Profile.h"
+#include "StartScreen.h"
 
 // ---------------------------------------------------------------------------
 // Game State Variables
@@ -46,6 +47,9 @@ float rescale = 70.0f;
 
 float gScaleX = 1600.0f / 1920.0f;
 float gScaleY = 900.0f / 1080.0f;
+
+// Start Screen
+bool gStartScreenActive = true;
 
 //// Inventory System
 //int inventory[3] = { 0, 0, 0 }; // 0: Apple, 1: Pear, 2: Banana
@@ -95,41 +99,41 @@ AEGfxTexture* pTexPlus = nullptr;
 //{
 //	return gFruitBaskets;
 //}
-void SaveGame(int goldParam, int energyParam, int inventoryparam[3])
-{
-	std::ofstream outFile("savegame.txt");
-	if (outFile.is_open())
-	{
-		outFile << goldParam << "\n";
-		outFile << energyParam << "\n";
-		outFile << inventoryparam[0] << "\n";
-		outFile << inventoryparam[1] << "\n";
-		outFile << inventoryparam[2] << "\n";
-		outFile.close();
-		OutputDebugStringA("Game Saved Successfully.\n");
-	}
-	else
-	{
-		OutputDebugStringA("ERROR: Could not save game.\n");
-	}
-}
-
-bool LoadGame(int goldParam, int energyParam, int inventoryparam[3])
-{
-	std::ifstream inFile("savegame.txt");
-	if (inFile.is_open())
-	{
-		inFile >> goldParam;
-		inFile >> energyParam;
-		inFile >> inventoryparam[0];
-		inFile >> inventoryparam[1];
-		inFile >> inventoryparam[2];
-		inFile.close();
-		OutputDebugStringA("Game Loaded Successfully.\n");
-		return true;
-	}
-	return false;
-}
+//void SaveGame(int goldParam, int energyParam, int inventoryparam[3])
+//{
+//	std::ofstream outFile("savegame.txt");
+//	if (outFile.is_open())
+//	{
+//		outFile << goldParam << "\n";
+//		outFile << energyParam << "\n";
+//		outFile << inventoryparam[0] << "\n";
+//		outFile << inventoryparam[1] << "\n";
+//		outFile << inventoryparam[2] << "\n";
+//		outFile.close();
+//		OutputDebugStringA("Game Saved Successfully.\n");
+//	}
+//	else
+//	{
+//		OutputDebugStringA("ERROR: Could not save game.\n");
+//	}
+//}
+//
+//bool LoadGame(int goldParam, int energyParam, int inventoryparam[3])
+//{
+//	std::ifstream inFile("savegame.txt");
+//	if (inFile.is_open())
+//	{
+//		inFile >> goldParam;
+//		inFile >> energyParam;
+//		inFile >> inventoryparam[0];
+//		inFile >> inventoryparam[1];
+//		inFile >> inventoryparam[2];
+//		inFile.close();
+//		OutputDebugStringA("Game Loaded Successfully.\n");
+//		return true;
+//	}
+//	return false;
+//}
 
 //int GetGold() { return gold; }
 //int GetEnergy() { return energy; }
@@ -171,6 +175,9 @@ void MainScreen_Initialize()
 	//selectedFruit = 0;
 	//fruits.clear();
 	//inventory[0] = inventory[1] = inventory[2] = 0;
+
+	//Start Screen Init
+	StartScreen_Init();
 
 	//Economy Init
 	Economy_Init();
@@ -223,6 +230,16 @@ void MainScreen_Update()
 {
 	// Get Delta Time
 	float dt = (float)AEFrameRateControllerGetFrameTime();
+
+	if (gStartScreenActive)
+	{
+		// --- Update start screen ---
+		StartScreen_Update(dt);
+
+		// Check if the animation is finished
+		if (!StartScreen_IsActive()) // you’ll make this function
+			gStartScreenActive = false;
+	}
 
 	//Get Mouse Position
 	s32 mouseX, mouseY;
@@ -399,7 +416,6 @@ void MainScreen_Render()
 
 
 
-
 	// --- Draw Background (Center) ---
 	if (pBackground)
 	{
@@ -418,7 +434,7 @@ void MainScreen_Render()
 
 
 	// Scale: 1600x900 pixels (Full Screen)
-	AEMtx33Scale(&scale, 1920, 1080.0f);
+	AEMtx33Scale(&scale, 1920 * gScaleX, 1080.0f * gScaleY);
 	AEMtx33Trans(&trans, 0.0f, 0.0f);
 	AEMtx33Concat(&transform, &trans, &scale);
 
@@ -632,6 +648,11 @@ void MainScreen_Render()
 	UI_Draw();
 	Farm_Render();
 	UI_DrawFruitBasketTooltips();
+
+	if (gStartScreenActive)
+	{
+		StartScreen_Draw();
+	}
 
 
 
