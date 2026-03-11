@@ -6,8 +6,6 @@
 //extern variables
 
 extern bool startScreenActive;
-extern float gScaleX;
-extern float gScaleY;
 
 // ------------------------------------------------------------
 // Public interface

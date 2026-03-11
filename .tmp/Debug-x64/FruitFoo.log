@@ -1,7 +1,22 @@
-﻿  Main.cpp
+﻿  Economy.cpp
+  Farm.cpp
+  GameStateManager.cpp
+  Inventory.cpp
+  Main.cpp
   Profile.cpp
+  Rhythm.cpp
+  ShopUpgrade.cpp
+  SpawnFruits.cpp
+C:\Users\Admin\OneDrive\Documents\GitHub\FRUITFOO_CSD1451_GAM150\Source\SpawnFruits.cpp(21,24): warning C4305: 'initializing': truncation from 'double' to 'float'
+  StartScreen.cpp
+C:\Users\Admin\OneDrive\Documents\GitHub\FRUITFOO_CSD1451_GAM150\Source\StartScreen.cpp(108,13): warning C4505: 'CheckSaveExists': unreferenced function with internal linkage has been removed
+  Transition.cpp
+  UI.cpp
   Utilities.cpp
   Generating Code...
-StartScreen.obj : error LNK2001: unresolved external symbol "float gScaleX" (?gScaleX@@3MA)
-StartScreen.obj : error LNK2001: unresolved external symbol "float gScaleY" (?gScaleY@@3MA)
-C:\Github\FRUITFOO_CSD1451_GAM150\bin\Debug-x64\Fruitfoo.exe : fatal error LNK1120: 2 unresolved externals
+C:\Users\Admin\OneDrive\Documents\GitHub\FRUITFOO_CSD1451_GAM150\Source\GameStateManager.cpp(62,1): warning C4702: unreachable code
+  Fruitfoo.vcxproj -> C:\Users\Admin\OneDrive\Documents\GitHub\FRUITFOO_CSD1451_GAM150\bin\Debug-x64\Fruitfoo.exe
+  46 File(s) copied
+  1 File(s) copied
+  1 File(s) copied
+  1 File(s) copied
