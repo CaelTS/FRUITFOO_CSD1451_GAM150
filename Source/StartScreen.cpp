@@ -46,8 +46,8 @@ static bool hasSave = false; //placeholder until we implement profile system
 static f32 logoPosX = -520.0;
 static f32 logoPosY = 260.0;
 
-extern float gScaleX;
-extern float gScaleY;
+float gScaleX = 1600.0f/1920.0f;
+float gScaleY = 900.0f/1080.0f;
 
 //animation variable
 extern bool startScreenActive = true;   // Is the start screen still active?
