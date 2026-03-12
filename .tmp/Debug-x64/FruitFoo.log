@@ -1,18 +1,8 @@
-﻿  Economy.cpp
-  Farm.cpp
-  GameStateManager.cpp
-  Inventory.cpp
+﻿  GameStateManager.cpp
   Main.cpp
   Profile.cpp
-  Rhythm.cpp
-  ShopUpgrade.cpp
-  SpawnFruits.cpp
-C:\Github\FRUITFOO_CSD1451_GAM150\Source\SpawnFruits.cpp(21,24): warning C4305: 'initializing': truncation from 'double' to 'float'
   StartScreen.cpp
 C:\Github\FRUITFOO_CSD1451_GAM150\Source\StartScreen.cpp(101,13): warning C4505: 'CheckSaveExists': unreferenced function with internal linkage has been removed
-  Transition.cpp
-  UI.cpp
-  Utilities.cpp
   Generating Code...
   Fruitfoo.vcxproj -> C:\Github\FRUITFOO_CSD1451_GAM150\bin\Debug-x64\Fruitfoo.exe
   46 File(s) copied

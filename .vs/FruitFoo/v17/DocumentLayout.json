@@ -24,8 +24,16 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 0,
+          "SelectedChildIndex": 2,
           "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:1:0:{e8b06f52-6d01-11d2-aa7d-00c04f990343}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:128:0:{13b12e3e-c1b4-4539-9371-4fe9a0d523fc}"
+            },
             {
               "$type": "Document",
               "DocumentIndex": 0,
@@ -34,19 +42,10 @@
               "RelativeDocumentMoniker": "Source\\Main.cpp",
               "ToolTip": "C:\\Github\\FRUITFOO_CSD1451_GAM150\\Source\\Main.cpp",
               "RelativeToolTip": "Source\\Main.cpp",
-              "ViewState": "AgIAADIAAAAAAAAAAAAAwGMAAAABAAAAAAAAAA==",
+              "ViewState": "AgIAAFsBAAAAAAAAAAAAAEkBAAApAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2026-02-01T12:46:29.168Z",
-              "IsPinned": true,
+              "WhenOpened": "2026-03-12T08:47:44.82Z",
               "EditorCaption": ""
-            },
-            {
-              "$type": "Bookmark",
-              "Name": "ST:1:0:{e8b06f52-6d01-11d2-aa7d-00c04f990343}"
-            },
-            {
-              "$type": "Bookmark",
-              "Name": "ST:128:0:{13b12e3e-c1b4-4539-9371-4fe9a0d523fc}"
             },
             {
               "$type": "Document",
@@ -70,7 +69,7 @@
               "RelativeToolTip": "Source\\GameStateManager.cpp",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2026-02-01T12:46:03.32Z"
+              "WhenOpened": "2026-03-12T08:47:44.931Z"
             },
             {
               "$type": "Document",
