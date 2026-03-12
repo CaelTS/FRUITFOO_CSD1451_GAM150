@@ -1,34 +1,21 @@
-<<<<<<< HEAD
-﻿  Farm.cpp
+﻿  Economy.cpp
+  Farm.cpp
   GameStateManager.cpp
+  Inventory.cpp
   Main.cpp
-  UI.cpp
-C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\Main.cpp(47,6): error C2065: 'previous': undeclared identifier
-C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\Main.cpp(82,3): error C2065: 'next': undeclared identifier
-C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\Main.cpp(87,3): error C2065: 'next': undeclared identifier
-C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\Main.cpp(91,39): error C2065: 'current': undeclared identifier
-C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\Main.cpp(94,3): error C2065: 'next': undeclared identifier
-C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\Main.cpp(203,4): error C2065: 'next': undeclared identifier
-C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\Main.cpp(207,7): error C2065: 'current': undeclared identifier
-C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\Main.cpp(211,4): error C2065: 'next': undeclared identifier
-C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\Main.cpp(215,7): error C2065: 'next': undeclared identifier
-C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\Main.cpp(215,15): error C2065: 'current': undeclared identifier
-C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\Main.cpp(217,13): error C2065: 'current': undeclared identifier
-C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\Main.cpp(217,22): error C2065: 'next': undeclared identifier
-C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\Main.cpp(223,8): error C2065: 'current': undeclared identifier
-C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\Main.cpp(225,4): error C2065: 'previous': undeclared identifier
-C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\Main.cpp(225,15): error C2065: 'current': undeclared identifier
-C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\Main.cpp(226,4): error C2065: 'current': undeclared identifier
-C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\Main.cpp(226,14): error C2065: 'next': undeclared identifier
-C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\Main.cpp(229,8): error C2065: 'current': undeclared identifier
-C:\Users\tiara\Downloads\PROJECTS\GAM150\FRUITFOO_CSD1451_GAM150\Source\Main.cpp(236,7): error C2065: 'current': undeclared identifier
-  Generating Code...
-=======
-﻿  Main.cpp
   Profile.cpp
+  Rhythm.cpp
+  ShopUpgrade.cpp
+  SpawnFruits.cpp
+C:\Github\FRUITFOO_CSD1451_GAM150\Source\SpawnFruits.cpp(21,24): warning C4305: 'initializing': truncation from 'double' to 'float'
+  StartScreen.cpp
+C:\Github\FRUITFOO_CSD1451_GAM150\Source\StartScreen.cpp(101,13): warning C4505: 'CheckSaveExists': unreferenced function with internal linkage has been removed
+  Transition.cpp
+  UI.cpp
   Utilities.cpp
   Generating Code...
-StartScreen.obj : error LNK2001: unresolved external symbol "float gScaleX" (?gScaleX@@3MA)
-StartScreen.obj : error LNK2001: unresolved external symbol "float gScaleY" (?gScaleY@@3MA)
-C:\Github\FRUITFOO_CSD1451_GAM150\bin\Debug-x64\Fruitfoo.exe : fatal error LNK1120: 2 unresolved externals
->>>>>>> 1f3b0444ae524c55e1a2cd2480c4bccc61bbd87a
+  Fruitfoo.vcxproj -> C:\Github\FRUITFOO_CSD1451_GAM150\bin\Debug-x64\Fruitfoo.exe
+  46 File(s) copied
+  1 File(s) copied
+  1 File(s) copied
+  1 File(s) copied
