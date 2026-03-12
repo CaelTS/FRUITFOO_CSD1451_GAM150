@@ -1,4 +1,4 @@
-﻿#include "StartScreen.h"
+#include "StartScreen.h"
 #include "Profile.h"
 #include "AEEngine.h"
 #include "Utilities.h"
@@ -46,8 +46,8 @@ static bool hasSave = false; //placeholder until we implement profile system
 static f32 logoPosX = -520.0;
 static f32 logoPosY = 260.0;
 
-float gScaleX = 1600.0f / 1600.0f;  // = 1.0f  (scale relative to base 1600 width)
-float gScaleY = 900.0f / 900.0f;   // = 1.0f  (scale relative to base 900 height)
+extern float gScaleX;
+extern float gScaleY;
 
 //animation variable
 extern bool startScreenActive = true;   // Is the start screen still active?
@@ -74,13 +74,6 @@ bool IsButtonHovered(Button& btn, float width, float height) {
 
     return IsMouseOverRect(x, y, width * gScaleX, height * gScaleY);
 }
-
-//ButtonID ID (float x, float y) {
-//    if (!newGameButton.hovered && IsButtonHovered(newGameButton, 234.0f, 35.0f)) return BUTTON_NEW_GAME;
-//    if (!continueButton.hovered && IsButtonHovered(continueButton, 300.0f, 80.0f)) return BUTTON_CONTINUE;
-//    if (!settingsButton.hovered && IsButtonHovered(settingsButton, 300.0f, 80.0f)) return BUTTON_SETTINGS;
-//    if (!exitButton.hovered && IsButtonHovered(exitButton, 68.0f, 39.0f)) return BUTTON_EXIT;
-//}
 
 //Textures
 AEGfxTexture* logoTexture = nullptr;
@@ -153,15 +146,19 @@ void DrawButton(Button& btn, AEGfxVertexList* mesh, f32 width, f32 height, float
 AEGfxVertexList* createMesh()
 {
     AEGfxMeshStart();
-    // bottom-left, bottom-right, top-right
-    AEGfxVertexAdd(-0.5f, -0.5f, 0xFFFFFFFF, 0.0f, 1.0f);
-    AEGfxVertexAdd(0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f);
-    AEGfxVertexAdd(0.5f, 0.5f, 0xFFFFFFFF, 1.0f, 0.0f);
-
-    // bottom-left, top-right, top-left
-    AEGfxVertexAdd(-0.5f, -0.5f, 0xFFFFFFFF, 0.0f, 1.0f);
-    AEGfxVertexAdd(0.5f, 0.5f, 0xFFFFFFFF, 1.0f, 0.0f);
-    AEGfxVertexAdd(-0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
+    // Use AEGfxTriAdd for consistency with other code in the project
+    // First triangle: bottom-left, bottom-right, top-left
+    AEGfxTriAdd(
+        -0.5f, -0.5f, 0xFFFFFFFF, 0.0f, 1.0f,
+        0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f,
+        -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f
+    );
+    // Second triangle: bottom-right, top-right, top-left
+    AEGfxTriAdd(
+        0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f,
+        0.5f, 0.5f, 0xFFFFFFFF, 1.0f, 0.0f,
+        -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f
+    );
     return AEGfxMeshEnd();
 }
 
@@ -178,9 +175,21 @@ void StartScreen_Init()
     hasSave = false;
 
     logoTexture = AEGfxTextureLoad("Assets/StartScreen_Logo.png");
+    if (!logoTexture) {
+        OutputDebugStringA("ERROR: Failed to load 'Assets/StartScreen_Logo.png'\n");
+    }
+
     gradientBlur = AEGfxTextureLoad("Assets/StartScreen_GradientBlur.png");
+    if (!gradientBlur) {
+        OutputDebugStringA("ERROR: Failed to load 'Assets/StartScreen_GradientBlur.png'\n");
+    }
+
     pMeshLogo = createMesh();
     pMeshGradientBlur = createMesh();
+    if (!pMeshGradientBlur) {
+        OutputDebugStringA("ERROR: Failed to create gradient blur mesh\n");
+    }
+
     pMeshNewGameButton = createMesh();
     pMeshNewGameButton_Selected = createMesh();
     pMeshContinueButton = createMesh();
@@ -192,7 +201,13 @@ void StartScreen_Init()
 
     // Initialize "Exit" button (always shown)
     exitButton.normal = AEGfxTextureLoad("Assets/StartScreen_Exit.png");
+    if (!exitButton.normal) {
+        OutputDebugStringA("ERROR: Failed to load 'Assets/StartScreen_Exit.png'\n");
+    }
     exitButton.hover = AEGfxTextureLoad("Assets/StartScreen_Exit_Selected.png");
+    if (!exitButton.hover) {
+        OutputDebugStringA("ERROR: Failed to load 'Assets/StartScreen_Exit_Selected.png'\n");
+    }
     exitButton.x = logoPosX - 102.0f;
     exitButton.y = 45.0f;
     exitButton.x_selected = exitButton.x; // slide left on hover
@@ -204,7 +219,13 @@ void StartScreen_Init()
 
     // Initialize "Continue" button 
     continueButton.normal = AEGfxTextureLoad("Assets/StartScreen_Continue.png");
+    if (!continueButton.normal) {
+        OutputDebugStringA("ERROR: Failed to load 'Assets/StartScreen_Continue.png'\n");
+    }
     continueButton.hover = AEGfxTextureLoad("Assets/StartScreen_Continue_Selected.png");
+    if (!continueButton.hover) {
+        OutputDebugStringA("ERROR: Failed to load 'Assets/StartScreen_Continue_Selected.png'\n");
+    }
     continueButton.x = logoPosX - 50.0f;
     continueButton.y = 100.0f;
     continueButton.x_selected = continueButton.x; // slide left on hover
@@ -216,7 +237,13 @@ void StartScreen_Init()
 
     // Initialize "Profile" button
     profileButton.normal = AEGfxTextureLoad("Assets/StartScreen_Profile.png");
+    if (!profileButton.normal) {
+        OutputDebugStringA("ERROR: Failed to load 'Assets/StartScreen_Profile.png'\n");
+    }
     profileButton.hover = AEGfxTextureLoad("Assets/StartScreen_Profile_Selected.png");
+    if (!profileButton.hover) {
+        OutputDebugStringA("ERROR: Failed to load 'Assets/StartScreen_Profile_Selected.png'\n");
+    }
     profileButton.x = logoPosX - 72.0f;
     profileButton.y = 45.0f;
     profileButton.x_selected = profileButton.x; // slide left on hover
@@ -228,13 +255,17 @@ void StartScreen_Init()
 
     // Initialize "New Game" button
     newGameButton.normal = AEGfxTextureLoad("Assets/StartScreen_NewGameButton.png");
+    if (!newGameButton.normal) {
+        OutputDebugStringA("ERROR: Failed to load 'Assets/StartScreen_NewGameButton.png'\n");
+    }
     newGameButton.hover = AEGfxTextureLoad("Assets/StartScreen_NewGameButton_Selected.png");
+    if (!newGameButton.hover) {
+        OutputDebugStringA("ERROR: Failed to load 'Assets/StartScreen_NewGameButton_Selected.png'\n");
+    }
     newGameButton.x = logoPosX - 32.0f;
     newGameButton.y = 100.0f;
     newGameButton.x_selected = newGameButton.x; // slide left on hover
     newGameButton.y_selected = newGameButton.y;
-
-
 }
 
 void StartScreen_Update(float dt)
@@ -270,7 +301,7 @@ void StartScreen_Update(float dt)
             }
             else if (IsButtonClicked(continueButton, 190.0f, 41.0f))
             {
-                // Continue game (for now just go to farm screen)
+                // Continue game - go to Main Screen
                 isExiting = true;
             }
 
@@ -286,6 +317,7 @@ void StartScreen_Update(float dt)
         else
         {
             if (IsButtonClicked(newGameButton, 234.0f, 35.0f)) {
+                // New Game - go to Main Screen
                 isExiting = true;
             }
             // No save: check NewGame + Exit
@@ -324,7 +356,7 @@ void StartScreen_Update(float dt)
 void StartScreen_Draw()
 {
 
-    if (!startScreenActive) return; // don�t draw after animation finished
+    if (!startScreenActive) return; // don't draw after animation finished
 
     float slideOffset = exitAnimProgress * 3000.0f; // pixels to move left
     float fadeOut = exitAnimFadeOut; // fade out from 1 to 0
@@ -333,27 +365,25 @@ void StartScreen_Draw()
     AEMtx33 scale, trans, transform;
 
     //Draw background gradient blur
-    if (pMeshGradientBlur)
+    if (pMeshGradientBlur && gradientBlur)
     {
         AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
-        AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 0.5f);
+        AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);  // Reset color multiply
         AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
         AEGfxSetBlendMode(AE_GFX_BM_BLEND);
         AEGfxSetTransparency(0.9f * fadeOut);
         AEGfxTextureSet(gradientBlur, 0, 0);
 
         AEMtx33Trans(&trans, 0.0f, 0.0f);
-        AEMtx33Scale(&scale, 1920 * gScaleX, 1080.0f * gScaleY);
+        AEMtx33Scale(&scale, 1920.0f * gScaleX, 1080.0f * gScaleY);
         AEMtx33Concat(&transform, &trans, &scale);
 
         AEGfxSetTransform(transform.m);
         AEGfxMeshDraw(pMeshGradientBlur, AE_GFX_MDM_TRIANGLES);
-
-
     }
 
     // Draw logo
-    if (pMeshLogo)
+    if (pMeshLogo && logoTexture)
     {
         AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
         AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
