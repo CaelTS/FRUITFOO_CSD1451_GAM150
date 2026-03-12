@@ -19,8 +19,9 @@ struct FarmPlot
 
     bool rhythmTriggered = false;
     bool waitingForRhythm = false;
-};
 
+};
+static bool g_rhythmUsed = false;
 static bool g_requestRhythm = false;
 static int  g_rhythmPlotIndex = -1;
 
@@ -75,42 +76,13 @@ void Farm_Initialize()
 // ------------------------------------------------------------
 // UPDATE
 // ------------------------------------------------------------
+
+
+
 void Farm_Update()
 {
+
     float dt = (float)AEFrameRateControllerGetFrameTime();
-
-    for (int i = 0; i < farmPlots.size(); i++)
-    {
-        FarmPlot& plot = farmPlots[i];
-
-        if (!plot.isPlanted)
-            continue;
-
-        if (plot.waitingForRhythm)
-            continue;
-
-        // Grow
-        plot.growTimer += dt;
-
-        float ratio = plot.growTimer / GROW_TIME;
-
-        // Trigger rhythm at 50%
-        if (ratio >= 0.5f && !plot.rhythmTriggered)
-        {
-            plot.rhythmTriggered = true;
-            plot.waitingForRhythm = true;
-
-            g_requestRhythm = true;
-            g_rhythmPlotIndex = i;
-
-            break;
-        }
-
-        if (ratio >= 1.0f)
-        {
-            plot.isReady = true;
-        }
-    }
 
     // Harvest
     if (AEInputCheckTriggered(AEVK_SPACE))
@@ -129,6 +101,47 @@ void Farm_Update()
             }
         }
     }
+
+
+
+    //Pause all other PLOTS when rhythm game is active
+    if (g_requestRhythm)
+        return;
+
+    for (int i = 0; i < farmPlots.size(); i++)
+    {
+        FarmPlot& plot = farmPlots[i];
+
+        if (!plot.isPlanted)
+            continue;
+
+        if (plot.waitingForRhythm)
+            continue;
+
+        // Grow
+        plot.growTimer += dt;
+
+        float ratio = plot.growTimer / GROW_TIME;
+
+
+
+        if (ratio >= 0.5f && !g_rhythmUsed && !g_requestRhythm)
+        {
+            g_rhythmUsed = true;
+
+            plot.rhythmTriggered = true;
+
+            g_requestRhythm = true;
+            g_rhythmPlotIndex = i;
+        }
+        if (ratio >= 1.0f)
+        {
+            plot.isReady = true;
+        }
+    }
+
+
+
 }
 
 // ------------------------------------------------------------
@@ -188,6 +201,12 @@ void Farm_Render()
             stageTexture = fruitStage75;
         else
             stageTexture = fruitStageFull;
+
+
+        if (farmPlots[i].waitingForRhythm)
+        {
+            AEGfxSetColorToMultiply(1.0f, 0.9f, 0.6f, 1.0f);
+        }
 
         float size = 120.0f;
 
@@ -317,6 +336,8 @@ void Farm_Unload()
 
 void Farm_PlantSeed(int plotIndex, int seedType)
 {
+    g_rhythmUsed = false;
+
     if (plotIndex < 0 || plotIndex >= farmPlots.size())
         return;
 
@@ -329,7 +350,6 @@ void Farm_PlantSeed(int plotIndex, int seedType)
     plot.isReady = false;
     plot.seedType = seedType;
     plot.growTimer = 0.0f;
-    std::cout << "Planting at plot: " << plotIndex << "\n";
 }
 
 bool Farm_IsPlotPlanted(int plotIndex)
