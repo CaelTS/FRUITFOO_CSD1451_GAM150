@@ -1,5 +1,4 @@
 #pragma once
-#pragma once
 #include <vector>
 
 // ================= Menu =================
@@ -10,6 +9,13 @@ void UI_Exit();
 bool UI_IsMenuOpen();
 
 // ================= Fruit Basket Hover =================
+enum fruitType
+{
+    FRUIT_APPLE = 0,
+    FRUIT_PEAR = 1,
+    FRUIT_BANANA = 2
+};
+
 struct FruitBasket
 {
     int fruitType;        // 0 Apple, 1 Pear, 2 Banana
@@ -29,3 +35,25 @@ void UI_DrawFruitBasketTooltips();
 void UI_UpdateButtons();
 float UI_GetPlotSlotX(int index);
 float UI_GetPlotSlotY(int index);
+
+// crates
+struct CrateLayoutConfig
+{
+    struct UVRect { float uCenter, vCenter, uWidth, vHeight; } bins[3];
+
+    // Tooltip
+    float tipWidth;        // panel width (world units)
+    float tipHeight;       // panel height
+    float tipMargin;       // gap between crate and tooltip
+    bool  tipCenterOnCrate; // true: center under crate; false: left-align to crate
+};
+
+const CrateLayoutConfig& UI_GetCrateLayoutConfig();
+void UI_SetCrateLayoutConfig(const CrateLayoutConfig& cfg);
+
+
+// Build crate hitboxes from the current stall transform.
+void UI_RebuildCrateHitboxesFromStall(float stallX, float stallY, float stallW, float stallH);
+
+// Simple yellow hover tint (same look as your Upgrades highlight).
+void UI_DrawCrateHoverTint_Yellow();
