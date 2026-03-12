@@ -30,7 +30,7 @@ void GSM_Initialize(int startingState)
 // StartScreen GSM wrappers
 // StartScreen uses Init/Update/Draw - map them to the GSM lifecycle slots
 
-static void StartScreen_GSM_Load() { /* textures loaded in Init */ }
+static void StartScreen_GSM_Load() { StartScreen_Load(); }
 static void StartScreen_GSM_Initialize() { StartScreen_Init(); }
 static void StartScreen_GSM_Update()
 {

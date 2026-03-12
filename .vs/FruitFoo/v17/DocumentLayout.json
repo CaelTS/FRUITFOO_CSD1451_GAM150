@@ -3,15 +3,23 @@
   "WorkspaceRootPath": "C:\\Github\\FRUITFOO_CSD1451_GAM150\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\Fruitfoo.vcxproj|C:\\Github\\FRUITFOO_CSD1451_GAM150\\Source\\StartScreen.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\Fruitfoo.vcxproj|solutionrelative:Source\\StartScreen.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\FruitFoo.vcxproj|C:\\Github\\FRUITFOO_CSD1451_GAM150\\Source\\GameStateManager.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\FruitFoo.vcxproj|solutionrelative:Source\\GameStateManager.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\Fruitfoo.vcxproj|C:\\Github\\FRUITFOO_CSD1451_GAM150\\Source\\StartScreen.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\Fruitfoo.vcxproj|solutionrelative:Source\\StartScreen.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\Fruitfoo.vcxproj|C:\\Github\\FRUITFOO_CSD1451_GAM150\\Source\\Main.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\Fruitfoo.vcxproj|solutionrelative:Source\\Main.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\mumup\\\u6587\u6863\\SIT\\Year 1 Trimester 2\\SEP2\\fruitfoo\\FRUITFOO_CSD1451_GAM150\\FruitFoo\\Economy.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\FruitFoo.vcxproj|C:\\Github\\FRUITFOO_CSD1451_GAM150\\Source\\GameStateManager.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\FruitFoo.vcxproj|solutionrelative:Source\\GameStateManager.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\mumup\\\u6587\u6863\\SIT\\Year 1 Trimester 2\\SEP2\\fruitfoo\\FRUITFOO_CSD1451_GAM150\\FruitFoo\\Economy.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
@@ -24,7 +32,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 2,
+          "SelectedChildIndex": 3,
           "Children": [
             {
               "$type": "Bookmark",
@@ -36,20 +44,46 @@
             },
             {
               "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "StartScreen.h",
+              "DocumentMoniker": "C:\\Github\\FRUITFOO_CSD1451_GAM150\\Source\\StartScreen.h",
+              "RelativeDocumentMoniker": "Source\\StartScreen.h",
+              "ToolTip": "C:\\Github\\FRUITFOO_CSD1451_GAM150\\Source\\StartScreen.h",
+              "RelativeToolTip": "Source\\StartScreen.h",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAB8AAAAXAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2026-03-12T09:03:33.312Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
               "DocumentIndex": 0,
+              "Title": "StartScreen.cpp",
+              "DocumentMoniker": "C:\\Github\\FRUITFOO_CSD1451_GAM150\\Source\\StartScreen.cpp",
+              "RelativeDocumentMoniker": "Source\\StartScreen.cpp",
+              "ToolTip": "C:\\Github\\FRUITFOO_CSD1451_GAM150\\Source\\StartScreen.cpp*",
+              "RelativeToolTip": "Source\\StartScreen.cpp*",
+              "ViewState": "AgIAABsAAAAAAAAAAAAAADEAAAAOAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2026-03-12T09:00:46.955Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
               "Title": "Main.cpp",
               "DocumentMoniker": "C:\\Github\\FRUITFOO_CSD1451_GAM150\\Source\\Main.cpp",
               "RelativeDocumentMoniker": "Source\\Main.cpp",
               "ToolTip": "C:\\Github\\FRUITFOO_CSD1451_GAM150\\Source\\Main.cpp",
               "RelativeToolTip": "Source\\Main.cpp",
-              "ViewState": "AgIAAKsAAAAAAAAAAAAAAMAAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAKcAAAAAAAAAAAAAAMAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
               "WhenOpened": "2026-03-12T08:47:44.82Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 5,
               "Title": "Economy.h",
               "DocumentMoniker": "C:\\Users\\mumup\\\u6587\u6863\\SIT\\Year 1 Trimester 2\\SEP2\\fruitfoo\\FRUITFOO_CSD1451_GAM150\\FruitFoo\\Economy.h",
               "RelativeDocumentMoniker": "..\\..\\Users\\mumup\\\u6587\u6863\\SIT\\Year 1 Trimester 2\\SEP2\\fruitfoo\\FRUITFOO_CSD1451_GAM150\\FruitFoo\\Economy.h",
@@ -61,19 +95,20 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 1,
               "Title": "GameStateManager.cpp",
               "DocumentMoniker": "C:\\Github\\FRUITFOO_CSD1451_GAM150\\Source\\GameStateManager.cpp",
               "RelativeDocumentMoniker": "Source\\GameStateManager.cpp",
               "ToolTip": "C:\\Github\\FRUITFOO_CSD1451_GAM150\\Source\\GameStateManager.cpp",
               "RelativeToolTip": "Source\\GameStateManager.cpp",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAGoAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2026-03-12T08:47:44.931Z"
+              "WhenOpened": "2026-03-12T08:47:44.931Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 4,
               "Title": "Economy.cpp",
               "DocumentMoniker": "C:\\Users\\mumup\\\u6587\u6863\\SIT\\Year 1 Trimester 2\\SEP2\\fruitfoo\\FRUITFOO_CSD1451_GAM150\\FruitFoo\\Economy.cpp",
               "RelativeDocumentMoniker": "..\\..\\Users\\mumup\\\u6587\u6863\\SIT\\Year 1 Trimester 2\\SEP2\\fruitfoo\\FRUITFOO_CSD1451_GAM150\\FruitFoo\\Economy.cpp",

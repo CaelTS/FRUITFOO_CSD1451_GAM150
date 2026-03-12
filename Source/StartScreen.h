@@ -17,7 +17,10 @@ extern bool startScreenActive;
 // Call this to check if the start screen is still active (for Main.cpp to know when to switch to main menu)
 bool StartScreen_IsActive();
 
-// Initialize the start screen
+// Load textures and meshes (called once by GSM Load slot)
+void StartScreen_Load();
+
+// Reset animation state and button positions (called by GSM Initialize slot)
 void StartScreen_Init();
 
 // Update the start screen (hover, clicks, etc.)

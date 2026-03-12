@@ -46,11 +46,11 @@ static bool hasSave = false; //placeholder until we implement profile system
 static f32 logoPosX = -520.0;
 static f32 logoPosY = 260.0;
 
-extern float gScaleX;
-extern float gScaleY;
+float gScaleX;
+float gScaleY;
 
 //animation variable
-extern bool startScreenActive = true;   // Is the start screen still active?
+bool startScreenActive = true;   // Is the start screen still active?
 static bool isExiting = false;          // Has the exit animation started?
 static float exitAnimProgress = 0.0f;   // 0.0 -> 1.0 animation progress
 static float exitAnimFadeOut = 1.0f;   // 0.0 -> 1.0 fade out progress
@@ -63,7 +63,7 @@ bool IsButtonClicked(Button& btn, float width, float height) {
     else return false;
 }
 
-bool IsButtonHovered(Button& btn, float width, float height) {
+static bool IsButtonHovered(Button& btn, float width, float height) {
     float x = btn.x;
     float y = btn.y;
 
@@ -108,7 +108,7 @@ static bool CheckSaveExists()
     return false;
 }
 
-void DrawButton(Button& btn, AEGfxVertexList* mesh, f32 width, f32 height, float offset)
+static void DrawButton(Button& btn, AEGfxVertexList* mesh, f32 width, f32 height, float offset)
 {
     AEMtx33 scale, trans, transform;
 
@@ -143,7 +143,7 @@ void DrawButton(Button& btn, AEGfxVertexList* mesh, f32 width, f32 height, float
     AEGfxMeshDraw(mesh, AE_GFX_MDM_TRIANGLES);
 }
 
-AEGfxVertexList* createMesh()
+static AEGfxVertexList* createMesh()
 {
     AEGfxMeshStart();
     // Use AEGfxTriAdd for consistency with other code in the project
@@ -167,47 +167,60 @@ bool StartScreen_IsActive()
     return startScreenActive; // from your start screen cpp
 }
 
+void StartScreen_Load()
+{
+    // Load all textures and create all meshes - guarded so they only load once.
+    // Called by GSM_Load so assets exist before the very first draw call.
+    if (!logoTexture)
+        logoTexture = AEGfxTextureLoad("Assets/StartScreen_Logo.png");
+    if (!logoTexture)
+        OutputDebugStringA("ERROR: Failed to load 'Assets/StartScreen_Logo.png'\n");
+
+    if (!gradientBlur)
+        gradientBlur = AEGfxTextureLoad("Assets/StartScreen_GradientBlur.png");
+    if (!gradientBlur)
+        OutputDebugStringA("ERROR: Failed to load 'Assets/StartScreen_GradientBlur.png'\n");
+
+    if (!exitButton.normal)
+        exitButton.normal = AEGfxTextureLoad("Assets/StartScreen_Exit.png");
+    if (!exitButton.hover)
+        exitButton.hover = AEGfxTextureLoad("Assets/StartScreen_Exit_Selected.png");
+    if (!continueButton.normal)
+        continueButton.normal = AEGfxTextureLoad("Assets/StartScreen_Continue.png");
+    if (!continueButton.hover)
+        continueButton.hover = AEGfxTextureLoad("Assets/StartScreen_Continue_Selected.png");
+    if (!profileButton.normal)
+        profileButton.normal = AEGfxTextureLoad("Assets/StartScreen_Profile.png");
+    if (!profileButton.hover)
+        profileButton.hover = AEGfxTextureLoad("Assets/StartScreen_Profile_Selected.png");
+    if (!newGameButton.normal)
+        newGameButton.normal = AEGfxTextureLoad("Assets/StartScreen_NewGameButton.png");
+    if (!newGameButton.hover)
+        newGameButton.hover = AEGfxTextureLoad("Assets/StartScreen_NewGameButton_Selected.png");
+
+    if (!pMeshLogo)                   pMeshLogo = createMesh();
+    if (!pMeshGradientBlur)           pMeshGradientBlur = createMesh();
+    if (!pMeshNewGameButton)          pMeshNewGameButton = createMesh();
+    if (!pMeshNewGameButton_Selected) pMeshNewGameButton_Selected = createMesh();
+    if (!pMeshContinueButton)         pMeshContinueButton = createMesh();
+    if (!pMeshContinueButton_Selected)pMeshContinueButton_Selected = createMesh();
+    if (!pMeshProfileButton)          pMeshProfileButton = createMesh();
+    if (!pMeshProfileButton_Selected) pMeshProfileButton_Selected = createMesh();
+    if (!pMeshExitButton)             pMeshExitButton = createMesh();
+    if (!pMeshExitButton_Selected)    pMeshExitButton_Selected = createMesh();
+}
+
 void StartScreen_Init()
 {
-    // Check if save file exists to determine if "Continue" button should be shown
-    // Should be implemented in Profile.cpp, but for now we can just check if the file exists here
-    //hasSave = SaveSystem_HasSaveFile();
-    hasSave = false;
+    // Reset animation and button state so the screen plays fresh on each visit.
+    startScreenActive = true;
+    isExiting = false;
+    exitAnimProgress = 0.0f;
+    exitAnimFadeOut = 1.0f;
 
-    logoTexture = AEGfxTextureLoad("Assets/StartScreen_Logo.png");
-    if (!logoTexture) {
-        OutputDebugStringA("ERROR: Failed to load 'Assets/StartScreen_Logo.png'\n");
-    }
+    hasSave = false; // TODO: replace with actual save detection
 
-    gradientBlur = AEGfxTextureLoad("Assets/StartScreen_GradientBlur.png");
-    if (!gradientBlur) {
-        OutputDebugStringA("ERROR: Failed to load 'Assets/StartScreen_GradientBlur.png'\n");
-    }
-
-    pMeshLogo = createMesh();
-    pMeshGradientBlur = createMesh();
-    if (!pMeshGradientBlur) {
-        OutputDebugStringA("ERROR: Failed to create gradient blur mesh\n");
-    }
-
-    pMeshNewGameButton = createMesh();
-    pMeshNewGameButton_Selected = createMesh();
-    pMeshContinueButton = createMesh();
-    pMeshContinueButton_Selected = createMesh();
-    pMeshProfileButton = createMesh();
-    pMeshProfileButton_Selected = createMesh();
-    pMeshExitButton = createMesh();
-    pMeshExitButton_Selected = createMesh();
-
-    // Initialize "Exit" button (always shown)
-    exitButton.normal = AEGfxTextureLoad("Assets/StartScreen_Exit.png");
-    if (!exitButton.normal) {
-        OutputDebugStringA("ERROR: Failed to load 'Assets/StartScreen_Exit.png'\n");
-    }
-    exitButton.hover = AEGfxTextureLoad("Assets/StartScreen_Exit_Selected.png");
-    if (!exitButton.hover) {
-        OutputDebugStringA("ERROR: Failed to load 'Assets/StartScreen_Exit_Selected.png'\n");
-    }
+    // Initialize "Exit" button positions (always shown)
     exitButton.x = logoPosX - 102.0f;
     exitButton.y = 45.0f;
     exitButton.x_selected = exitButton.x; // slide left on hover
