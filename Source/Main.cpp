@@ -191,6 +191,16 @@ void MainScreen_Initialize()
 	{
 		Farm_Initialize();
 	}
+
+	// Build crate rectangles to match the stall's current transform:
+	{
+		float stallW = 702.0f * gScaleX;
+		float stallH = 716.0f * gScaleY;
+		float stallX = 330.0f * gScaleX;
+		float stallY = -15.0f * gScaleY;
+		UI_RebuildCrateHitboxesFromStall(stallX, stallY, stallW, stallH);
+	}
+
 	//gFruitBaskets.clear();
 	//gFruitBaskets.push_back({ 0, -350.0f, -250.0f, 120.0f, 120.0f }); // Apple
 	//gFruitBaskets.push_back({ 1, -150.0f, -250.0f, 120.0f, 120.0f }); // Pear
@@ -496,6 +506,9 @@ void MainScreen_Render()
 		// Draw mesh (usually this is a quad mesh you created earlier)
 		AEGfxMeshDraw(pMeshGrass, AE_GFX_MDM_TRIANGLES);
 	}
+
+	//crate hover tint
+	UI_DrawCrateHoverTint_Yellow();
 
 	//// --- Draw Fruits ---
 	//AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
