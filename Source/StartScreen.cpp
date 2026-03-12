@@ -115,8 +115,8 @@ static bool  hasSave = false;
 static f32   logoPosX = -520.0f;
 static f32   logoPosY = 260.0f;
 
-extern float gScaleX;
-extern float gScaleY;
+float gScaleX;
+float gScaleY;
 
 extern bool  startScreenActive = true;
 static bool  isExiting = false;
