@@ -6,6 +6,7 @@
 #include <fstream>
 #include <cstdio>
 #include <cstring>
+#include "Main.h"
 
 // ============================================================
 // Profile persistence  (mirrored from Profile.cpp so the
@@ -115,8 +116,6 @@ static bool  hasSave = false;
 static f32   logoPosX = -520.0f;
 static f32   logoPosY = 260.0f;
 
-float gScaleX;
-float gScaleY;
 
 extern bool  startScreenActive = true;
 static bool  isExiting = false;
@@ -386,9 +385,10 @@ void StartScreen_Update(float dt)
         else if (IsHoveredBtn(exitButton, kExitW, kExitH))
             exitButton.hovered = true;
 
-        // Continue → ProfileScreen to select which existing profile to load
+        // Continue → ProfileScreen in select/load mode
         if (hasSave && IsClicked(continueButton, kContinueW, kContinueH))
         {
+            ProfileScreen_SetSelectMode(true); // clicking a slot will LOAD it
             isExiting = true;
             nextState = GS_NEXT_SCREEN;
         }
@@ -554,7 +554,7 @@ void StartScreen_Draw()
             AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
             AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
             AEGfxPrint(ssFont, "ENTER to confirm    ESC to cancel",
-                -0.14f, -0.12f, 0.45f, 0.75f, 0.75f, 0.75f, 1.0f);
+                -0.15f, -0.12f, 0.45f, 0.75f, 0.75f, 0.75f, 1.0f);
 
             // "Profiles full" warning inside popup (edge case)
             if (popupShowFull)

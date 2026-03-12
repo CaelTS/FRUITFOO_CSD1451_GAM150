@@ -38,11 +38,37 @@ static int   popupSlotIndex = -1;           // which slot triggered the popup
 static char  popupInputBuf[PROFILE_NAME_MAX_LEN] = "";
 static int   popupInputLen = 0;
 
+// Active profile slot (-1 = none selected)
+static int   activeSlot = -1;
+static bool  selectMode = false; // true = Continue path (click loads), false = manage path (click renames)
+
 // Hover state (-1 = none)
 static int   hoveredProfileSlot = -1;
 static int   hoveredDeleteSlot = -1;
 
 bool ProfileScreen_IsPopupActive() { return popupActive; }
+
+void ProfileScreen_SetSelectMode(bool mode) { selectMode = mode; }
+
+int Profile_GetActiveSlot() { return activeSlot; }
+
+const char* Profile_GetName() {
+    if (activeSlot >= 0 && activeSlot < MAX_PROFILES && profiles[activeSlot].exists)
+        return profiles[activeSlot].name;
+    return "";
+}
+
+int Profile_GetLevel() {
+    if (activeSlot >= 0 && activeSlot < MAX_PROFILES)
+        return profiles[activeSlot].level;
+    return 0;
+}
+
+int Profile_GetScore() {
+    if (activeSlot >= 0 && activeSlot < MAX_PROFILES)
+        return profiles[activeSlot].score;
+    return 0;
+}
 
 // ---------------------------------------------------------------------------
 // Persistence helpers
@@ -310,7 +336,9 @@ void ProfileScreen_Update() {
     // --- Normal update: Escape to go back ---
     // Guard against popupActive so closing the popup's ESC never leaks through
     if (!popupActive && AEInputCheckTriggered(AEVK_ESCAPE)) {
-        nextState = GS_MAIN_SCREEN;
+        // In selectMode we came from the start screen, go back there
+        nextState = selectMode ? GS_START_SCREEN : GS_MAIN_SCREEN;
+        selectMode = false;
     }
 
     // Mouse position in NDC
@@ -380,14 +408,24 @@ void ProfileScreen_Update() {
                     Profiles_Save();
                     break;
                 }
-                // Profile button click -> open edit popup pre-filled with current name
+                // Profile button click:
+                //   selectMode = true  -> load this profile and go to main screen
+                //   selectMode = false -> open rename popup (original behaviour)
                 else if (mNDC_X >= -halfW && mNDC_X <= halfW &&
                     mNDC_Y >= yPos - halfH && mNDC_Y <= yPos + halfH) {
-                    popupActive = true;
-                    popupEditMode = true;
-                    popupSlotIndex = i;
-                    strncpy_s(popupInputBuf, PROFILE_NAME_MAX_LEN, profiles[i].name, _TRUNCATE);
-                    popupInputLen = (int)strnlen_s(popupInputBuf, PROFILE_NAME_MAX_LEN);
+                    if (selectMode) {
+                        // Load this profile
+                        activeSlot = i;
+                        selectMode = false; // reset for next visit
+                        nextState = GS_MAIN_SCREEN;
+                    }
+                    else {
+                        popupActive = true;
+                        popupEditMode = true;
+                        popupSlotIndex = i;
+                        strncpy_s(popupInputBuf, PROFILE_NAME_MAX_LEN, profiles[i].name, _TRUNCATE);
+                        popupInputLen = (int)strnlen_s(popupInputBuf, PROFILE_NAME_MAX_LEN);
+                    }
                     break;
                 }
             }
@@ -413,7 +451,7 @@ void ProfileScreen_Render() {
 
     // Title - Centered at top
     if (fontId >= 0) {
-        AEGfxPrint(fontId, "SELECT PROFILE", -0.25f, 0.75f, 1.0f, 1.0f, 0.8f, 0.4f, 1.0f);
+        AEGfxPrint(fontId, selectMode ? "SELECT PROFILE TO LOAD" : "MANAGE PROFILES", -0.30f, 0.75f, 1.0f, 1.0f, 0.8f, 0.4f, 1.0f);
     }
 
     // Calculate center positions
@@ -454,7 +492,8 @@ void ProfileScreen_Render() {
 
                 // Show edit hint on hover (same row as name, to the right)
                 if (hoveredProfileSlot == i) {
-                    AEGfxPrint(fontId, "[click to rename]",
+                    const char* hint = selectMode ? "[click to load]" : "[click to rename]";
+                    AEGfxPrint(fontId, hint,
                         0.05f, yPos + 0.045f,
                         0.45f, 1.0f, 0.9f, 0.5f, 1.0f);
                 }
