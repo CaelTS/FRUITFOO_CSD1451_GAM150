@@ -5,14 +5,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\Fruitfoo.vcxproj|C:\\Github\\FRUITFOO_CSD1451_GAM150\\Source\\Profile.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\Fruitfoo.vcxproj|solutionrelative:Source\\Profile.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\Fruitfoo.vcxproj|C:\\Github\\FRUITFOO_CSD1451_GAM150\\Source\\SpawnFruits.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\Fruitfoo.vcxproj|solutionrelative:Source\\SpawnFruits.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\Fruitfoo.vcxproj|C:\\Github\\FRUITFOO_CSD1451_GAM150\\Source\\StartScreen.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\Fruitfoo.vcxproj|solutionrelative:Source\\StartScreen.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     }
   ],
   "DocumentGroupContainers": [
@@ -22,7 +14,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 4,
+          "SelectedChildIndex": 2,
           "Children": [
             {
               "$type": "Bookmark",
@@ -34,39 +26,13 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "StartScreen.cpp",
-              "DocumentMoniker": "C:\\Github\\FRUITFOO_CSD1451_GAM150\\Source\\StartScreen.cpp",
-              "RelativeDocumentMoniker": "Source\\StartScreen.cpp",
-              "ToolTip": "C:\\Github\\FRUITFOO_CSD1451_GAM150\\Source\\StartScreen.cpp",
-              "RelativeToolTip": "Source\\StartScreen.cpp",
-              "ViewState": "AgIAAFMAAAAAAAAAAAAnwGYAAAASAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2026-03-12T05:33:58.575Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "SpawnFruits.cpp",
-              "DocumentMoniker": "C:\\Github\\FRUITFOO_CSD1451_GAM150\\Source\\SpawnFruits.cpp",
-              "RelativeDocumentMoniker": "Source\\SpawnFruits.cpp",
-              "ToolTip": "C:\\Github\\FRUITFOO_CSD1451_GAM150\\Source\\SpawnFruits.cpp",
-              "RelativeToolTip": "Source\\SpawnFruits.cpp",
-              "ViewState": "AgIAAAMAAAAAAAAAAAAnwBQAAAAXAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2026-03-12T05:33:56.006Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
               "DocumentIndex": 0,
               "Title": "Profile.cpp",
               "DocumentMoniker": "C:\\Github\\FRUITFOO_CSD1451_GAM150\\Source\\Profile.cpp",
               "RelativeDocumentMoniker": "Source\\Profile.cpp",
               "ToolTip": "C:\\Github\\FRUITFOO_CSD1451_GAM150\\Source\\Profile.cpp",
               "RelativeToolTip": "Source\\Profile.cpp",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAAaAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
               "WhenOpened": "2026-03-12T05:10:38.988Z",
               "EditorCaption": ""

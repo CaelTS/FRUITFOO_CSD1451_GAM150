@@ -57,13 +57,13 @@ static float exitAnimFadeOut = 1.0f;   // 0.0 -> 1.0 fade out progress
 static float exitAnimSpeed = 1.3f;      // Speed of slide animation
 
 //Local helper function button click detection
-static bool IsButtonClicked(Button& btn, float width, float height) {
+bool IsButtonClicked(Button& btn, float width, float height) {
     if (ClickedOnRect(btn.x, btn.y, width * gScaleX, height * gScaleY))
         return true;
     else return false;
 }
 
-static bool IsButtonHovered(Button& btn, float width, float height) {
+bool IsButtonHovered(Button& btn, float width, float height) {
     float x = btn.x;
     float y = btn.y;
 
@@ -108,7 +108,7 @@ static bool CheckSaveExists()
     return false;
 }
 
-static void DrawButton(Button& btn, AEGfxVertexList* mesh, f32 width, f32 height, float offset)
+void DrawButton(Button& btn, AEGfxVertexList* mesh, f32 width, f32 height, float offset)
 {
     AEMtx33 scale, trans, transform;
 
@@ -143,7 +143,7 @@ static void DrawButton(Button& btn, AEGfxVertexList* mesh, f32 width, f32 height
     AEGfxMeshDraw(mesh, AE_GFX_MDM_TRIANGLES);
 }
 
-static AEGfxVertexList* createMesh()
+AEGfxVertexList* createMesh()
 {
     AEGfxMeshStart();
     // Use AEGfxTriAdd for consistency with other code in the project

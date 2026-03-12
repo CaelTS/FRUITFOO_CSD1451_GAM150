@@ -18,7 +18,7 @@ float GROUND_Y = -350.0f;
 
 // Tunables
 const float gravity = 80.0f;   // multiply falling speed to get pixels/sec
-const float FRICTION = 0.88f;          // friction applied to horizontal speed each frame
+const float FRICTION = 0.88;          // friction applied to horizontal speed each frame
 const float ROTATION_FACTOR = 0.92f;    // degrees of rotation per horizont
 const float ANGULAR_FRICTION = 0.92f;       // friction applied to angular velocity each frame
 const float ANGVEL_FROM_SPEED = 0.5f;    // multiplier for how much horizontal speed affects angular velocity
@@ -42,7 +42,7 @@ void SpawnFruit_Init() {
 }
 
 void SpawnFruit() {
-    Fruit newApple{};
+    Fruit newApple;
     newApple.texture = AEGfxTextureLoad("Assets/Fruit_Apple.png");  // Load the apple texture
 
     newApple.x = random_float(-200.0,600.0);  // Random X position between 400 to 1000

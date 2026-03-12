@@ -1,17 +1,8 @@
-#define NOMINMAX
 #include <crtdbg.h>
 #include "AEEngine.h"
 #include "Transition.h"
 #include "GameStateManager.h"
 
-#pragma warning(push, 0)
-#include "../Extern/rapidjson/document.h"
-#include "../Extern/rapidjson/prettywriter.h"
-#include "../Extern/rapidjson/stringbuffer.h"
-#include "../Extern/rapidjson/filereadstream.h"
-#pragma warning(pop)
-
-using namespace rapidjson;
 extern AEGfxVertexList* g_pMeshFullScreen;
 extern s8 fontId;
 
@@ -53,44 +44,31 @@ static int   hoveredDeleteSlot = -1;
 
 bool ProfileScreen_IsPopupActive() { return popupActive; }
 
+// ---------------------------------------------------------------------------
+// Persistence helpers
+// ---------------------------------------------------------------------------
+static const char* PROFILES_FILE = "profiles.txt";
 
-/*
-    // Persistence helpers
-    // File format - JSON array of profile objects:
-    // [
-    //   { "slot": 0, "exists": true, "name": "dan", "level": 5, "score": 1250 },
-    //   { "slot": 1, "exists": false, "name": "", "level": 0, "score": 0 },
-    //   { "slot": 2, "exists": false, "name": "", "level": 0, "score": 0 }
-    // ]
-*/
-
-static const char* PROFILES_FILE = "profiles.json";
+// File format - one block per profile slot separated by blank lines:
+//   [PROFILE_0]
+//   EXISTS=1
+//   NAME=dan
+//   LEVEL=5
+//   SCORE=1250
 
 static void Profiles_Save() {
-    Document doc;
-    doc.SetArray();
-    auto& alloc = doc.GetAllocator();
-
-    for (int i = 0; i < MAX_PROFILES; i++) {
-        Value obj(kObjectType);
-        obj.AddMember("slot", i, alloc);
-        obj.AddMember("exists", profiles[i].exists, alloc);
-        obj.AddMember("name", Value(profiles[i].name, alloc), alloc);
-        obj.AddMember("level", profiles[i].level, alloc);
-        obj.AddMember("score", profiles[i].score, alloc);
-        doc.PushBack(obj, alloc);
-    }
-
-    StringBuffer sb;
-    PrettyWriter<StringBuffer> writer(sb);
-    doc.Accept(writer);
-
     FILE* f = nullptr;
     if (fopen_s(&f, PROFILES_FILE, "w") != 0 || !f) {
-        OutputDebugStringA("ERROR: Could not open profiles.json for writing.\n");
+        OutputDebugStringA("ERROR: Could not open profiles.txt for writing.\n");
         return;
     }
-    fputs(sb.GetString(), f);
+    for (int i = 0; i < MAX_PROFILES; i++) {
+        fprintf(f, "[PROFILE_%d]\n", i);
+        fprintf(f, "EXISTS=%d\n", profiles[i].exists ? 1 : 0);
+        fprintf(f, "NAME=%s\n", profiles[i].name);
+        fprintf(f, "LEVEL=%d\n", profiles[i].level);
+        fprintf(f, "SCORE=%d\n\n", profiles[i].score);
+    }
     fclose(f);
 }
 
@@ -99,37 +77,50 @@ static void Profiles_Load() {
     if (fopen_s(&f, PROFILES_FILE, "r") != 0 || !f)
         return; // No save file yet - keep the defaults
 
-    char readBuf[512]{};
-    FileReadStream stream(f, readBuf, sizeof(readBuf));
-    Document doc;
-    doc.ParseStream(stream);
+    int slotIndex = -1;
+    char line[128] = "";
+
+    while (fgets(line, sizeof(line), f)) {
+        // Strip trailing newline/carriage return
+        int len = (int)strlen(line);
+        if (len > 0 && line[len - 1] == '\n') line[--len] = '\0';
+        if (len > 0 && line[len - 1] == '\r') line[--len] = '\0';
+
+        // Skip blank lines
+        if (len == 0) continue;
+
+        // Section header e.g. [PROFILE_0]
+        if (line[0] == '[') {
+            sscanf_s(line, "[PROFILE_%d]", &slotIndex);
+            continue;
+        }
+
+        // Must have a valid slot before reading keys
+        if (slotIndex < 0 || slotIndex >= MAX_PROFILES) continue;
+
+        // Find '=' sign
+        char* eq = strchr(line, '=');
+        if (!eq) continue;
+
+        // Split into key and value
+        *eq = '\0';
+        const char* key = line;
+        const char* value = eq + 1;
+
+        if (strcmp(key, "EXISTS") == 0) {
+            profiles[slotIndex].exists = (atoi(value) != 0);
+        }
+        else if (strcmp(key, "NAME") == 0) {
+            strncpy_s(profiles[slotIndex].name, PROFILE_NAME_MAX_LEN, value, _TRUNCATE);
+        }
+        else if (strcmp(key, "LEVEL") == 0) {
+            profiles[slotIndex].level = atoi(value);
+        }
+        else if (strcmp(key, "SCORE") == 0) {
+            profiles[slotIndex].score = atoi(value);
+        }
+    }
     fclose(f);
-
-    if (doc.HasParseError() || !doc.IsArray()) {
-        OutputDebugStringA("ERROR: profiles.json is malformed.\n");
-        return;
-    }
-
-    for (auto& entry : doc.GetArray()) {
-        if (!entry.IsObject()) continue;
-
-        if (!entry.HasMember("slot") || !entry["slot"].IsInt()) continue;
-        int slot = entry["slot"].GetInt();
-        if (slot < 0 || slot >= MAX_PROFILES) continue;
-
-        if (entry.HasMember("exists") && entry["exists"].IsBool())
-            profiles[slot].exists = entry["exists"].GetBool();
-
-        if (entry.HasMember("name") && entry["name"].IsString())
-            strncpy_s(profiles[slot].name, PROFILE_NAME_MAX_LEN,
-                entry["name"].GetString(), _TRUNCATE);
-
-        if (entry.HasMember("level") && entry["level"].IsInt())
-            profiles[slot].level = entry["level"].GetInt();
-
-        if (entry.HasMember("score") && entry["score"].IsInt())
-            profiles[slot].score = entry["score"].GetInt();
-    }
 }
 
 // UI Layout constants - Centered
