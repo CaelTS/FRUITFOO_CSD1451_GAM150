@@ -2,9 +2,11 @@
 #include "AEEngine.h"
 #include "Transition.h"
 #include "GameStateManager.h"
+#include "StartScreen.h"
 
 extern AEGfxVertexList* g_pMeshFullScreen;
 extern s8 fontId;
+extern int currentState;
 
 // UI Textures
 AEGfxTexture* pTexButtonLong = NULL;
@@ -336,11 +338,10 @@ void ProfileScreen_Update() {
     // --- Normal update: Escape to go back ---
     // Guard against popupActive so closing the popup's ESC never leaks through
     if (!popupActive && AEInputCheckTriggered(AEVK_ESCAPE)) {
-        // In selectMode we came from the start screen, go back there
-        nextState = selectMode ? GS_START_SCREEN : GS_MAIN_SCREEN;
-        selectMode = false;
+        StartScreen_Init();
+        nextState = GS_START_SCREEN;
+        selectMode = false;  // Reset select mode
     }
-
     // Mouse position in NDC
     s32 mouseX, mouseY;
     AEInputGetCursorPosition(&mouseX, &mouseY);

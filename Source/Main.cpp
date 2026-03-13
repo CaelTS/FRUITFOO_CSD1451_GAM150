@@ -758,6 +758,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		// Check for ESCAPE key to exit
 		// Do NOT exit if the profile name popup is currently open
 		if ((AEInputCheckTriggered(AEVK_ESCAPE) && !ProfileScreen_IsPopupActive()
+			&& currentState != GS_MAIN_SCREEN  // Don't allow ESC in main screen
 			&& currentState != GS_NEXT_SCREEN) || 0 == AESysDoesWindowExist()) {
 			nextState = GS_EXIT;
 		}

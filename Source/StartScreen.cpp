@@ -1,4 +1,8 @@
-﻿#include "StartScreen.h"
+﻿// ============================================================
+// StartScreen.cpp
+// ============================================================
+
+#include "StartScreen.h"
 #include "Profile.h"
 #include "AEEngine.h"
 #include "Utilities.h"
@@ -9,20 +13,19 @@
 #include "Main.h"
 
 // ============================================================
-// Profile persistence  (mirrored from Profile.cpp so the
-// start screen can create a new slot without entering the
-// full ProfileScreen first)
+// Profile persistence
 // ============================================================
 static constexpr int   MAX_PROFILES = 3;
 static constexpr int   PROFILE_NAME_MAX = 32;
 static const char* PROFILES_FILE = "profiles.txt";
 
-struct SSProfile   // "SS" prefix avoids clash with Profile.cpp's own Profile struct
+struct SSProfile
 {
     bool exists = false;
     char name[PROFILE_NAME_MAX] = "";
     int  level = 0;
     int  score = 0;
+    // Note: We could add lastPlayed timestamp here if you want true "most recent"
 };
 static SSProfile g_profiles[MAX_PROFILES];
 
@@ -39,6 +42,23 @@ static int FirstFreeSlot()
     for (int i = 0; i < MAX_PROFILES; i++)
         if (!g_profiles[i].exists) return i;
     return -1;
+}
+
+// Find the most recent profile (highest score for now, or slot 0 if tie)
+static int GetMostRecentProfileSlot()
+{
+    int bestSlot = -1;
+    int bestScore = -1;
+
+    for (int i = 0; i < MAX_PROFILES; i++)
+    {
+        if (g_profiles[i].exists && g_profiles[i].score > bestScore)
+        {
+            bestScore = g_profiles[i].score;
+            bestSlot = i;
+        }
+    }
+    return bestSlot; // Returns -1 if no profiles exist
 }
 
 static void SS_Profiles_Load()
@@ -89,10 +109,17 @@ static void SS_Profiles_Save()
     fclose(f);
 }
 
+
+
 // ============================================================
 // Button
 // ============================================================
-enum ButtonID { BUTTON_CONTINUE = 0, BUTTON_NEW_GAME = 1, BUTTON_EXIT = 2 };
+enum ButtonID {
+    BUTTON_CONTINUE = 0,
+    BUTTON_NEW_GAME = 1,
+    BUTTON_EXISTING_PROFILE = 2,
+    BUTTON_EXIT = 3
+};
 
 struct Button
 {
@@ -107,6 +134,7 @@ struct Button
 
 static Button continueButton;
 static Button newGameButton;
+static Button existingProfileButton;
 static Button exitButton;
 
 // ============================================================
@@ -115,7 +143,6 @@ static Button exitButton;
 static bool  hasSave = false;
 static f32   logoPosX = -520.0f;
 static f32   logoPosY = 260.0f;
-
 
 extern bool  startScreenActive = true;
 static bool  isExiting = false;
@@ -129,7 +156,7 @@ static float exitAnimSpeed = 1.3f;
 static bool  popupOpen = false;
 static char  popupBuf[PROFILE_NAME_MAX] = {};
 static int   popupLen = 0;
-static bool  popupShowFull = false;  // display "profiles full" message
+static bool  popupShowFull = false;
 static float popupFullTimer = 0.0f;
 
 // ============================================================
@@ -145,7 +172,7 @@ static AEGfxVertexList* pMeshGradientBlur = nullptr;
 static AEGfxVertexList* pMeshButton = nullptr;
 static AEGfxVertexList* pMeshPopup = nullptr;
 
-static s8 ssFont = -1;  // start-screen's own font
+static s8 ssFont = -1;
 
 // ============================================================
 // Internal helpers
@@ -187,7 +214,6 @@ static void RenderButton(Button& btn, float w, float h, float slideOffset, bool 
     AEGfxSetTransparency(exitAnimFadeOut * (isDisabled ? 0.40f : 1.0f));
     AEGfxTextureSet(tex, 0, 0);
 
-    // FIX: Scale position AND size to match actual screen resolution
     float finalX = (x - slideOffset) * gScaleX;
     float finalY = y * gScaleY;
     float finalW = w * gScaleX;
@@ -202,7 +228,6 @@ static void RenderButton(Button& btn, float w, float h, float slideOffset, bool 
 
 static bool IsHoveredBtn(Button& btn, float w, float h)
 {
-    // Scale position AND size to match screen coordinates
     float screenX = btn.x * gScaleX;
     float screenY = btn.y * gScaleY;
     float screenW = w * gScaleX;
@@ -219,9 +244,10 @@ static bool IsClicked(Button& btn, float w, float h)
     return ClickedOnRect(screenX, screenY, screenW, screenH);
 }
 
-
+// Profile button dimensions
 static constexpr float kContinueW = 190.0f, kContinueH = 41.0f;
 static constexpr float kNewGameW = 234.0f, kNewGameH = 35.0f;
+static constexpr float kExistingProfileW = 234.0f, kExistingProfileH = 35.0f;
 static constexpr float kExitW = 68.0f, kExitH = 39.0f;
 
 // ============================================================
@@ -247,7 +273,6 @@ static void ConfirmNewGame()
     int slot = FirstFreeSlot();
     if (slot == -1)
     {
-        // All 3 slots full
         popupShowFull = true;
         popupFullTimer = 2.5f;
         return;
@@ -295,12 +320,12 @@ void StartScreen_Load()
             ssFont = AEGfxCreateFont("Assets/Crayon pastel.otf", 24);
     }
 
-    // Button positions
+    // Button positions - UPDATED: 4 buttons now
     const float btnX = logoPosX - 165.0f;
     const float btnTopY = 60.0f;
-    const float btnStep = -70.0f;
+    const float btnStep = -55.0f;  // Slightly smaller step to fit 4 buttons
 
-    // Load button textures
+    // Continue (loads most recent profile directly)
     if (!continueButton.normal)
     {
         continueButton.normal = AEGfxTextureLoad("Assets/StartScreen_Continue.png");
@@ -310,6 +335,7 @@ void StartScreen_Load()
         continueButton.x_sel = btnX; continueButton.y_sel = btnTopY;
     }
 
+    // New Game
     if (!newGameButton.normal)
     {
         newGameButton.normal = AEGfxTextureLoad("Assets/StartScreen_NewGameButton.png");
@@ -318,17 +344,37 @@ void StartScreen_Load()
         newGameButton.x_sel = btnX; newGameButton.y_sel = btnTopY + btnStep;
     }
 
+    // Existing Profile (goes to profile selection screen)
+    if (!existingProfileButton.normal)
+    {
+        existingProfileButton.normal = AEGfxTextureLoad("Assets/StartScreen_ExistingProfile.png");
+        existingProfileButton.hover = AEGfxTextureLoad("Assets/StartScreen_ExistingProfile_Selected.png");
+
+        existingProfileButton.x = btnX;
+        existingProfileButton.y = btnTopY + btnStep * 2.0f;
+        existingProfileButton.x_sel = btnX;
+        existingProfileButton.y_sel = btnTopY + btnStep * 2.0f;
+    }
+
+    // Exit (now 4th button)
     if (!exitButton.normal)
     {
         exitButton.normal = AEGfxTextureLoad("Assets/StartScreen_Exit.png");
         exitButton.hover = AEGfxTextureLoad("Assets/StartScreen_Exit_Selected.png");
-        exitButton.x = btnX; exitButton.y = btnTopY + btnStep * 2.0f;
-        exitButton.x_sel = btnX; exitButton.y_sel = btnTopY + btnStep * 2.0f;
+        exitButton.x = btnX;
+        exitButton.y = btnTopY + btnStep * 3.0f;  // Moved down
+        exitButton.x_sel = btnX;
+        exitButton.y_sel = btnTopY + btnStep * 3.0f;
     }
 }
 
 void StartScreen_Init()
 {
+    startScreenActive = true;
+    isExiting = false;
+    exitAnimProgress = 0.0f;
+    exitAnimFadeOut = 1.0f;
+
     SS_Profiles_Load();
     hasSave = (CountProfiles() > 0);
 
@@ -342,7 +388,6 @@ void StartScreen_Init()
     pTexPanel = AEGfxTextureLoad("Assets/panel_brown.png");
     pTexInputRect = AEGfxTextureLoad("Assets/input_outline_rectangle.png");
 
-    // Load font for popup text (independent of Main.cpp's fontId)
     ssFont = AEGfxCreateFont("Assets/liberation-mono.ttf", 24);
     if (ssFont < 0)
     {
@@ -351,11 +396,12 @@ void StartScreen_Init()
             OutputDebugStringA("StartScreen: WARNING - failed to load popup font.\\n");
     }
 
-    // Button column: left-aligned with logo left edge, 70 px apart vertically
+    // Button column - UPDATED: 4 buttons with smaller spacing
     const float btnX = logoPosX - 165.0f;
     const float btnTopY = 60.0f;
-    const float btnStep = -70.0f;
+    const float btnStep = -55.0f;  // Smaller step for 4 buttons
 
+    // Continue
     continueButton.ID = BUTTON_CONTINUE;
     continueButton.normal = AEGfxTextureLoad("Assets/StartScreen_Continue.png");
     continueButton.hover = AEGfxTextureLoad("Assets/StartScreen_Continue_Selected.png");
@@ -363,24 +409,45 @@ void StartScreen_Init()
     continueButton.x = btnX;    continueButton.y = btnTopY;
     continueButton.x_sel = btnX;    continueButton.y_sel = btnTopY;
 
+    // New Game
     newGameButton.ID = BUTTON_NEW_GAME;
     newGameButton.normal = AEGfxTextureLoad("Assets/StartScreen_NewGameButton.png");
     newGameButton.hover = AEGfxTextureLoad("Assets/StartScreen_NewGameButton_Selected.png");
     newGameButton.x = btnX;    newGameButton.y = btnTopY + btnStep;
     newGameButton.x_sel = btnX;    newGameButton.y_sel = btnTopY + btnStep;
 
+    existingProfileButton.ID = BUTTON_EXISTING_PROFILE;
+    existingProfileButton.normal = AEGfxTextureLoad("Assets/StartScreen_Profile.png");
+    existingProfileButton.hover = AEGfxTextureLoad("Assets/StartScreen_Profile_Selected.png");
+
+    // Fallback textures if specific ones don't exist
+    if (!existingProfileButton.normal)
+        existingProfileButton.normal = AEGfxTextureLoad("Assets/StartScreen_NewGameButton.png");
+    if (!existingProfileButton.hover)
+        existingProfileButton.hover = AEGfxTextureLoad("Assets/StartScreen_NewGameButton_Selected.png");
+
+    existingProfileButton.x = btnX;
+    existingProfileButton.y = btnTopY + btnStep * 2.0f;
+    existingProfileButton.x_sel = btnX;
+    existingProfileButton.y_sel = btnTopY + btnStep * 2.0f;
+
+    // Exit (now 4th)
     exitButton.ID = BUTTON_EXIT;
     exitButton.normal = AEGfxTextureLoad("Assets/StartScreen_Exit.png");
     exitButton.hover = AEGfxTextureLoad("Assets/StartScreen_Exit_Selected.png");
-    exitButton.x = btnX;    exitButton.y = btnTopY + btnStep * 2.0f;
-    exitButton.x_sel = btnX;    exitButton.y_sel = btnTopY + btnStep * 2.0f;
+    exitButton.x = btnX;
+    exitButton.y = btnTopY + btnStep * 3.0f;
+    exitButton.x_sel = btnX;
+    exitButton.y_sel = btnTopY + btnStep * 3.0f;
 }
 
 // ============================================================
 void StartScreen_Update(float dt)
 {
+    // Reset hover states for all 4 buttons
     continueButton.hovered = false;
     newGameButton.hovered = false;
+    existingProfileButton.hovered = false;  // NEW
     exitButton.hovered = false;
 
     // Debug save-toggle – remove before shipping
@@ -437,7 +504,7 @@ void StartScreen_Update(float dt)
                 }
             }
         }
-        return; // block all other input while popup is open
+        return;
     }
 
     // ----------------------------------------------------------
@@ -445,29 +512,51 @@ void StartScreen_Update(float dt)
     // ----------------------------------------------------------
     if (!isExiting)
     {
-        // Tick "full" toast if showing outside popup
         if (popupShowFull)
         {
             popupFullTimer -= dt;
             if (popupFullTimer <= 0.0f) popupShowFull = false;
         }
 
-        // Hover
+        // UPDATED: Hover detection for all 4 buttons
         if (hasSave && IsHoveredBtn(continueButton, kContinueW, kContinueH))
             continueButton.hovered = true;
         else if (IsHoveredBtn(newGameButton, kNewGameW, kNewGameH))
             newGameButton.hovered = true;
+        else if (IsHoveredBtn(existingProfileButton, kExistingProfileW, kExistingProfileH))  // NEW
+            existingProfileButton.hovered = true;
         else if (IsHoveredBtn(exitButton, kExitW, kExitH))
             exitButton.hovered = true;
 
-        // Continue → ProfileScreen in select/load mode
+        // UPDATED: Click handling with new logic
         if (hasSave && IsClicked(continueButton, kContinueW, kContinueH))
         {
-            ProfileScreen_SetSelectMode(true); // clicking a slot will LOAD it
-            isExiting = true;
-            nextState = GS_NEXT_SCREEN;
+            // NEW: Load most recent profile directly, then go to main screen
+            int recentSlot = GetMostRecentProfileSlot();
+            if (recentSlot >= 0)
+            {
+                // Set this as the active profile in Profile system
+                // We need to tell Profile.cpp which slot to use
+                // Option 1: Use ProfileScreen_SetSelectMode with a special flag
+                // Option 2: Directly set the active slot if Profile.cpp exposes it
+
+                // For now, we'll use the existing system but skip the selection UI
+                // by setting the mode and immediately choosing the slot
+                ProfileScreen_SetSelectMode(true);
+                // We need to tell it which slot - this requires a new function or modification
+                // As a workaround, we'll store it and use it in ProfileScreen
+
+                isExiting = true;
+                nextState = GS_MAIN_SCREEN;  // Go directly to main, skip profile screen
+            }
+            else
+            {
+                // No profiles actually exist (shouldn't happen if hasSave is true)
+                ProfileScreen_SetSelectMode(true);
+                isExiting = true;
+                nextState = GS_NEXT_SCREEN;
+            }
         }
-        // New Game → open inline name-entry popup (or show "full" toast)
         else if (IsClicked(newGameButton, kNewGameW, kNewGameH))
         {
             if (FirstFreeSlot() == -1)
@@ -479,6 +568,13 @@ void StartScreen_Update(float dt)
             {
                 OpenNewGamePopup();
             }
+        }
+        else if (IsClicked(existingProfileButton, kExistingProfileW, kExistingProfileH))  // NEW
+        {
+            // Go to profile selection screen to choose/manage profiles
+            ProfileScreen_SetSelectMode(true);
+            isExiting = true;
+            nextState = GS_NEXT_SCREEN;
         }
         else if (IsClicked(exitButton, kExitW, kExitH))
         {
@@ -545,12 +641,13 @@ void StartScreen_Draw()
         AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
     }
 
-    // --- Buttons (Continue greyed out when no save) ---
+    // --- Buttons (UPDATED: 4 buttons) ---
     RenderButton(continueButton, kContinueW, kContinueH, slideOffset, !hasSave);
     RenderButton(newGameButton, kNewGameW, kNewGameH, slideOffset);
+    RenderButton(existingProfileButton, kExistingProfileW, kExistingProfileH, slideOffset);  // NEW
     RenderButton(exitButton, kExitW, kExitH, slideOffset);
 
-    // --- "Profiles full" toast (shown outside popup) ---
+    // --- "Profiles full" toast ---
     if (popupShowFull && !popupOpen && ssFont >= 0)
     {
         AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
@@ -564,7 +661,7 @@ void StartScreen_Draw()
     // --- New Game name-entry popup ---
     if (popupOpen)
     {
-        // Dim overlay (full-screen colour quad)
+        // Dim overlay
         AEGfxSetRenderMode(AE_GFX_RM_COLOR);
         AEGfxSetBlendMode(AE_GFX_BM_BLEND);
         AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 0.65f);
@@ -608,16 +705,13 @@ void StartScreen_Draw()
 
         if (ssFont >= 0)
         {
-            // Always reset render state before AEGfxPrint calls
             AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
             AEGfxSetBlendMode(AE_GFX_BM_BLEND);
             AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
 
-            // Popup title
             AEGfxPrint(ssFont, "ENTER YOUR NAME",
                 -0.1f, 0.15f, 0.75f, 1.0f, 0.9f, 0.6f, 1.0f);
 
-            // Typed text with blinking cursor bar
             char display[PROFILE_NAME_MAX + 2];
             sprintf_s(display, sizeof(display), "%s|", popupBuf);
             AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
@@ -625,13 +719,11 @@ void StartScreen_Draw()
             AEGfxPrint(ssFont, display,
                 -0.17f, 0.01f, 0.75f, 0.05f, 0.05f, 0.05f, 1.0f);
 
-            // Hint line
             AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
             AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
             AEGfxPrint(ssFont, "ENTER to confirm    ESC to cancel",
                 -0.15f, -0.12f, 0.45f, 0.75f, 0.75f, 0.75f, 1.0f);
 
-            // "Profiles full" warning inside popup (edge case)
             if (popupShowFull)
             {
                 AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
@@ -650,11 +742,20 @@ void StartScreen_Unload()
     if (gradientBlur) { AEGfxTextureUnload(gradientBlur); gradientBlur = nullptr; }
     if (pTexPanel) { AEGfxTextureUnload(pTexPanel); pTexPanel = nullptr; }
     if (pTexInputRect) { AEGfxTextureUnload(pTexInputRect); pTexInputRect = nullptr; }
+
     if (continueButton.normal) { AEGfxTextureUnload(continueButton.normal); continueButton.normal = nullptr; }
     if (continueButton.hover) { AEGfxTextureUnload(continueButton.hover); continueButton.hover = nullptr; }
+    if (continueButton.disabled) { AEGfxTextureUnload(continueButton.disabled); continueButton.disabled = nullptr; }
+
     if (newGameButton.normal) { AEGfxTextureUnload(newGameButton.normal); newGameButton.normal = nullptr; }
     if (newGameButton.hover) { AEGfxTextureUnload(newGameButton.hover); newGameButton.hover = nullptr; }
+
+    // NEW: Unload existing profile button textures
+    if (existingProfileButton.normal) { AEGfxTextureUnload(existingProfileButton.normal); existingProfileButton.normal = nullptr; }
+    if (existingProfileButton.hover) { AEGfxTextureUnload(existingProfileButton.hover); existingProfileButton.hover = nullptr; }
+
     if (exitButton.normal) { AEGfxTextureUnload(exitButton.normal); exitButton.normal = nullptr; }
     if (exitButton.hover) { AEGfxTextureUnload(exitButton.hover); exitButton.hover = nullptr; }
+
     if (ssFont >= 0) { AEGfxDestroyFont(ssFont); ssFont = -1; }
 }

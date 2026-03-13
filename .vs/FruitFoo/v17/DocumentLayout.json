@@ -3,6 +3,10 @@
   "WorkspaceRootPath": "C:\\Github\\FRUITFOO_CSD1451_GAM150\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\Fruitfoo.vcxproj|C:\\Github\\FRUITFOO_CSD1451_GAM150\\Source\\Profile.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\Fruitfoo.vcxproj|solutionrelative:Source\\Profile.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\Fruitfoo.vcxproj|C:\\Github\\FRUITFOO_CSD1451_GAM150\\Source\\StartScreen.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\Fruitfoo.vcxproj|solutionrelative:Source\\StartScreen.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
@@ -11,36 +15,32 @@
       "RelativeMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\Fruitfoo.vcxproj|solutionrelative:Source\\StartScreen.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\Fruitfoo.vcxproj|C:\\Github\\FRUITFOO_CSD1451_GAM150\\Source\\Main.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\Fruitfoo.vcxproj|solutionrelative:Source\\Main.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\Fruitfoo.vcxproj|C:\\Github\\FRUITFOO_CSD1451_GAM150\\Source\\Transition.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\Fruitfoo.vcxproj|solutionrelative:Source\\Transition.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+      "AbsoluteMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\Fruitfoo.vcxproj|C:\\Github\\FRUITFOO_CSD1451_GAM150\\Source\\Profile.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\Fruitfoo.vcxproj|solutionrelative:Source\\Profile.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\Fruitfoo.vcxproj|C:\\Github\\FRUITFOO_CSD1451_GAM150\\Source\\SpawnFruits.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\Fruitfoo.vcxproj|solutionrelative:Source\\SpawnFruits.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\FruitFoo.vcxproj|C:\\Github\\FRUITFOO_CSD1451_GAM150\\Source\\GameStateManager.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\FruitFoo.vcxproj|solutionrelative:Source\\GameStateManager.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\Fruitfoo.vcxproj|C:\\Github\\FRUITFOO_CSD1451_GAM150\\Source\\GameStateManager.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\Fruitfoo.vcxproj|solutionrelative:Source\\GameStateManager.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\Fruitfoo.vcxproj|C:\\Github\\FRUITFOO_CSD1451_GAM150\\Source\\Profile.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\Fruitfoo.vcxproj|solutionrelative:Source\\Profile.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\Fruitfoo.vcxproj|C:\\Github\\FRUITFOO_CSD1451_GAM150\\Source\\Profile.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\Fruitfoo.vcxproj|solutionrelative:Source\\Profile.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+      "AbsoluteMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\Fruitfoo.vcxproj|C:\\Github\\FRUITFOO_CSD1451_GAM150\\Source\\Main.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\Fruitfoo.vcxproj|solutionrelative:Source\\Main.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\Fruitfoo.vcxproj|C:\\Github\\FRUITFOO_CSD1451_GAM150\\Source\\SpawnFruits.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\Fruitfoo.vcxproj|solutionrelative:Source\\SpawnFruits.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\Fruitfoo.vcxproj|C:\\Github\\FRUITFOO_CSD1451_GAM150\\Source\\Transition.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\Fruitfoo.vcxproj|solutionrelative:Source\\Transition.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\FruitFoo.vcxproj|C:\\Github\\FRUITFOO_CSD1451_GAM150\\Source\\GameStateManager.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\FruitFoo.vcxproj|solutionrelative:Source\\GameStateManager.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{44A12DCF-4059-446D-BC27-05BA63EC68C1}|FruitFoo\\Fruitfoo.vcxproj|C:\\Github\\FRUITFOO_CSD1451_GAM150\\Source\\UI.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
@@ -60,7 +60,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 11,
+          "SelectedChildIndex": 9,
           "Children": [
             {
               "$type": "Bookmark",
@@ -76,7 +76,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 8,
               "Title": "Transition.h",
               "DocumentMoniker": "C:\\Github\\FRUITFOO_CSD1451_GAM150\\Source\\Transition.h",
               "RelativeDocumentMoniker": "Source\\Transition.h",
@@ -95,14 +95,14 @@
               "RelativeDocumentMoniker": "Source\\SpawnFruits.h",
               "ToolTip": "C:\\Github\\FRUITFOO_CSD1451_GAM150\\Source\\SpawnFruits.h",
               "RelativeToolTip": "Source\\SpawnFruits.h",
-              "ViewState": "AgIAAAoAAAAAAAAAAAAawBoAAAAFAAAAAAAAAA==",
+              "ViewState": "AgIAAAEAAAAAAAAAAAAUwB0AAAAXAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
               "WhenOpened": "2026-03-13T13:46:09.828Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 5,
               "Title": "GameStateManager.h",
               "DocumentMoniker": "C:\\Github\\FRUITFOO_CSD1451_GAM150\\Source\\GameStateManager.h",
               "RelativeDocumentMoniker": "Source\\GameStateManager.h",
@@ -115,13 +115,13 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 2,
               "Title": "StartScreen.h",
               "DocumentMoniker": "C:\\Github\\FRUITFOO_CSD1451_GAM150\\Source\\StartScreen.h",
               "RelativeDocumentMoniker": "Source\\StartScreen.h",
               "ToolTip": "C:\\Github\\FRUITFOO_CSD1451_GAM150\\Source\\StartScreen.h",
               "RelativeToolTip": "Source\\StartScreen.h",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABoAAAAiAAAAAAAAAA==",
+              "ViewState": "AgIAAAkAAAAAAAAAAAAAACEAAAAXAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
               "WhenOpened": "2026-03-13T13:00:29.467Z",
               "EditorCaption": ""
@@ -140,33 +140,33 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 9,
+              "DocumentIndex": 7,
               "Title": "SpawnFruits.cpp",
               "DocumentMoniker": "C:\\Github\\FRUITFOO_CSD1451_GAM150\\Source\\SpawnFruits.cpp",
               "RelativeDocumentMoniker": "Source\\SpawnFruits.cpp",
               "ToolTip": "C:\\Github\\FRUITFOO_CSD1451_GAM150\\Source\\SpawnFruits.cpp",
               "RelativeToolTip": "Source\\SpawnFruits.cpp",
-              "ViewState": "AgIAAGwAAAAAAAAAAAAAADkAAAAlAAAAAAAAAA==",
+              "ViewState": "AgIAAFoAAAAAAAAAAAAAADkAAAAlAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
               "WhenOpened": "2026-03-12T12:04:45.304Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 0,
               "Title": "Profile.cpp",
               "DocumentMoniker": "C:\\Github\\FRUITFOO_CSD1451_GAM150\\Source\\Profile.cpp",
               "RelativeDocumentMoniker": "Source\\Profile.cpp",
-              "ToolTip": "C:\\Github\\FRUITFOO_CSD1451_GAM150\\Source\\Profile.cpp",
-              "RelativeToolTip": "Source\\Profile.cpp",
-              "ViewState": "AgIAAHUBAAAAAAAAAAAAAFMBAAAfAAAAAAAAAA==",
+              "ToolTip": "C:\\Github\\FRUITFOO_CSD1451_GAM150\\Source\\Profile.cpp*",
+              "RelativeToolTip": "Source\\Profile.cpp*",
+              "ViewState": "AgIAAEUBAAAAAAAAAAAAAFABAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
               "WhenOpened": "2026-03-12T12:03:28.113Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 3,
               "Title": "Profile.h",
               "DocumentMoniker": "C:\\Github\\FRUITFOO_CSD1451_GAM150\\Source\\Profile.h",
               "RelativeDocumentMoniker": "Source\\Profile.h",
@@ -179,26 +179,26 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "StartScreen.cpp",
               "DocumentMoniker": "C:\\Github\\FRUITFOO_CSD1451_GAM150\\Source\\StartScreen.cpp",
               "RelativeDocumentMoniker": "Source\\StartScreen.cpp",
-              "ToolTip": "C:\\Github\\FRUITFOO_CSD1451_GAM150\\Source\\StartScreen.cpp",
-              "RelativeToolTip": "Source\\StartScreen.cpp",
-              "ViewState": "AgIAAL0AAAAAAAAAAAAAANEAAAAiAAAAAAAAAA==",
+              "ToolTip": "C:\\Github\\FRUITFOO_CSD1451_GAM150\\Source\\StartScreen.cpp*",
+              "RelativeToolTip": "Source\\StartScreen.cpp*",
+              "ViewState": "AgIAAIcCAAAAAAAAAAAAAPgCAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
               "WhenOpened": "2026-03-12T11:25:49.677Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 6,
               "Title": "Main.cpp",
               "DocumentMoniker": "C:\\Github\\FRUITFOO_CSD1451_GAM150\\Source\\Main.cpp",
               "RelativeDocumentMoniker": "Source\\Main.cpp",
               "ToolTip": "C:\\Github\\FRUITFOO_CSD1451_GAM150\\Source\\Main.cpp",
               "RelativeToolTip": "Source\\Main.cpp",
-              "ViewState": "AgIAACQAAAAAAAAAAAAAAKIBAAAGAAAAAAAAAA==",
+              "ViewState": "AgIAAAsDAAAAAAAAAAArwCEDAAAYAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
               "WhenOpened": "2026-03-12T08:47:44.82Z",
               "EditorCaption": ""
@@ -217,13 +217,13 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 9,
               "Title": "GameStateManager.cpp",
               "DocumentMoniker": "C:\\Github\\FRUITFOO_CSD1451_GAM150\\Source\\GameStateManager.cpp",
               "RelativeDocumentMoniker": "Source\\GameStateManager.cpp",
               "ToolTip": "C:\\Github\\FRUITFOO_CSD1451_GAM150\\Source\\GameStateManager.cpp",
               "RelativeToolTip": "Source\\GameStateManager.cpp",
-              "ViewState": "AgIAACcAAAAAAAAAAAAwwCsAAABZAAAAAAAAAA==",
+              "ViewState": "AgIAADEAAAAAAAAAAAAAADkAAAAZAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
               "WhenOpened": "2026-03-12T08:47:44.931Z",
               "EditorCaption": ""
