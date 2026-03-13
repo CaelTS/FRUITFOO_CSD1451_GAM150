@@ -1,8 +1,10 @@
 #include "UI.h"
 #include "Farm.h"
+#include "Economy.h"
 #include "AEEngine.h"
 #include <vector>
 #include <iostream>
+#include <algorithm>
 
 extern AEGfxVertexList* g_pMeshFullScreen;
 extern s8 fontId;
@@ -13,8 +15,8 @@ static bool seedsPopupOpen = false;
 
 static int activePopupIndex = -1;
 static int selectedSeed = -1;
-int hoveredSeed = -1;   // purely for highlight
-int infoSeed = -1;         // which seed info panel is showing
+static int hoveredSeed = -1;   // purely for highlight
+static int infoSeed = -1;         // which seed info panel is showing
 static int hoveredPlotIndex = -1;
 static int activePlotIndex = -1;
 
@@ -60,17 +62,40 @@ struct MenuButton
 static std::vector<MenuButton> menuButtons;
 static MenuButton plotPlusButton;
 
+// Crate bins
+extern std::vector<FruitBasket> gFruitBaskets;
+
+static CrateLayoutConfig gCrateCfg{};
+static bool gCrateCfgInitialized = false;
+
+
 // ------------------------
 // Upgrades
 // ------------------------
 struct Upgrade { std::string name; int cost; bool purchased; };
 static std::vector<Upgrade> upgrades;
 static int upgradesStartIndex = 0;
+
 static const int MAX_VISIBLE_UPGRADES = 3;
-static const float UPGRADES_PANEL_W = 450.0f;
-static const float UPGRADES_PANEL_H = 280.0f;
-static const float UPGRADES_PANEL_X = -530.0f;
-static const float UPGRADES_PANEL_Y = -160.0f;
+static const float UP_BOX_X = -480.0f;   // center X of the Upgrades box
+static const float UP_BOX_Y = -180.0f;   // center Y of the Upgrades box 
+static const float UP_BOX_W = 450.0f;    // width  of the Upgrades box interior
+static const float UP_BOX_H = 280.0f;    // height of the Upgrades box interior
+
+// List layout inside upgrade box 
+static const float UP_LIST_TOP_OFFSET = +80.0f; // distance from center Y to first row center (positive is up)
+static const float UP_ROW_SPACING = 70.0f;  // vertical distance between row centers
+static const float UP_ROW_W_MARGIN = 20.0f;  // left/right padding from box edge
+static const float UP_ROW_H = 70.0f;  // row height (for hover highlight)
+
+// Upgrades highlight tuning
+
+static const float UP_HOVER_INSET_L = 15.0f;  // px inset from left edge of the row
+static const float UP_HOVER_INSET_R = 12.0f;  // px inset from right edge of the row 
+static const float UP_HOVER_INSET_TB = 8.0f;   // px inset from top/bottom (bigger = thinner bar)
+static const float UP_HOVER_Y_NUDGE = 15.0f;  // px vertical nudge (negative = slightly lower)
+static const float UP_HOVER_X_OFFSET = -50.0f;  // px horizontal nudge without moving text (negative = left)
+
 
 
 void UI_Init()
@@ -313,48 +338,45 @@ void UI_UpdateButtons()
     }
 
     // --- Upgrades ---
-    float upgradesPanelW = UPGRADES_PANEL_W;
-    float panelX = UPGRADES_PANEL_X;
-    float panelY = UPGRADES_PANEL_Y;
 
-    float spacingUp = 70.0f;
-    float startYUp = panelY + 60.0f;   // SAME AS DRAW
+    const float panelX = UP_BOX_X;
+    const float panelY = UP_BOX_Y;
+    const float upgradesW = UP_BOX_W;
 
-    int endIndex = upgradesStartIndex + MAX_VISIBLE_UPGRADES;
-    if (endIndex > (int)upgrades.size())
-        endIndex = (int)upgrades.size();
+    const float startYUp = panelY + UP_LIST_TOP_OFFSET;
+    const float spacingUp = UP_ROW_SPACING;
+    const float boxW = upgradesW - (2.0f * UP_ROW_W_MARGIN);
+    const float boxH = UP_ROW_H;
 
     int shownUp = 0;
-    for (int i = upgradesStartIndex; i < upgrades.size() && shownUp < MAX_VISIBLE_UPGRADES; ++i)
+
+    for (size_t i = upgradesStartIndex; i < upgrades.size() && shownUp < MAX_VISIBLE_UPGRADES; ++i)
     {
-        auto& u = upgrades[i];
-        if (u.purchased) continue;  // skip purchased upgrades
+        auto& u = upgrades[(int)i];
+        if (u.purchased) continue;
 
-        float y = startYUp - shownUp * spacingUp;
+        const float rowCenterY = startYUp - shownUp * spacingUp;
 
-        float boxW = upgradesPanelW - 40.0f;
-        float boxH = 50.0f;
+        // Same rect as draw()
+        const float rowW = boxW;
+        const float rowH = boxH;
+        const float hoverW = rowW - (UP_HOVER_INSET_L + UP_HOVER_INSET_R);
+        const float hoverH = rowH - 2.0f * UP_HOVER_INSET_TB;
+        const float hoverX = panelX + 0.5f * (UP_HOVER_INSET_L - UP_HOVER_INSET_R) + UP_HOVER_X_OFFSET;
 
-        bool over =
-            worldX >= panelX - boxW * 0.5f &&
-            worldX <= panelX + boxW * 0.5f &&
-            worldY >= y - boxH * 0.5f &&
-            worldY <= y + boxH * 0.5f;
+        const float hoverY = rowCenterY + UP_HOVER_Y_NUDGE;
+
+        ;
+
+        const bool over =
+            worldX >= hoverX - hoverW * 0.5f && worldX <= hoverX + hoverW * 0.5f &&
+            worldY >= hoverY - hoverH * 0.5f && worldY <= hoverY + hoverH * 0.5f;
 
         if (over && AEInputCheckTriggered(AEVK_LBUTTON))
         {
             u.purchased = true;
-
-            // Only shift list if the last visible upgrade was clicked
-            if (shownUp == MAX_VISIBLE_UPGRADES - 1 &&
-                upgradesStartIndex < upgrades.size() - MAX_VISIBLE_UPGRADES)
-            {
-                upgradesStartIndex++;
-            }
-
-            break;  // stop after one click
+            break;
         }
-
         ++shownUp;
     }
 
@@ -375,12 +397,26 @@ void UI_Draw()
     AEGfxSetColorToMultiply(1, 1, 1, 1);
     AEGfxTextureSet(menuTexture, 0, 0);
 
-    AEMtx33Scale(&scale, 480, 830);
+    AEMtx33Scale(&scale, 480, 850);
     AEMtx33Trans(&trans, -770 + 240, 0);
     AEMtx33Concat(&transform, &trans, &scale);
 
     AEGfxSetTransform(transform.m);
     AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+    // --- Gold number text ---
+    char goldText[32];
+    sprintf_s(goldText, "%d", Economy_GetTotalMoney());
+
+
+    float x = -530.0f / 800.0f;  // normalize X by 800.0f
+    float y = 350.0f / 450.0f;  // normalize Y by 450.0f
+
+    AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+    AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+    AEGfxSetColorToMultiply(0, 0, 0, 1);
+
+    AEGfxPrint(fontId, goldText, x, y, 1.2f, 0, 0, 0, 1);
 
     // --- Menu Buttons ---
     for (auto& button : menuButtons)
@@ -461,23 +497,16 @@ void UI_Draw()
     // Note: Q to close popup is handled in UI_Input(), not here
 
     // --- Upgrades Panel ---
-    float upgradesPanelW = UPGRADES_PANEL_W;
-    float upgradesPanelH = UPGRADES_PANEL_H;
-    float panelX = UPGRADES_PANEL_X;
-    float panelY = UPGRADES_PANEL_Y;
-    AEMtx33Scale(&scale, upgradesPanelW, upgradesPanelH);
-    AEMtx33Trans(&trans, panelX, panelY);
-    AEMtx33Concat(&transform, &trans, &scale);
-    AEGfxSetRenderMode(AE_GFX_RM_COLOR);
-    AEGfxSetColorToMultiply(0.2f, 0.2f, 0.2f, 1.0f);
-    AEGfxSetTransform(transform.m);
-    AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
 
-    // Draw Header
-    float headerX = (panelX - upgradesPanelW * 0.45f) / 800.0f;
-    float headerY = (panelY + upgradesPanelH * 0.5f - 40.0f) / 450.0f;
+    const float panelX = UP_BOX_X;
+    const float panelY = UP_BOX_Y;
+    const float upgradesW = UP_BOX_W;
 
-    AEGfxPrint(fontId, "Upgrades", headerX, headerY, 1.0f, 1, 1, 1, 1);
+    const float startYUp = panelY + UP_LIST_TOP_OFFSET;
+    const float spacingUp = UP_ROW_SPACING;
+    const float boxW = upgradesW - (2.0f * UP_ROW_W_MARGIN);
+    const float boxH = UP_ROW_H;
+
 
     // Draw upgrades text & hover highlight
     int mx, my;
@@ -485,39 +514,39 @@ void UI_Draw()
 
     float worldX = static_cast<float>(mx) - 800.0f;
     float worldY = 450.0f - static_cast<float>(my);
-    float startYUp = panelY + 60.0f;
-    float spacingUp = 70.0f;
+
 
 
     // --- Upgrades Text & Hover Highlight ---
     int visibleSlot = 0;
 
-    for (int i = upgradesStartIndex;
-        i < upgrades.size() && visibleSlot < MAX_VISIBLE_UPGRADES;
-        ++i)
+    for (size_t i = upgradesStartIndex; i < upgrades.size() && visibleSlot < MAX_VISIBLE_UPGRADES; ++i)
     {
-        if (upgrades[i].purchased)
-            continue;  // skip purchased ones
+        if (upgrades[i].purchased) continue;
 
-        float y = startYUp - visibleSlot * spacingUp;
+        const float rowCenterY = startYUp - visibleSlot * spacingUp;
 
-        float boxW = upgradesPanelW - 40.0f;
-        float boxH = 50.0f;
+        // Final hover rect derived from your boxW/boxH + insets/offsets
+        const float rowW = boxW;
+        const float rowH = boxH;
+        const float hoverW = rowW - (UP_HOVER_INSET_L + UP_HOVER_INSET_R);
+        const float hoverH = rowH - 2.0f * UP_HOVER_INSET_TB;
+        const float hoverX = panelX + 0.5f * (UP_HOVER_INSET_L - UP_HOVER_INSET_R) + UP_HOVER_X_OFFSET;
+        const float hoverY = rowCenterY + UP_HOVER_Y_NUDGE;
 
-        bool isHover =
-            worldX >= panelX - boxW * 0.5f &&
-            worldX <= panelX + boxW * 0.5f &&
-            worldY >= y - boxH * 0.5f &&
-            worldY <= y + boxH * 0.5f;
+        const bool isHover =
+            worldX >= hoverX - hoverW * 0.5f && worldX <= hoverX + hoverW * 0.5f &&
+            worldY >= hoverY - hoverH * 0.5f && worldY <= hoverY + hoverH * 0.5f;
 
+        // Draw highlight (only if hovered)
         if (isHover)
         {
             AEGfxSetRenderMode(AE_GFX_RM_COLOR);
             AEGfxSetBlendMode(AE_GFX_BM_BLEND);
-            AEGfxSetColorToMultiply(0.9f, 0.8f, 0.2f, 0.5f);
+            AEGfxSetColorToMultiply(0.95f, 0.85f, 0.25f, 0.55f);
 
-            AEMtx33Scale(&scale, boxW, boxH);
-            AEMtx33Trans(&trans, panelX, y);
+            AEMtx33Scale(&scale, hoverW, hoverH);
+            AEMtx33Trans(&trans, hoverX, hoverY);
             AEMtx33Concat(&transform, &trans, &scale);
 
             AEGfxSetTransform(transform.m);
@@ -527,17 +556,17 @@ void UI_Draw()
             AEGfxSetColorToMultiply(1, 1, 1, 1);
         }
 
+
+        // Row text 
         char buf[128];
-        sprintf_s(buf, "%s - %d Gold",
-            upgrades[i].name.c_str(),
-            upgrades[i].cost);
+        sprintf_s(buf, "%s - %d Gold", upgrades[i].name.c_str(), upgrades[i].cost);
 
-        float xText = (panelX - upgradesPanelW * 0.45f) / 800.0f;
-        float yText = (y + boxH * 0.1f) / 450.0f;
+        const float xText = (panelX - (upgradesW * 0.5f) + UP_ROW_W_MARGIN) / 800.0f;
+        const float yText = (rowCenterY + boxH * 0.1f) / 450.0f;
 
-        AEGfxPrint(fontId, buf, xText, yText, 0.8f, 1, 1, 1, 1);
+        AEGfxPrint(fontId, buf, xText, yText, 0.8f, 0, 0, 0, 1);
 
-        visibleSlot++;
+        ++visibleSlot;
     }
 
     // --- Seeds Panel ---
@@ -664,13 +693,95 @@ bool UI_IsMenuOpen()
     return menuOpen;
 }
 
-static bool IsMouseOverBasket(const FruitBasket& basket)
+// ============================
+// Crate hover + tints
+// ============================
+
+static void UI_ResetCrateConfigToDefaults()
+{
+    // tuned values
+    gCrateCfg.bins[0] = { 0.285f, 0.740f, 0.200f, 0.135f }; // Left bin
+    gCrateCfg.bins[1] = { 0.475f, 0.740f, 0.170f, 0.135f }; // Middle bin
+    gCrateCfg.bins[2] = { 0.660f, 0.740f, 0.200f, 0.135f }; // Right bin
+
+    // Tooltip defaults
+    gCrateCfg.tipWidth = 200.0f;
+    gCrateCfg.tipHeight = 100.0f;
+    gCrateCfg.tipMargin = 24.0f;
+    gCrateCfg.tipCenterOnCrate = true;
+}
+
+static inline void UI_EnsureCrateCfg()
+{
+    if (!gCrateCfgInitialized) {
+        UI_ResetCrateConfigToDefaults();
+        gCrateCfgInitialized = true;
+    }
+}
+
+const CrateLayoutConfig& UI_GetCrateLayoutConfig()
+{
+    UI_EnsureCrateCfg();
+    return gCrateCfg;
+}
+
+void UI_SetCrateLayoutConfig(const CrateLayoutConfig& cfg)
+{
+    gCrateCfg = cfg;
+    gCrateCfgInitialized = true;
+}
+
+// ---- builder ( uses config) ----
+void UI_RebuildCrateHitboxesFromStall(float stallX, float stallY, float stallW, float stallH)
+{
+    UI_EnsureCrateCfg();
+
+    gFruitBaskets.clear();
+
+
+    auto uvToWorldRect = [stallX, stallY, stallW, stallH](float uC, float vC, float uW, float vH) -> FruitBasket
+        {
+            FruitBasket b{};
+            const float xLocal = (uC - 0.5f) * stallW;  // mesh centered
+            const float yLocal = (0.5f - vC) * stallH;  // invert V (texture top = 0)
+            b.x = stallX + xLocal;
+            b.y = stallY + yLocal;
+            b.width = uW * stallW;
+            b.height = vH * stallH;
+            return b;
+        };
+
+
+    for (int i = 0; i < 3; ++i) {
+        const auto& r = gCrateCfg.bins[i];
+
+        FruitBasket b = uvToWorldRect(r.uCenter, r.vCenter, r.uWidth, r.vHeight);
+
+        b.fruitType = (fruitType)i;   // 0 Apple, 1 Pear, 2 Banana
+
+        gFruitBaskets.push_back(b);
+    }
+}
+
+
+// Convert mouse to world coordinates (window: 1600x900)
+static inline void GetWorldMouse(float& worldX, float& worldY)
 {
     int mx, my;
     AEInputGetCursorPosition(&mx, &my);
 
-    float worldX = static_cast<float>(mx) - 800.0f;
-    float worldY = 450.0f - static_cast<float>(my);
+    const float halfW = 1600.0f * 0.5f;
+    const float halfH = 900.0f * 0.5f;
+
+    worldX = static_cast<float>(mx) - halfW;
+    worldY = halfH - static_cast<float>(my);
+}
+
+// AABB test for a basket/crate
+static bool IsMouseOverBasket(const FruitBasket& basket)
+{
+    float worldX, worldY;
+    GetWorldMouse(worldX, worldY);
 
     return worldX >= basket.x - basket.width * 0.5f &&
         worldX <= basket.x + basket.width * 0.5f &&
@@ -678,49 +789,154 @@ static bool IsMouseOverBasket(const FruitBasket& basket)
         worldY <= basket.y + basket.height * 0.5f;
 }
 
-static void DrawTooltip(float x, float y, const char* text)
+
+// --- Safe clamp ---
+static inline float clampf(float v, float lo, float hi)
 {
-    float w = 250.0f;
-    float h = 80.0f;
+    return (v < lo) ? lo : (v > hi) ? hi : v;
+}
+
+// Draw a tooltip clamped to the screen, centered at world (cx, cy)
+static void DrawTooltipClampedAt(float cx, float cy, const char* text,
+    float w, float h)
+{
+    const float halfW = 1600.0f * 0.5f;
+    const float halfH = 900.0f * 0.5f;
+
+    const float minX = -halfW + w * 0.5f + 6.0f;
+    const float maxX = halfW - w * 0.5f - 6.0f;
+    const float minY = -halfH + h * 0.5f + 6.0f;
+    const float maxY = halfH - h * 0.5f - 6.0f;
+
+    const float x = clampf(cx, minX, maxX);
+    const float y = clampf(cy, minY, maxY);
 
     AEMtx33 scale, trans, transform;
-
     AEMtx33Scale(&scale, w, h);
     AEMtx33Trans(&trans, x, y);
     AEMtx33Concat(&transform, &trans, &scale);
 
     AEGfxSetRenderMode(AE_GFX_RM_COLOR);
     AEGfxSetBlendMode(AE_GFX_BM_BLEND);
-    AEGfxSetColorToMultiply(0.1f, 0.1f, 0.1f, 0.9f);
-
+    AEGfxSetColorToMultiply(0.10f, 0.10f, 0.10f, 0.85f); // panel color
     AEGfxSetTransform(transform.m);
     AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
 
-    float xText = (x - w * 0.45f) / 800.0f;
-    float yText = (y + h * 0.25f) / 450.0f;
+    // AE text uses coords normalized by half sizes
+    const float xText = (x - w * 0.45f) / halfW;
+    const float yText = (y + h * 0.25f) / halfH;
 
+    AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+    AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+    AEGfxSetColorToMultiply(1, 1, 1, 1);
     AEGfxPrint(fontId, text, xText, yText, 1.0f, 1, 1, 1, 1);
 }
 
-
 void UI_DrawFruitBasketTooltips()
 {
-    if (UI_IsMenuOpen())
-        return;
-
+    UI_EnsureCrateCfg();
+    const auto& C = UI_GetCrateLayoutConfig();
     const auto& baskets = GetFruitBaskets();
 
-    for (const auto& basket : baskets)
+    int mx, my;
+    AEInputGetCursorPosition(&mx, &my);
+    const float halfW = 1600.0f * 0.5f;
+    const float halfH = 900.0f * 0.5f;
+    const float worldX = (float)mx - halfW;
+    const float worldY = halfH - (float)my;
+
+    for (const auto& b : baskets)
     {
-        if (IsMouseOverBasket(basket))
+        const bool isHover =
+            worldX >= b.x - b.width * 0.5f &&
+            worldX <= b.x + b.width * 0.5f &&
+            worldY >= b.y - b.height * 0.5f &&
+            worldY <= b.y + b.height * 0.5f;
+
+        if (!isHover) continue;
+
+        // Tooltip panel position
+        float tipX = C.tipCenterOnCrate ? b.x : (b.x - b.width * 0.5f + C.tipWidth * 0.5f);
+        float tipY = (b.y - b.height * 0.5f) - C.tipMargin - (C.tipHeight * 0.5f);
+
+        if (tipY - C.tipHeight * 0.5f < -halfH + 6.0f) {
+            tipY = (b.y + b.height * 0.5f) + C.tipMargin + (C.tipHeight * 0.5f);
+        }
+
+        // Panel background
+        DrawTooltipClampedAt(tipX, tipY, "", C.tipWidth, C.tipHeight);
+
+        // --- Text for the fruit ---
+        const char* fruitName = "Unknown";
+        const char* stockText = "Stock: ?";
+        const char* inventoryText = "Inventory: ?";
+
+        switch (b.fruitType)
         {
-            int mx, my;
-            AEInputGetCursorPosition(&mx, &my);
+        case FRUIT_APPLE:
+            fruitName = "Apple";
+            stockText = "Stock: 3";        // demo
+            inventoryText = "Inventory: 10"; // demo
+            break;
+        case FRUIT_PEAR:
+            fruitName = "Pear";
+            stockText = "Stock: 2";
+            inventoryText = "Inventory: 5";
+            break;
+        case FRUIT_BANANA:
+            fruitName = "Banana";
+            stockText = "Stock: 4";
+            inventoryText = "Inventory: 8";
+            break;
+        }
 
-            float worldX = static_cast<float>(mx) - 800.0f + 20.0f;
-            float worldY = 450.0f - static_cast<float>(my) - 20.0f;
+        // --- Draw the text inside the panel ---
+        const float textStartY = tipY + C.tipHeight * 0.25f; // start a bit below top
+        const float lineSpacing = 25.0f;
 
-            DrawTooltip(worldX, worldY, "Fruit Basket");
+        const float xTextNorm = (tipX - C.tipWidth * 0.45f) / halfW;
+
+        // Fruit name at top
+        const float yNameNorm = textStartY / halfH;
+        AEGfxPrint(fontId, fruitName, xTextNorm, yNameNorm, 1.0f, 1, 1, 1, 1);
+
+        // Stock underneath
+        const float yStockNorm = (textStartY - lineSpacing) / halfH;
+        AEGfxPrint(fontId, stockText, xTextNorm, yStockNorm, 1.0f, 1, 1, 1, 1);
+
+        // Inventory underneath
+        const float yInvNorm = (textStartY - 2.0f * lineSpacing) / halfH;
+        AEGfxPrint(fontId, inventoryText, xTextNorm, yInvNorm, 1.0f, 1, 1, 1, 1);
+
+        break; // only show one tooltip at a time
+    }
+}
+
+
+
+void UI_DrawCrateHoverTint_Yellow()
+{
+    AEMtx33 scale, trans, transform;
+    const auto& baskets = GetFruitBaskets();
+
+    for (const auto& b : baskets)
+    {
+        if (IsMouseOverBasket(b))
+        {
+            AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+            AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+            AEGfxSetColorToMultiply(0.9f, 0.8f, 0.2f, 0.5f);
+
+            AEMtx33Scale(&scale, b.width, b.height);
+            AEMtx33Trans(&trans, b.x, b.y);
+            AEMtx33Concat(&transform, &trans, &scale);
+
+            AEGfxSetTransform(transform.m);
+            AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+            AEGfxSetColorToMultiply(1, 1, 1, 1);
+
             break;
         }
     }

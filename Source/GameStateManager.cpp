@@ -36,11 +36,12 @@ static void StartScreen_GSM_Update()
 {
     float dt = (float)AEFrameRateControllerGetFrameTime();
     StartScreen_Update(dt);
-    // When the exit animation finishes, move to Main Screen (which has Farm integrated)
+
     if (!StartScreen_IsActive())
     {
-        // Always go to Main Screen - Farm is already integrated there
-        nextState = GS_MAIN_SCREEN;
+        if (nextState == currentState) // nothing chosen yet
+            nextState = GS_MAIN_SCREEN;
+        // else: Continue set GS_NEXT_SCREEN, New Game set GS_MAIN_SCREEN, etc. — keep it
     }
 }
 static void StartScreen_GSM_Render() { StartScreen_Draw(); }

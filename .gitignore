@@ -17,3 +17,6 @@
 bin
 Debug
 Release
+/.vs
+/.tmp
+/.vs
