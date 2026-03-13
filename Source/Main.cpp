@@ -401,12 +401,6 @@ void MainScreen_Update()
 	//		return;
 	//}
 
-
-
-	if (AEInputCheckTriggered(AEVK_N)) {
-		nextState = GS_NEXT_SCREEN;
-	}
-
 	// Switch to Rhythm game when pressing R
 	if (AEInputCheckTriggered(AEVK_R))
 	{
@@ -422,7 +416,7 @@ void MainScreen_Render()
 
 	// Transformation Matrices
 	AEMtx33 scale, trans, transform;
-	char strBuffer[100];
+	char strBuffer[100]{};
 
 
 

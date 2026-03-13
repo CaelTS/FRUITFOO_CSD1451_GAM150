@@ -29,4 +29,6 @@ void StartScreen_Update(float dt);
 // Draw the start screen
 void StartScreen_Draw();
 
+void StartScreen_Unload();
+
 #endif // STARTSCREEN_H

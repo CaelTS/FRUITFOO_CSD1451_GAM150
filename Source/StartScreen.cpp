@@ -186,21 +186,39 @@ static void RenderButton(Button& btn, float w, float h, float slideOffset, bool 
     AEGfxSetBlendMode(AE_GFX_BM_BLEND);
     AEGfxSetTransparency(exitAnimFadeOut * (isDisabled ? 0.40f : 1.0f));
     AEGfxTextureSet(tex, 0, 0);
-    AEMtx33Trans(&trans, x - slideOffset, y);
-    AEMtx33Scale(&scale, w * gScaleX, h * gScaleY);
+
+    // FIX: Scale position AND size to match actual screen resolution
+    float finalX = (x - slideOffset) * gScaleX;
+    float finalY = y * gScaleY;
+    float finalW = w * gScaleX;
+    float finalH = h * gScaleY;
+
+    AEMtx33Trans(&trans, finalX, finalY);
+    AEMtx33Scale(&scale, finalW, finalH);
     AEMtx33Concat(&transform, &trans, &scale);
     AEGfxSetTransform(transform.m);
     AEGfxMeshDraw(pMeshButton, AE_GFX_MDM_TRIANGLES);
 }
 
-static bool IsClicked(Button& btn, float w, float h)
-{
-    return ClickedOnRect(btn.x, btn.y, w * gScaleX, h * gScaleY);
-}
 static bool IsHoveredBtn(Button& btn, float w, float h)
 {
-    return IsMouseOverRect(btn.x, btn.y, w * gScaleX, h * gScaleY);
+    // Scale position AND size to match screen coordinates
+    float screenX = btn.x * gScaleX;
+    float screenY = btn.y * gScaleY;
+    float screenW = w * gScaleX;
+    float screenH = h * gScaleY;
+    return IsMouseOverRect(screenX, screenY, screenW, screenH);
 }
+
+static bool IsClicked(Button& btn, float w, float h)
+{
+    float screenX = btn.x * gScaleX;
+    float screenY = btn.y * gScaleY;
+    float screenW = w * gScaleX;
+    float screenH = h * gScaleY;
+    return ClickedOnRect(screenX, screenY, screenW, screenH);
+}
+
 
 static constexpr float kContinueW = 190.0f, kContinueH = 41.0f;
 static constexpr float kNewGameW = 234.0f, kNewGameH = 35.0f;
@@ -251,6 +269,63 @@ static void ConfirmNewGame()
 // Public interface
 // ============================================================
 bool StartScreen_IsActive() { return startScreenActive; }
+
+void StartScreen_Load()
+{
+    SS_Profiles_Load();
+    hasSave = (CountProfiles() > 0);
+
+    // Create meshes
+    if (!pMeshButton) pMeshButton = CreateMesh();
+    if (!pMeshLogo) pMeshLogo = CreateMesh();
+    if (!pMeshGradientBlur) pMeshGradientBlur = CreateMesh();
+    if (!pMeshPopup) pMeshPopup = CreateMesh();
+
+    // Load textures
+    if (!logoTexture) logoTexture = AEGfxTextureLoad("Assets/StartScreen_Logo.png");
+    if (!gradientBlur) gradientBlur = AEGfxTextureLoad("Assets/StartScreen_GradientBlur.png");
+    if (!pTexPanel) pTexPanel = AEGfxTextureLoad("Assets/panel_brown.png");
+    if (!pTexInputRect) pTexInputRect = AEGfxTextureLoad("Assets/input_outline_rectangle.png");
+
+    // Load font
+    if (ssFont < 0)
+    {
+        ssFont = AEGfxCreateFont("Assets/liberation-mono.ttf", 24);
+        if (ssFont < 0)
+            ssFont = AEGfxCreateFont("Assets/Crayon pastel.otf", 24);
+    }
+
+    // Button positions
+    const float btnX = logoPosX - 165.0f;
+    const float btnTopY = 60.0f;
+    const float btnStep = -70.0f;
+
+    // Load button textures
+    if (!continueButton.normal)
+    {
+        continueButton.normal = AEGfxTextureLoad("Assets/StartScreen_Continue.png");
+        continueButton.hover = AEGfxTextureLoad("Assets/StartScreen_Continue_Selected.png");
+        continueButton.disabled = AEGfxTextureLoad("Assets/StartScreen_Continue.png");
+        continueButton.x = btnX; continueButton.y = btnTopY;
+        continueButton.x_sel = btnX; continueButton.y_sel = btnTopY;
+    }
+
+    if (!newGameButton.normal)
+    {
+        newGameButton.normal = AEGfxTextureLoad("Assets/StartScreen_NewGameButton.png");
+        newGameButton.hover = AEGfxTextureLoad("Assets/StartScreen_NewGameButton_Selected.png");
+        newGameButton.x = btnX; newGameButton.y = btnTopY + btnStep;
+        newGameButton.x_sel = btnX; newGameButton.y_sel = btnTopY + btnStep;
+    }
+
+    if (!exitButton.normal)
+    {
+        exitButton.normal = AEGfxTextureLoad("Assets/StartScreen_Exit.png");
+        exitButton.hover = AEGfxTextureLoad("Assets/StartScreen_Exit_Selected.png");
+        exitButton.x = btnX; exitButton.y = btnTopY + btnStep * 2.0f;
+        exitButton.x_sel = btnX; exitButton.y_sel = btnTopY + btnStep * 2.0f;
+    }
+}
 
 void StartScreen_Init()
 {
@@ -566,4 +641,20 @@ void StartScreen_Draw()
             }
         }
     }
+}
+
+void StartScreen_Unload()
+{
+    // Unload all textures
+    if (logoTexture) { AEGfxTextureUnload(logoTexture); logoTexture = nullptr; }
+    if (gradientBlur) { AEGfxTextureUnload(gradientBlur); gradientBlur = nullptr; }
+    if (pTexPanel) { AEGfxTextureUnload(pTexPanel); pTexPanel = nullptr; }
+    if (pTexInputRect) { AEGfxTextureUnload(pTexInputRect); pTexInputRect = nullptr; }
+    if (continueButton.normal) { AEGfxTextureUnload(continueButton.normal); continueButton.normal = nullptr; }
+    if (continueButton.hover) { AEGfxTextureUnload(continueButton.hover); continueButton.hover = nullptr; }
+    if (newGameButton.normal) { AEGfxTextureUnload(newGameButton.normal); newGameButton.normal = nullptr; }
+    if (newGameButton.hover) { AEGfxTextureUnload(newGameButton.hover); newGameButton.hover = nullptr; }
+    if (exitButton.normal) { AEGfxTextureUnload(exitButton.normal); exitButton.normal = nullptr; }
+    if (exitButton.hover) { AEGfxTextureUnload(exitButton.hover); exitButton.hover = nullptr; }
+    if (ssFont >= 0) { AEGfxDestroyFont(ssFont); ssFont = -1; }
 }

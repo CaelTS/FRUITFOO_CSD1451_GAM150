@@ -1,11 +1,6 @@
-<<<<<<< HEAD
 ﻿  StartScreen.cpp
-C:\Github\FRUITFOO_CSD1451_GAM150\Source\StartScreen.cpp(101,13): warning C4505: 'CheckSaveExists': unreferenced function with internal linkage has been removed
-=======
-﻿  SpawnFruits.cpp
->>>>>>> main
   Fruitfoo.vcxproj -> C:\Github\FRUITFOO_CSD1451_GAM150\bin\Debug-x64\Fruitfoo.exe
-  46 File(s) copied
+  52 File(s) copied
   1 File(s) copied
   1 File(s) copied
   1 File(s) copied
