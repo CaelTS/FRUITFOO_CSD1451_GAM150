@@ -1,4 +1,15 @@
 ﻿  Profile.cpp
+C:\Github\FRUITFOO_CSD1451_GAM150\Source\Profile.cpp(661,55): warning C4477: 'sprintf_s' : format string '%d' requires an argument of type 'int', but variadic argument 1 has type 'unsigned __int64'
+      C:\Github\FRUITFOO_CSD1451_GAM150\Source\Profile.cpp(661,55):
+      consider using '%lld' in the format string
+      C:\Github\FRUITFOO_CSD1451_GAM150\Source\Profile.cpp(661,55):
+      consider using '%Id' in the format string
+      C:\Github\FRUITFOO_CSD1451_GAM150\Source\Profile.cpp(661,55):
+      consider using '%I64d' in the format string
+  
+  StartScreen.cpp
+  UI.cpp
+  Generating Code...
   Fruitfoo.vcxproj -> C:\Github\FRUITFOO_CSD1451_GAM150\bin\Debug-x64\Fruitfoo.exe
   52 File(s) copied
   1 File(s) copied

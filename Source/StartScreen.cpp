@@ -517,27 +517,18 @@ void StartScreen_Update(float dt)
         // UPDATED: Click handling with new logic
         if (hasSave && IsClicked(continueButton, kContinueW, kContinueH))
         {
-            // NEW: Load most recent profile directly, then go to main screen
             int recentSlot = GetMostRecentProfileSlot();
             if (recentSlot >= 0)
             {
-                // Set this as the active profile in Profile system
-                // We need to tell Profile.cpp which slot to use
-                // Option 1: Use ProfileScreen_SetSelectMode with a special flag
-                // Option 2: Directly set the active slot if Profile.cpp exposes it
-
-                // For now, we'll use the existing system but skip the selection UI
-                // by setting the mode and immediately choosing the slot
-                ProfileScreen_SetSelectMode(true);
-                // We need to tell it which slot - this requires a new function or modification
-                // As a workaround, we'll store it and use it in ProfileScreen
-
+                // Ensure Profile.cpp's internal array is loaded from disk before
+                // calling Profile_SetActiveSlot (which reads from that array).
+                ProfileScreen_Load();
+                Profile_SetActiveSlot(recentSlot); // sets activeSlot + syncs economy
                 isExiting = true;
-                nextState = GS_MAIN_SCREEN;  // Go directly to main, skip profile screen
+                nextState = GS_MAIN_SCREEN;
             }
             else
             {
-                // No profiles actually exist (shouldn't happen if hasSave is true)
                 ProfileScreen_SetSelectMode(true);
                 isExiting = true;
                 nextState = GS_NEXT_SCREEN;

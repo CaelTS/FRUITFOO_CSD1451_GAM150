@@ -7,6 +7,7 @@
 #include <AETypes.h>
 #include <stdlib.h>
 #include <time.h>
+#include "Profile.h"
 
 // Global variables - remove 'static' since they're extern in the header
 u64 total_money = 0;
@@ -142,11 +143,13 @@ void Economy_Update(float dt) {
 
 void Economy_AddMoney(int amount) {
 	total_money += static_cast<u64>(amount);
+	Economy_SaveToProfile(Profile_GetActiveSlot());
 }
 
 bool Economy_SpendMoney(int amount) {
 	if (total_money >= static_cast<u64>(amount)) {
 		total_money -= static_cast<u64>(amount);
+		Economy_SaveToProfile(Profile_GetActiveSlot());
 		return true;
 	}
 	else {
@@ -157,6 +160,10 @@ bool Economy_SpendMoney(int amount) {
 // getters (read-only)
 int Economy_GetTotalMoney() {
 	return static_cast<int>(total_money);
+}
+
+int Economy_GetMaxMoney() {
+	return static_cast<int>(max_money);
 }
 float Economy_GetMultiplier() {
 	return money_multiplier;

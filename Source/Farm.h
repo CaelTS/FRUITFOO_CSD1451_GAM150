@@ -1,4 +1,3 @@
-
 #pragma once
 
 void Farm_Load();

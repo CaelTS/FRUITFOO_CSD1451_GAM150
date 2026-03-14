@@ -16,6 +16,7 @@ bool Economy_SpendMoney(int amount);
 
 // Getter functions (read-only)
 int Economy_GetTotalMoney();
+int Economy_GetMaxMoney();
 float Economy_GetMultiplier();
 
 // Helper functions
