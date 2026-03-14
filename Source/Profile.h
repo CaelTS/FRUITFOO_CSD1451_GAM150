@@ -24,5 +24,4 @@ int  Profile_GetActiveSlot();
 const char* Profile_GetName();
 
 // Returns level/score of active profile
-int  Profile_GetLevel();
-int  Profile_GetScore();
+int Profile_Getcoins();

@@ -23,14 +23,13 @@ constexpr auto PROFILE_NAME_MAX_LEN = 32;
 typedef struct {
     bool exists;
     char name[PROFILE_NAME_MAX_LEN];
-    int level;
-    int score;
+    int coins;
 } Profile;
 
 static Profile profiles[MAX_PROFILES] = {
-    { false, "", 0, 0 },
-    { false, "", 0, 0 },
-    { false, "", 0, 0 }
+    { false, "", 0 },
+    { false, "", 0},
+    { false, "", 0}
 };
 
 // Popup state
@@ -60,15 +59,9 @@ const char* Profile_GetName() {
     return "";
 }
 
-int Profile_GetLevel() {
+int Profile_Getcoins() {
     if (activeSlot >= 0 && activeSlot < MAX_PROFILES)
-        return profiles[activeSlot].level;
-    return 0;
-}
-
-int Profile_GetScore() {
-    if (activeSlot >= 0 && activeSlot < MAX_PROFILES)
-        return profiles[activeSlot].score;
+        return profiles[activeSlot].coins;
     return 0;
 }
 
@@ -81,8 +74,7 @@ static const char* PROFILES_FILE = "profiles.txt";
 //   [PROFILE_0]
 //   EXISTS=1
 //   NAME=dan
-//   LEVEL=5
-//   SCORE=1250
+//   coins=1250
 
 static void Profiles_Save() {
     FILE* f = nullptr;
@@ -94,8 +86,7 @@ static void Profiles_Save() {
         fprintf(f, "[PROFILE_%d]\n", i);
         fprintf(f, "EXISTS=%d\n", profiles[i].exists ? 1 : 0);
         fprintf(f, "NAME=%s\n", profiles[i].name);
-        fprintf(f, "LEVEL=%d\n", profiles[i].level);
-        fprintf(f, "SCORE=%d\n\n", profiles[i].score);
+        fprintf(f, "coins=%d\n\n", profiles[i].coins);
     }
     fclose(f);
 }
@@ -141,11 +132,8 @@ static void Profiles_Load() {
         else if (strcmp(key, "NAME") == 0) {
             strncpy_s(profiles[slotIndex].name, PROFILE_NAME_MAX_LEN, value, _TRUNCATE);
         }
-        else if (strcmp(key, "LEVEL") == 0) {
-            profiles[slotIndex].level = atoi(value);
-        }
-        else if (strcmp(key, "SCORE") == 0) {
-            profiles[slotIndex].score = atoi(value);
+        else if (strcmp(key, "coins") == 0) {
+            profiles[slotIndex].coins = atoi(value);
         }
     }
     fclose(f);
@@ -275,11 +263,10 @@ void ProfileScreen_Update() {
                     popupInputBuf, _TRUNCATE);
                 if (!popupEditMode) {
                     // Creating a new profile
-                    profiles[popupSlotIndex].level = 1;
-                    profiles[popupSlotIndex].score = 0;
+                    profiles[popupSlotIndex].coins = 0;
                     profiles[popupSlotIndex].exists = true;
                 }
-                // In edit mode we only update the name; level/score stay intact
+                // In edit mode we only update the name; coins stay intact
             }
             Profiles_Save();
             popupActive = false;
@@ -404,8 +391,7 @@ void ProfileScreen_Update() {
                     mNDC_Y >= yPos - dHalfH && mNDC_Y <= yPos + dHalfH) {
                     profiles[i].exists = false;
                     profiles[i].name[0] = '\0';
-                    profiles[i].level = 0;
-                    profiles[i].score = 0;
+                    profiles[i].coins = 0;
                     Profiles_Save();
                     break;
                 }
@@ -483,10 +469,10 @@ void ProfileScreen_Render() {
                     -0.10f, yPos + 0.02f,
                     0.75f, 1.0f, 0.95f, 0.8f, 1.0f);
 
-                // Level and score - inside button, lower half
+                // coins - inside button, lower half
                 char infoText[64];
-                sprintf_s(infoText, sizeof(infoText), "Lvl:%d  Score:%d",
-                    profiles[i].level, profiles[i].score);
+                sprintf_s(infoText, sizeof(infoText), "Coins:%d",
+                    profiles[i].coins);
                 AEGfxPrint(fontId, infoText,
                     -0.13f, yPos - 0.03f,
                     0.5f, 0.85f, 0.75f, 0.6f, 1.0f);
