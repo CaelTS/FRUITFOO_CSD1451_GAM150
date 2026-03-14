@@ -408,7 +408,7 @@ void ProfileScreen_Update() {
                         activeSlot = i;
                         selectMode = false; // reset for next visit
                         wentBack = false;
-                        nextState = GS_START_SCREEN;
+                        nextState = GS_MAIN_SCREEN;
                     }
                     else {
                         popupActive = true;

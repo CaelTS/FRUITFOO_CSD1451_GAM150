@@ -1,5 +1,4 @@
-﻿  Main.cpp
-C:\Github\FRUITFOO_CSD1451_GAM150\Source\Main.cpp(430,7): warning C4189: 'strBuffer': local variable is initialized but not referenced
+﻿  Profile.cpp
   Fruitfoo.vcxproj -> C:\Github\FRUITFOO_CSD1451_GAM150\bin\Debug-x64\Fruitfoo.exe
   52 File(s) copied
   1 File(s) copied
