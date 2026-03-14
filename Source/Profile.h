@@ -25,3 +25,5 @@ const char* Profile_GetName();
 
 // Returns level/score of active profile
 int Profile_Getcoins();
+
+bool Profile_WentBack();

@@ -724,6 +724,11 @@ void StartScreen_Draw()
 void StartScreen_Unload()
 {
     // Unload all textures
+    if (pMeshButton) { AEGfxMeshFree(pMeshButton);      pMeshButton = nullptr; }
+    if (pMeshLogo) { AEGfxMeshFree(pMeshLogo);        pMeshLogo = nullptr; }
+    if (pMeshGradientBlur) { AEGfxMeshFree(pMeshGradientBlur); pMeshGradientBlur = nullptr; }
+    if (pMeshPopup) { AEGfxMeshFree(pMeshPopup);       pMeshPopup = nullptr; }
+
     if (logoTexture) { AEGfxTextureUnload(logoTexture); logoTexture = nullptr; }
     if (gradientBlur) { AEGfxTextureUnload(gradientBlur); gradientBlur = nullptr; }
     if (pTexPanel) { AEGfxTextureUnload(pTexPanel); pTexPanel = nullptr; }

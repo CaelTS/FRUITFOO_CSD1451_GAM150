@@ -177,15 +177,15 @@ void MainScreen_Initialize()
 	//inventory[0] = inventory[1] = inventory[2] = 0;
 
 	//Start Screen Init
-	if (previousState == GS_NEXT_SCREEN)
+	if (previousState == GS_NEXT_SCREEN && !Profile_WentBack())
 	{
-		// Returning from the profile selection screen — skip the start screen overlay
+		// User selected a profile — go straight into the game
 		gStartScreenActive = false;
 		startScreenActive = false;
 	}
 	else
 	{
-		// First launch, or returning from rhythm/other screens — show the start screen
+		// First launch, returning from rhythm, or ESC'd back from profile
 		gStartScreenActive = true;
 		StartScreen_Init();
 	}

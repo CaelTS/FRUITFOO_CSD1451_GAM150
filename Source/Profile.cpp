@@ -47,6 +47,9 @@ static bool  selectMode = false; // true = Continue path (click loads), false = 
 static int   hoveredProfileSlot = -1;
 static int   hoveredDeleteSlot = -1;
 
+static bool wentBack = false;
+bool Profile_WentBack() { return wentBack; }
+
 bool ProfileScreen_IsPopupActive() { return popupActive; }
 
 void ProfileScreen_SetSelectMode(bool mode) { selectMode = mode; }
@@ -325,9 +328,9 @@ void ProfileScreen_Update() {
     // --- Normal update: Escape to go back ---
     // Guard against popupActive so closing the popup's ESC never leaks through
     if (!popupActive && AEInputCheckTriggered(AEVK_ESCAPE)) {
-        StartScreen_Init();
-        nextState = GS_START_SCREEN;
-        selectMode = false;  // Reset select mode
+        wentBack = true;
+        nextState = GS_MAIN_SCREEN;
+        selectMode = false;
     }
     // Mouse position in NDC
     s32 mouseX, mouseY;
@@ -404,7 +407,8 @@ void ProfileScreen_Update() {
                         // Load this profile
                         activeSlot = i;
                         selectMode = false; // reset for next visit
-                        nextState = GS_MAIN_SCREEN;
+                        wentBack = false;
+                        nextState = GS_START_SCREEN;
                     }
                     else {
                         popupActive = true;

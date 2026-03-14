@@ -46,8 +46,7 @@ static void StartScreen_GSM_Update()
 }
 static void StartScreen_GSM_Render() { StartScreen_Draw(); }
 static void StartScreen_GSM_Free() { /* nothing to free */ }
-static void StartScreen_GSM_Unload() { /* nothing to unload */ }
-
+static void StartScreen_GSM_Unload() { StartScreen_Unload(); }
 // ---------------------------------------------------------------------------
 
 void GSM_Update()
