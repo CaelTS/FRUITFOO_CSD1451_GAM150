@@ -3,6 +3,7 @@
 #include "Transition.h"
 #include "GameStateManager.h"
 #include "StartScreen.h"
+#include "Economy.h"
 
 extern AEGfxVertexList* g_pMeshFullScreen;
 extern s8 fontId;
@@ -23,13 +24,24 @@ constexpr auto PROFILE_NAME_MAX_LEN = 32;
 typedef struct {
     bool exists;
     char name[PROFILE_NAME_MAX_LEN];
-    int coins;
+    // Play stats
+    float   play_time;      // total hours played
+    int     session_count;  // number of sessions
+    // Economy data
+    unsigned long long total_money;
+    unsigned long long max_money;
+    float money_multiplier;
+    // Inventory data
+    int apples;
+    int pears;
+    int bananas;
+    int seeds[3];   // seeds[0]=apple, seeds[1]=pear, seeds[2]=banana
 } Profile;
 
 static Profile profiles[MAX_PROFILES] = {
-    { false, "", 0 },
-    { false, "", 0},
-    { false, "", 0}
+    { false, "", 0.0f, 0, 0ULL, 255ULL, 1.0f, 0, 0, 0, {0,0,0} },
+    { false, "", 0.0f, 0, 0ULL, 255ULL, 1.0f, 0, 0, 0, {0,0,0} },
+    { false, "", 0.0f, 0, 0ULL, 255ULL, 1.0f, 0, 0, 0, {0,0,0} }
 };
 
 // Popup state
@@ -62,12 +74,6 @@ const char* Profile_GetName() {
     return "";
 }
 
-int Profile_Getcoins() {
-    if (activeSlot >= 0 && activeSlot < MAX_PROFILES)
-        return profiles[activeSlot].coins;
-    return 0;
-}
-
 // ---------------------------------------------------------------------------
 // Persistence helpers
 // ---------------------------------------------------------------------------
@@ -89,7 +95,21 @@ static void Profiles_Save() {
         fprintf(f, "[PROFILE_%d]\n", i);
         fprintf(f, "EXISTS=%d\n", profiles[i].exists ? 1 : 0);
         fprintf(f, "NAME=%s\n", profiles[i].name);
-        fprintf(f, "coins=%d\n\n", profiles[i].coins);
+        if (profiles[i].exists) {
+            fprintf(f, "\n");
+            fprintf(f, "[economy]\n");
+            fprintf(f, "total_money=%llu\n", profiles[i].total_money);
+            fprintf(f, "max_money=%llu\n", profiles[i].max_money);
+            fprintf(f, "money_multiplier=%.3f\n", profiles[i].money_multiplier);
+            fprintf(f, "\n");
+            fprintf(f, "[inventory]\n");
+            fprintf(f, "apples=%d\n", profiles[i].apples);
+            fprintf(f, "pears=%d\n", profiles[i].pears);
+            fprintf(f, "bananas=%d\n", profiles[i].bananas);
+            fprintf(f, "seeds=%d,%d,%d\n",
+                profiles[i].seeds[0], profiles[i].seeds[1], profiles[i].seeds[2]);
+        }
+        fprintf(f, "\n");
     }
     fclose(f);
 }
@@ -99,50 +119,198 @@ static void Profiles_Load() {
     if (fopen_s(&f, PROFILES_FILE, "r") != 0 || !f)
         return; // No save file yet - keep the defaults
 
-    int slotIndex = -1;
-    char line[128] = "";
+    int  slotIndex = -1;
+    bool inEconomy = false;
+    bool inInventory = false;
+    char line[256] = "";
 
     while (fgets(line, sizeof(line), f)) {
-        // Strip trailing newline/carriage return
         int len = (int)strlen(line);
         if (len > 0 && line[len - 1] == '\n') line[--len] = '\0';
         if (len > 0 && line[len - 1] == '\r') line[--len] = '\0';
-
-        // Skip blank lines
         if (len == 0) continue;
 
-        // Section header e.g. [PROFILE_0]
         if (line[0] == '[') {
-            sscanf_s(line, "[PROFILE_%d]", &slotIndex);
+            if (strcmp(line, "[economy]") == 0) { inEconomy = true;  inInventory = false; }
+            else if (strcmp(line, "[inventory]") == 0) { inInventory = true; inEconomy = false; }
+            else {
+                inEconomy = false; inInventory = false;
+                sscanf_s(line, "[PROFILE_%d]", &slotIndex);
+            }
             continue;
         }
 
-        // Must have a valid slot before reading keys
         if (slotIndex < 0 || slotIndex >= MAX_PROFILES) continue;
 
-        // Find '=' sign
         char* eq = strchr(line, '=');
         if (!eq) continue;
-
-        // Split into key and value
         *eq = '\0';
         const char* key = line;
         const char* value = eq + 1;
 
-        if (strcmp(key, "EXISTS") == 0) {
-            profiles[slotIndex].exists = (atoi(value) != 0);
+        if (inEconomy) {
+            if (strcmp(key, "total_money") == 0)
+                profiles[slotIndex].total_money = (unsigned long long)_strtoui64(value, nullptr, 10);
+            else if (strcmp(key, "max_money") == 0)
+                profiles[slotIndex].max_money = (unsigned long long)_strtoui64(value, nullptr, 10);
+            else if (strcmp(key, "money_multiplier") == 0)
+                profiles[slotIndex].money_multiplier = (float)atof(value);
         }
-        else if (strcmp(key, "NAME") == 0) {
-            strncpy_s(profiles[slotIndex].name, PROFILE_NAME_MAX_LEN, value, _TRUNCATE);
+        else if (inInventory) {
+            if (strcmp(key, "apples") == 0) profiles[slotIndex].apples = atoi(value);
+            else if (strcmp(key, "pears") == 0) profiles[slotIndex].pears = atoi(value);
+            else if (strcmp(key, "bananas") == 0) profiles[slotIndex].bananas = atoi(value);
+            else if (strcmp(key, "seeds") == 0)
+                sscanf_s(value, "%d,%d,%d",
+                    &profiles[slotIndex].seeds[0],
+                    &profiles[slotIndex].seeds[1],
+                    &profiles[slotIndex].seeds[2]);
         }
-        else if (strcmp(key, "coins") == 0) {
-            profiles[slotIndex].coins = atoi(value);
+        else {
+            if (strcmp(key, "EXISTS") == 0)
+                profiles[slotIndex].exists = (atoi(value) != 0);
+            else if (strcmp(key, "NAME") == 0)
+                strncpy_s(profiles[slotIndex].name, PROFILE_NAME_MAX_LEN, value, _TRUNCATE);
+            else if (strcmp(key, "play_time") == 0)
+                sscanf_s(value, "%f", &profiles[slotIndex].play_time);
+            else if (strcmp(key, "session_count") == 0)
+                profiles[slotIndex].session_count = atoi(value);
         }
     }
     fclose(f);
+    Profiles_Save(); // re-save to upgrade old files missing new sections
 }
 
-// UI Layout constants - Centered
+// ---------------------------------------------------------------------------
+// Play-time / session tracking
+// ---------------------------------------------------------------------------
+
+static float s_playTimeAccum = 0.0f;    // Seconds since last auto-save
+static float s_sessionStartTime = 0.0f; // Track when current session started
+static bool  s_sessionActive = false;     // Whether a session is currently active
+
+void Profile_StartSession() {
+    int slot = activeSlot;
+    if (slot < 0 || slot >= MAX_PROFILES || !profiles[slot].exists) return;
+
+    if (!s_sessionActive) {
+        // Increment session count once per session
+        profiles[slot].session_count++;
+        s_sessionActive = true;
+        s_sessionStartTime = 0.0f; // Will accumulate via UpdatePlayTime
+        s_playTimeAccum = 0.0f;
+
+        // Save immediately to persist the new session count
+        Profiles_Save();
+    }
+}
+
+void Profile_UpdatePlayTime(float dt) {
+    int slot = activeSlot;
+    if (slot < 0 || slot >= MAX_PROFILES || !profiles[slot].exists) return;
+    if (!s_sessionActive) return; // Don't track if session hasn't started
+
+    // Accumulate play time (convert seconds to hours)
+    profiles[slot].play_time += dt / 3600.0f;
+    s_playTimeAccum += dt;
+
+    // Auto-save every 60 seconds so play time survives a crash
+    if (s_playTimeAccum >= 60.0f) {
+        Profiles_Save();
+        s_playTimeAccum = 0.0f;
+    }
+}
+
+void Profile_EndSession() {
+    int slot = activeSlot;
+    if (slot < 0 || slot >= MAX_PROFILES || !profiles[slot].exists) return;
+
+    if (s_sessionActive) {
+        // Final save to ensure all data is persisted
+        Profiles_Save();
+        s_sessionActive = false;
+        s_playTimeAccum = 0.0f;
+    }
+}
+
+float Profile_GetPlayTime() {
+    return (activeSlot >= 0) ? profiles[activeSlot].play_time : 0.0f;
+}
+
+int Profile_GetSessionCount() {
+    return (activeSlot >= 0) ? profiles[activeSlot].session_count : 0;
+}
+
+// ---------------------------------------------------------------------------
+// Economy <-> Profile bridge
+// ---------------------------------------------------------------------------
+
+
+// Call this before Profiles_Save() to flush live economy state into the slot.
+void Economy_SaveToProfile(int slot) {
+    if (slot < 0 || slot >= MAX_PROFILES) return;
+    if (!profiles[slot].exists) return;
+    profiles[slot].total_money = (unsigned long long)Economy_GetTotalMoney();
+    profiles[slot].max_money = (unsigned long long)Economy_GetMaxMoney();
+    profiles[slot].money_multiplier = Economy_GetMultiplier();
+    Profiles_Save();
+}
+
+// Write inventory counts into the active profile and save.
+void Profile_SaveInventory(int slot, int apples, int pears, int bananas,
+    int seedApple, int seedPear, int seedBanana) {
+    if (slot < 0 || slot >= MAX_PROFILES || !profiles[slot].exists) return;
+    profiles[slot].apples = apples;
+    profiles[slot].pears = pears;
+    profiles[slot].bananas = bananas;
+    profiles[slot].seeds[0] = seedApple;
+    profiles[slot].seeds[1] = seedPear;
+    profiles[slot].seeds[2] = seedBanana;
+    Profiles_Save();
+}
+
+// Getters for inventory  (read from active slot).
+int   Profile_GetApples() { return (activeSlot >= 0) ? profiles[activeSlot].apples : 0; }
+int   Profile_GetPears() { return (activeSlot >= 0) ? profiles[activeSlot].pears : 0; }
+int   Profile_GetBananas() { return (activeSlot >= 0) ? profiles[activeSlot].bananas : 0; }
+int   Profile_GetSeed(int idx) { return (activeSlot >= 0 && idx >= 0 && idx < 3) ? profiles[activeSlot].seeds[idx] : 0; }
+
+// Call this after a profile is loaded to restore economy state from the slot.
+void Economy_LoadFromProfile(int slot) {
+    if (slot < 0 || slot >= MAX_PROFILES || !profiles[slot].exists) return;
+    total_money = profiles[slot].total_money;
+    max_money = profiles[slot].max_money;
+    money_multiplier = profiles[slot].money_multiplier;
+}
+
+// Creates a new profile slot with economy defaults and saves the full file.
+// Call this from any screen that creates a new profile (e.g. StartScreen).
+void Profile_CreateSlot(int slot, const char* name) {
+    if (slot < 0 || slot >= MAX_PROFILES) return;
+    profiles[slot].exists = true;
+    profiles[slot].play_time = 0.0f;
+    profiles[slot].session_count = 0;
+    profiles[slot].total_money = 0ULL;
+    profiles[slot].max_money = 255ULL;
+    profiles[slot].money_multiplier = 1.0f;
+    profiles[slot].apples = 0;
+    profiles[slot].pears = 0;
+    profiles[slot].bananas = 0;
+    profiles[slot].seeds[0] = profiles[slot].seeds[1] = profiles[slot].seeds[2] = 0;
+    strncpy_s(profiles[slot].name, PROFILE_NAME_MAX_LEN, name, _TRUNCATE);
+    Profiles_Save();
+}
+
+// Sets the active slot, restores economy globals, and rewrites the save file.
+// Call this from any screen that loads a profile (e.g. Continue button).
+void Profile_SetActiveSlot(int slot) {
+    if (slot < 0 || slot >= MAX_PROFILES || !profiles[slot].exists) return;
+    activeSlot = slot;
+    Economy_LoadFromProfile(slot);
+    Economy_SaveToProfile(slot);
+}
+
+
 static const float SCREEN_WIDTH = 1600.0f;
 static const float SCREEN_HEIGHT = 900.0f;
 static const float BUTTON_WIDTH_PX = 400.0f;
@@ -265,13 +433,20 @@ void ProfileScreen_Update() {
                 strncpy_s(profiles[popupSlotIndex].name, PROFILE_NAME_MAX_LEN,
                     popupInputBuf, _TRUNCATE);
                 if (!popupEditMode) {
-                    // Creating a new profile
-                    profiles[popupSlotIndex].coins = 0;
+                    // Creating a new profile - set economy defaults directly,
+                    // do NOT flush live economy globals (Economy is not running yet)
+                    profiles[popupSlotIndex].total_money = 0ULL;
+                    profiles[popupSlotIndex].max_money = 255ULL;
+                    profiles[popupSlotIndex].money_multiplier = 1.0f;
                     profiles[popupSlotIndex].exists = true;
+                    Profiles_Save();
+                }
+                else {
+                    // Renaming an existing in-game profile - flush live economy into slot
+                    Economy_SaveToProfile(popupSlotIndex);
                 }
                 // In edit mode we only update the name; coins stay intact
             }
-            Profiles_Save();
             popupActive = false;
             popupEditMode = false;
             popupSlotIndex = -1;
@@ -394,7 +569,13 @@ void ProfileScreen_Update() {
                     mNDC_Y >= yPos - dHalfH && mNDC_Y <= yPos + dHalfH) {
                     profiles[i].exists = false;
                     profiles[i].name[0] = '\0';
-                    profiles[i].coins = 0;
+                    profiles[i].play_time = 0.0f;
+                    profiles[i].session_count = 0;
+                    profiles[i].total_money = 0ULL;
+                    profiles[i].max_money = 255ULL;
+                    profiles[i].money_multiplier = 1.0f;
+                    profiles[i].apples = profiles[i].pears = profiles[i].bananas = 0;
+                    profiles[i].seeds[0] = profiles[i].seeds[1] = profiles[i].seeds[2] = 0;
                     Profiles_Save();
                     break;
                 }
@@ -408,6 +589,8 @@ void ProfileScreen_Update() {
                         activeSlot = i;
                         selectMode = false; // reset for next visit
                         wentBack = false;
+                        Economy_LoadFromProfile(i); // restore economy globals from slot
+                        Economy_SaveToProfile(i);   // rewrite file to confirm active slot
                         nextState = GS_MAIN_SCREEN;
                     }
                     else {
@@ -476,7 +659,7 @@ void ProfileScreen_Render() {
                 // coins - inside button, lower half
                 char infoText[64];
                 sprintf_s(infoText, sizeof(infoText), "Coins:%d",
-                    profiles[i].coins);
+                    profiles[i].total_money);
                 AEGfxPrint(fontId, infoText,
                     -0.13f, yPos - 0.03f,
                     0.5f, 0.85f, 0.75f, 0.6f, 1.0f);
