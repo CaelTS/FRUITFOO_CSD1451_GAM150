@@ -156,6 +156,16 @@ bool Economy_SpendMoney(int amount) {
 		return false;
 	}
 }
+void Economy_SetMaxMoney(int amount) {
+	max_money = static_cast<u64>(amount);
+	Economy_SaveToProfile(Profile_GetActiveSlot());
+}
+
+void Economy_SetMultiplier(float mult) {
+	money_multiplier = mult;
+	Economy_SaveToProfile(Profile_GetActiveSlot());
+}
+
 
 // getters (read-only)
 int Economy_GetTotalMoney() {

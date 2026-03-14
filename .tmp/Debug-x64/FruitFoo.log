@@ -1,4 +1,7 @@
-﻿  Profile.cpp
+﻿  Economy.cpp
+  Main.cpp
+C:\Github\FRUITFOO_CSD1451_GAM150\Source\Main.cpp(430,7): warning C4189: 'strBuffer': local variable is initialized but not referenced
+  Profile.cpp
 C:\Github\FRUITFOO_CSD1451_GAM150\Source\Profile.cpp(661,55): warning C4477: 'sprintf_s' : format string '%d' requires an argument of type 'int', but variadic argument 1 has type 'unsigned __int64'
       C:\Github\FRUITFOO_CSD1451_GAM150\Source\Profile.cpp(661,55):
       consider using '%lld' in the format string
@@ -7,7 +10,7 @@ C:\Github\FRUITFOO_CSD1451_GAM150\Source\Profile.cpp(661,55): warning C4477: 'sp
       C:\Github\FRUITFOO_CSD1451_GAM150\Source\Profile.cpp(661,55):
       consider using '%I64d' in the format string
   
-  StartScreen.cpp
+  SpawnFruits.cpp
   UI.cpp
   Generating Code...
   Fruitfoo.vcxproj -> C:\Github\FRUITFOO_CSD1451_GAM150\bin\Debug-x64\Fruitfoo.exe
