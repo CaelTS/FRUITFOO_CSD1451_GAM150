@@ -13,6 +13,8 @@ void Economy_Init();
 void Economy_Update(float dt);
 void Economy_AddMoney(int amount);
 bool Economy_SpendMoney(int amount);
+void Economy_SetMaxMoney(int amount);
+void Economy_SetMultiplier(float mult);
 
 // Getter functions (read-only)
 int Economy_GetTotalMoney();
