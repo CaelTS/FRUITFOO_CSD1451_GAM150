@@ -23,9 +23,7 @@ struct SSProfile
 {
     bool exists = false;
     char name[PROFILE_NAME_MAX] = "";
-    int  level = 0;
-    int  score = 0;
-    // Note: We could add lastPlayed timestamp here if you want true "most recent"
+    int  coins = 0;
 };
 static SSProfile g_profiles[MAX_PROFILES];
 
@@ -44,21 +42,12 @@ static int FirstFreeSlot()
     return -1;
 }
 
-// Find the most recent profile (highest score for now, or slot 0 if tie)
+// Find the most recent profile 
 static int GetMostRecentProfileSlot()
 {
-    int bestSlot = -1;
-    int bestScore = -1;
-
     for (int i = 0; i < MAX_PROFILES; i++)
-    {
-        if (g_profiles[i].exists && g_profiles[i].score > bestScore)
-        {
-            bestScore = g_profiles[i].score;
-            bestSlot = i;
-        }
-    }
-    return bestSlot; // Returns -1 if no profiles exist
+        if (g_profiles[i].exists) return i;
+    return -1;
 }
 
 static void SS_Profiles_Load()
@@ -88,8 +77,7 @@ static void SS_Profiles_Load()
 
         if (strcmp(key, "EXISTS") == 0) g_profiles[slot].exists = (atoi(val) != 0);
         else if (strcmp(key, "NAME") == 0) strncpy_s(g_profiles[slot].name, PROFILE_NAME_MAX, val, _TRUNCATE);
-        else if (strcmp(key, "LEVEL") == 0) g_profiles[slot].level = atoi(val);
-        else if (strcmp(key, "SCORE") == 0) g_profiles[slot].score = atoi(val);
+        else if (strcmp(key, "coins") == 0) g_profiles[slot].coins = atoi(val);
     }
     fclose(f);
 }
@@ -103,8 +91,7 @@ static void SS_Profiles_Save()
         fprintf(f, "[PROFILE_%d]\n", i);
         fprintf(f, "EXISTS=%d\n", g_profiles[i].exists ? 1 : 0);
         fprintf(f, "NAME=%s\n", g_profiles[i].name);
-        fprintf(f, "LEVEL=%d\n", g_profiles[i].level);
-        fprintf(f, "SCORE=%d\n\n", g_profiles[i].score);
+        fprintf(f, "coins=%d\n\n", g_profiles[i].coins);
     }
     fclose(f);
 }
@@ -280,8 +267,7 @@ static void ConfirmNewGame()
 
     g_profiles[slot].exists = true;
     strncpy_s(g_profiles[slot].name, PROFILE_NAME_MAX, popupBuf, _TRUNCATE);
-    g_profiles[slot].level = 1;
-    g_profiles[slot].score = 0;
+    g_profiles[slot].coins = 0;
     SS_Profiles_Save();
 
     ClosePopup();

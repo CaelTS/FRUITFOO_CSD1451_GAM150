@@ -177,7 +177,18 @@ void MainScreen_Initialize()
 	//inventory[0] = inventory[1] = inventory[2] = 0;
 
 	//Start Screen Init
-	StartScreen_Init();
+	if (previousState == GS_NEXT_SCREEN)
+	{
+		// Returning from the profile selection screen — skip the start screen overlay
+		gStartScreenActive = false;
+		startScreenActive = false;
+	}
+	else
+	{
+		// First launch, or returning from rhythm/other screens — show the start screen
+		gStartScreenActive = true;
+		StartScreen_Init();
+	}
 
 	//Economy Init
 	Economy_Init();
