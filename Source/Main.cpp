@@ -183,6 +183,14 @@ void MainScreen_Initialize()
 		gStartScreenActive = false;
 		startScreenActive = false;
 	}
+
+	else if (previousState == GS_RHYTHM_SCREEN)
+	{
+		// Returning from rhythm game — skip the start screen entirely
+		gStartScreenActive = false;
+		startScreenActive = false;
+	}
+
 	else
 	{
 		// First launch, returning from rhythm, or ESC'd back from profile
@@ -408,16 +416,16 @@ void MainScreen_Update()
 	//		++it;
 	//	}
 
-	//	if (UI_IsMenuOpen())
+	//	if (UI_IsMenuOpen())	
 	//		return;
 	//}
 
-	// Switch to Rhythm game when pressing R
-	if (AEInputCheckTriggered(AEVK_R))
-	{
-		OutputDebugStringA("Switching to RHYTHM state\n");
-		nextState = GS_RHYTHM_SCREEN;
-	}
+	//// Switch to Rhythm game when pressing R
+	//if (AEInputCheckTriggered(AEVK_R))
+	//{
+	//	OutputDebugStringA("Switching to RHYTHM state\n");
+	//	nextState = GS_RHYTHM_SCREEN;
+	//}
 }
 
 void MainScreen_Render()
@@ -774,13 +782,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			nextState = GS_EXIT;
 		}
 
-		// RHYTHM GAME INPUT
-		if (currentState == GS_RHYTHM_SCREEN && AEInputCheckTriggered(AEVK_E))
+		// RHYTHM GAME INPUT - only allow exit after song finishes
+		if (currentState == GS_RHYTHM_SCREEN && Rhythm_IsSongFinished() && AEInputCheckTriggered(AEVK_E))
 		{
-			bool success = true; // replace with your real score check
-
+			const RhythmScore& score = Rhythm_GetScore();
+			bool success = (score.perfectHits + score.goodHits) > score.misses;
 			Farm_OnRhythmResult(success);
-
 			nextState = GS_MAIN_SCREEN;
 		}
 

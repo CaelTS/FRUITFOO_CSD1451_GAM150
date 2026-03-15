@@ -32,11 +32,11 @@ static const float SCORE_TEXT_X = -0.95f;
 static const float SCORE_TEXT_Y = 0.85f;
 
 // Combo number (center area)
-static const float COMBO_NUM_X = -0.20f;
+static const float COMBO_NUM_X = -0.10f;
 static const float COMBO_NUM_Y = 0.75f;
 
 // Combo label
-static const float COMBO_LABEL_X = -0.1f;
+static const float COMBO_LABEL_X = 0.0f;
 static const float COMBO_LABEL_Y = 0.75f;
 
 // Hit feedback (PERFECT/GOOD/MISS)

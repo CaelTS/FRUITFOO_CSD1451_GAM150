@@ -24,7 +24,7 @@ void SpawnFruit();                         // Create a new fruit and add it to t
 void UpdateSpawnFruits(float dt);          // Update the position and state of all fruits
 void UpdateFruitSpawner(float dt);        // Update all falling apples
 void CheckForFruitClicks(s32 mouseX, s32 mouseY);  // Check for clicks on apples
-void AddToInventory();                    // Add +1 to inventory when clicked
+//void AddToInventory();                    // Add +1 to inventory when clicked
 void RenderSpawnFruits();                      // Render all apples on screen
 
 #endif // SPAWNFRUITS_H
