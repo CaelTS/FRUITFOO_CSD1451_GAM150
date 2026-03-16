@@ -374,6 +374,7 @@ void Farm_Render()
         // --------------------------
         if (farmPlots[i].waitingForRhythm && g_rhythmPlotIndex == i)
         {
+            AEGfxSetColorToMultiply(1, 1, 1, 1);   // reset tint
             // Draw prompt in screen center
             if (rhythmPrompt)
             {
