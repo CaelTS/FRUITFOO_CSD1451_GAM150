@@ -1,4 +1,4 @@
-ï»¿// ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 // includes
 
 #include <crtdbg.h> // To check for memory leaks
@@ -179,14 +179,14 @@ void MainScreen_Initialize()
 	//Start Screen Init
 	if (previousState == GS_NEXT_SCREEN && !Profile_WentBack())
 	{
-		// User selected a profile ï¿½ go straight into the game
+		// User selected a profile — go straight into the game
 		gStartScreenActive = false;
 		startScreenActive = false;
 	}
 
 	else if (previousState == GS_RHYTHM_SCREEN)
 	{
-		// Returning from rhythm game ï¿½ skip the start screen entirely
+		// Returning from rhythm game — skip the start screen entirely
 		gStartScreenActive = false;
 		startScreenActive = false;
 	}
@@ -274,24 +274,22 @@ void MainScreen_Update()
 	s32 mouseX, mouseY;
 	AEInputGetCursorPosition(&mouseX, &mouseY);
 
-	if (!gStartScreenActive)
+	UI_Input();
+	Farm_Update();
+	Economy_Update(dt);
+
+	UpdateSpawnFruits(dt);
+	UpdateFruitSpawner(dt);
+	CheckForFruitClicks(mouseX, mouseY);
+
+
+	// ---- Check if farm triggered rhythm ----
+	if (Farm_ShouldStartRhythm())
 	{
-		UI_Input();
-		Farm_Update();
-		Economy_Update(dt);
+		OutputDebugStringA("Farm requested rhythm game\n");
 
-		UpdateSpawnFruits(dt);
-		UpdateFruitSpawner(dt);
-		CheckForFruitClicks(mouseX, mouseY);
-
-		// ---- Check if farm triggered rhythm ----
-		if (Farm_ShouldStartRhythm())
-		{
-			OutputDebugStringA("Farm requested rhythm game\n");
-
-			Farm_ClearRhythmRequest();
-			nextState = GS_RHYTHM_SCREEN;
-		}
+		Farm_ClearRhythmRequest();
+		nextState = GS_RHYTHM_SCREEN;
 	}
 
 	//// Energy Regeneration Logic
