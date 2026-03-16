@@ -12,6 +12,8 @@ extern AEGfxVertexList* g_pMeshFullScreen;
 
 struct FarmPlot
 {
+    bool isUnlocked = false;
+
     bool isPlanted = false;
     bool isReady = false;
     float growTimer = 0.0f;
@@ -24,6 +26,8 @@ struct FarmPlot
 static bool g_rhythmUsed = false;
 static bool g_requestRhythm = false;
 static int  g_rhythmPlotIndex = -1;
+static bool g_rhythmPaused = false;
+
 
 static std::vector<FarmPlot> farmPlots;
 static AEGfxTexture* plantedTexture = nullptr;
@@ -37,6 +41,7 @@ static AEGfxTexture* Leaf = nullptr;
 static AEGfxTexture* rhythmPrompt = nullptr;
 static AEGfxTexture* tickIcon = nullptr;
 static AEGfxTexture* crossIcon = nullptr;
+static AEGfxTexture* lockedPlot = nullptr;
 
 
 const float GROW_TIME = 8.0f;
@@ -67,6 +72,7 @@ void Farm_Load()
     rhythmPrompt = AEGfxTextureLoad("Assets/rhythmprompt.png");
     tickIcon = AEGfxTextureLoad("Assets/tick.png");
     crossIcon = AEGfxTextureLoad("Assets/cross.png");
+    lockedPlot = AEGfxTextureLoad("Assets/lockedplot.png");
 
 
 
@@ -74,22 +80,35 @@ void Farm_Load()
 
 void Farm_Initialize()
 {
-    std::cout << "Farm_Initialize\n";
-
     farmPlots.clear();
-    farmPlots.resize(4);   // 4 plot slots
+    farmPlots.resize(4);
+
+    farmPlots[0].isUnlocked = true; // first plot available
+
+
 }
 
 // ------------------------------------------------------------
 // UPDATE
 // ------------------------------------------------------------
 
+//getter for unlocked plots/locked plots
+bool Farm_IsPlotLocked(int index)
+{
+    if (index == 0)
+        return false;   // first plot always unlocked
 
+    return true;        // others locked for now
+}
 
 void Farm_Update()
 {
 
+
+    if (!UI_IsMenuOpen())
+        return;
     float dt = (float)AEFrameRateControllerGetFrameTime();
+
     s32 mouseX, mouseY;
     AEInputGetCursorPosition(&mouseX, &mouseY);
 
@@ -118,6 +137,7 @@ void Farm_Update()
 
     for (int i = 0; i < farmPlots.size(); i++)
     {
+
         FarmPlot& plot = farmPlots[i];
 
         if (!plot.isPlanted)
@@ -199,6 +219,8 @@ void Farm_Update()
 
 void Farm_Render()
 {
+    if (!UI_IsMenuOpen())
+        return;
     if (!plantedTexture)
         return;
 
@@ -210,13 +232,36 @@ void Farm_Render()
 
     for (int i = 0; i < farmPlots.size(); i++)
     {
-        if (!farmPlots[i].isPlanted)
-            continue;
+
 
         // Get plot center once
         float plotX = UI_GetPlotSlotX(i);
         float plotY = UI_GetPlotSlotY(i);
 
+
+        FarmPlot& plot = farmPlots[i];
+
+        // --------------------------
+        // DRAW LOCKED PLOT
+        // --------------------------
+        if (!plot.isUnlocked)
+        {
+            float size = 120.0f;
+
+            AEGfxTextureSet(lockedPlot, 0, 0);
+
+            AEMtx33Scale(&scale, size, size);
+            AEMtx33Trans(&trans, plotX, plotY);
+            AEMtx33Concat(&transform, &trans, &scale);
+
+            AEGfxSetTransform(transform.m);
+            AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+            continue;
+        }
+
+        if (!plot.isPlanted)
+            continue;
         // --------------------------
         // 1 Draw Apple FIRST
         // --------------------------
@@ -503,6 +548,7 @@ void Farm_OnRhythmResult(bool success)
         }
     }
 }
+
 
 
 bool Farm_ShouldStartRhythm()
