@@ -34,6 +34,9 @@ static AEGfxTexture* fruitStage75 = nullptr;
 static AEGfxTexture* fruitStageFull = nullptr;
 static AEGfxTexture* Droplet = nullptr;
 static AEGfxTexture* Leaf = nullptr;
+static AEGfxTexture* rhythmPrompt = nullptr;
+static AEGfxTexture* tickIcon = nullptr;
+static AEGfxTexture* crossIcon = nullptr;
 
 
 const float GROW_TIME = 8.0f;
@@ -61,6 +64,10 @@ void Farm_Load()
     fruitStageFull = AEGfxTextureLoad("Assets/fruitStageFull.png");
     Droplet = AEGfxTextureLoad("Assets/Droplet.png");
     Leaf = AEGfxTextureLoad("Assets/Leaf.png");
+    rhythmPrompt = AEGfxTextureLoad("Assets/rhythmprompt.png");
+    tickIcon = AEGfxTextureLoad("Assets/tick.png");
+    crossIcon = AEGfxTextureLoad("Assets/cross.png");
+
 
 
 }
@@ -83,7 +90,12 @@ void Farm_Update()
 {
 
     float dt = (float)AEFrameRateControllerGetFrameTime();
+    s32 mouseX, mouseY;
+    AEInputGetCursorPosition(&mouseX, &mouseY);
 
+    // convert to world coordinates
+    float worldX = (float)mouseX - 800.0f;
+    float worldY = 450.0f - (float)mouseY;
     // Harvest
     if (AEInputCheckTriggered(AEVK_SPACE))
     {
@@ -104,10 +116,6 @@ void Farm_Update()
 
 
 
-    //Pause all other PLOTS when rhythm game is active
-    if (g_requestRhythm)
-        return;
-
     for (int i = 0; i < farmPlots.size(); i++)
     {
         FarmPlot& plot = farmPlots[i];
@@ -116,6 +124,52 @@ void Farm_Update()
             continue;
 
         if (plot.waitingForRhythm)
+        {
+            if (AEInputCheckTriggered(AEVK_LBUTTON))
+            {
+                float iconSize = 50.0f;
+
+                // Tick position
+                float tickX = -70.0f;
+                float tickY = -40.0f;
+
+                // Cross position
+                float crossX = 70.0f;
+                float crossY = -40.0f;
+
+                // --- Tick Click ---
+                if (worldX >= tickX - iconSize / 2 &&
+                    worldX <= tickX + iconSize / 2 &&
+                    worldY >= tickY - iconSize / 2 &&
+                    worldY <= tickY + iconSize / 2)
+                {
+                    plot.waitingForRhythm = false;
+
+                    g_requestRhythm = true;
+                    g_rhythmPlotIndex = i;
+
+                    std::cout << "Tick clicked\n";
+                    return;
+                }
+
+                // --- Cross Click ---
+                if (worldX >= crossX - iconSize / 2 &&
+                    worldX <= crossX + iconSize / 2 &&
+                    worldY >= crossY - iconSize / 2 &&
+                    worldY <= crossY + iconSize / 2)
+                {
+                    plot.waitingForRhythm = false;
+                    g_rhythmPlotIndex = -1;
+
+                    std::cout << "Cross clicked\n";
+                    return;
+                }
+            }
+
+            continue;
+        }
+        // Pause growth if rhythm is starting
+        if (g_requestRhythm)
             continue;
 
         // Grow
@@ -123,22 +177,17 @@ void Farm_Update()
 
         float ratio = plot.growTimer / GROW_TIME;
 
-
-
-        if (ratio >= 0.5f && !g_rhythmUsed && !g_requestRhythm)
+        if (ratio >= 0.5f && !plot.rhythmTriggered && g_rhythmPlotIndex == -1)
         {
-            g_rhythmUsed = true;
-
             plot.rhythmTriggered = true;
-
-            g_requestRhythm = true;
+            plot.waitingForRhythm = true;
             g_rhythmPlotIndex = i;
         }
+
         if (ratio >= 1.0f)
-        {
             plot.isReady = true;
-        }
     }
+
 
 
 
@@ -275,6 +324,64 @@ void Farm_Render()
             AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
             AEGfxSetTransparency(1.0f);
         }
+        // --------------------------
+        // Draw Rhythm UI (CENTER SCREEN)
+        // --------------------------
+        if (farmPlots[i].waitingForRhythm && g_rhythmPlotIndex == i)
+        {
+            // Draw prompt in screen center
+            if (rhythmPrompt)
+            {
+                float promptW = 350.0f;
+                float promptH = 200.0f;
+
+                AEGfxTextureSet(rhythmPrompt, 0, 0);
+
+                AEMtx33Scale(&scale, promptW, promptH);
+                AEMtx33Trans(&trans, 0.0f, 0.0f);
+                AEMtx33Concat(&transform, &trans, &scale);
+
+                AEGfxSetTransform(transform.m);
+                AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+            }
+
+            float iconSize = 50.0f;
+
+            //  Tick
+            if (tickIcon)
+            {
+                float tickX = -70.0f;
+                float tickY = -40.0f;
+
+                AEGfxTextureSet(tickIcon, 0, 0);
+
+                AEMtx33Scale(&scale, iconSize, iconSize);
+                AEMtx33Trans(&trans, tickX, tickY);
+                AEMtx33Concat(&transform, &trans, &scale);
+
+                AEGfxSetTransform(transform.m);
+                AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+            }
+
+            //  Cross
+            if (crossIcon)
+            {
+                float crossX = 70.0f;
+                float crossY = -40.0f;
+
+                AEGfxTextureSet(crossIcon, 0, 0);
+
+                AEMtx33Scale(&scale, iconSize, iconSize);
+                AEMtx33Trans(&trans, crossX, crossY);
+                AEMtx33Concat(&transform, &trans, &scale);
+
+                AEGfxSetTransform(transform.m);
+                AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+            }
+        }
+
+
+
 
         // --------------------------
         // 2 Draw Delete X AFTER
