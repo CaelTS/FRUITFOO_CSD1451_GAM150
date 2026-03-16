@@ -25,6 +25,25 @@ const char* Profile_GetName();
 bool Profile_WentBack();
 
 // ---------------------------------------------------------------------------
+// Play-time / session tracking
+// ---------------------------------------------------------------------------
+
+// Call once when the player enters the main game (starts accumulating time).
+void Profile_StartSession();
+
+// Call every frame with delta time while the game is running.
+void Profile_UpdatePlayTime(float dt);
+
+// Call when the player exits / the session ends. Flushes a final save.
+void Profile_EndSession();
+
+// Returns total hours played for the active slot (0 if none).
+float Profile_GetPlayTime();
+
+// Returns total session count for the active slot (0 if none).
+int Profile_GetSessionCount();
+
+// ---------------------------------------------------------------------------
 // Economy <-> Profile
 // ---------------------------------------------------------------------------
 void Economy_SaveToProfile(int slot);

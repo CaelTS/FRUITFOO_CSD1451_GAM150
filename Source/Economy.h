@@ -31,12 +31,4 @@ extern u64 total_money;
 extern u64 max_money;
 extern f32 money_multiplier;
 
-// Inventory panel getters
-int Economy_GetInventoryCount();
-int Economy_GetInventoryLimit();
-
-int Economy_GetFruitCount();
-int Economy_GetSeedCount();
-
-
 #endif // ECONOMY_H

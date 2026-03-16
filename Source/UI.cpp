@@ -32,18 +32,9 @@ static AEGfxTexture* plotSlotTexture = nullptr;
 
 static AEGfxTexture* menuTexture = nullptr;
 static AEGfxTexture* seedsTexture = nullptr;
-
 static AEGfxTexture* inventoryIcon = nullptr;
-static AEGfxTexture* inventoryBG = nullptr;
-static AEGfxTexture* invFruit = nullptr;
-static AEGfxTexture* invFruitHighlight = nullptr;
-static AEGfxTexture* invSeed = nullptr;
-static AEGfxTexture* invSeedHighlight = nullptr;
-
 static AEGfxTexture* collectionIcon = nullptr;
-
 static AEGfxTexture* settingsIcon = nullptr;
-
 static AEGfxTexture* appleSeedIcon = nullptr;
 static AEGfxTexture* appleSeedInfo = nullptr;
 
@@ -105,60 +96,15 @@ static const float UP_HOVER_INSET_TB = 8.0f;   // px inset from top/bottom (bigg
 static const float UP_HOVER_Y_NUDGE = 15.0f;  // px vertical nudge (negative = slightly lower)
 static const float UP_HOVER_X_OFFSET = -50.0f;  // px horizontal nudge without moving text (negative = left)
 
-// =========================
-// Inventory header icons (under title, left-aligned)
-// =========================
-enum InvTab { TAB_FRUITS = 0, TAB_SEEDS = 1 };
-static InvTab gActiveInvTab = TAB_FRUITS;   // default tab
-
-// Your panel is drawn at center (0,0) with size 520x680 in UI_Draw()
-static const float INV_PANEL_W = 520.0f;
-static const float INV_PANEL_H = 680.0f;
-
-// ---- POSITION CONTROLS (tweak these to move icons) ----
-// Move both icons LEFT/RIGHT  -> change INV_TAB_LEFT_PAD
-// Move both icons UP/DOWN     -> change INV_TAB_TOP_PAD   (bigger value moves them LOWER)
-// Change gap between icons    -> change INV_TAB_SPACING_X
-static const float INV_TAB_LEFT_PAD = 48.0f;   // px from panel LEFT edge to left icon's LEFT edge
-static const float INV_TAB_TOP_PAD = 120.0f;  // px from panel TOP edge down to icon's TOP edge
-static const float INV_TAB_SPACING_X = 96.0f;   // horizontal gap between Fruit and Seed
-
-// Icon draw size 
-
-static const float INV_FRUIT_W = 64.0f;
-static const float INV_FRUIT_H = 64.0f;
-static const float INV_FRUIT_HL_W = 72.0f;
-static const float INV_FRUIT_HL_H = 72.0f;
-
-static const float INV_SEED_W = 64.0f;
-static const float INV_SEED_H = 64.0f;
-static const float INV_SEED_HL_W = 72.0f;
-static const float INV_SEED_HL_H = 72.0f;
-
-
-// Highlight artwork correction (if highlight looks slightly shifted): position-only offset
-// (Do NOT scale; we keep size the same—just nudge when highlighted.)
-static const float INV_HL_OFFSET_X = 0.0f;  // try -2.0f to shift left, +2.0f to shift right
-static const float INV_HL_OFFSET_Y = 0.0f;  // try -2.0f up, +2.0f down
-
 
 
 void UI_Init()
 {
     menuTexture = AEGfxTextureLoad("Assets/MenuMockup.PNG");
     seedsTexture = AEGfxTextureLoad("Assets/SeedsPanel.png");
-
     inventoryIcon = AEGfxTextureLoad("Assets/Inventory.png");
-    inventoryBG = AEGfxTextureLoad("Assets/InventoryPanelBG.png");
-    invFruit = AEGfxTextureLoad("Assets/InvFruit.png");
-    invFruitHighlight = AEGfxTextureLoad("Assets/InvFruitHighlight.png");
-    invSeed = AEGfxTextureLoad("Assets/InvSeed.png");
-    invSeedHighlight = AEGfxTextureLoad("Assets/InvSeedHighlight.png");
-
     collectionIcon = AEGfxTextureLoad("Assets/Collection.png");
-
     settingsIcon = AEGfxTextureLoad("Assets/Settings.png");
-
     appleSeedIcon = AEGfxTextureLoad("Assets/AppleSeed.png");
     appleSeedInfo = AEGfxTextureLoad("Assets/AppleSeedInfo.png");
     plotSlotTexture = AEGfxTextureLoad("Assets/Plot1.png");
@@ -434,46 +380,6 @@ void UI_UpdateButtons()
         ++shownUp;
     }
 
-    // ================= Inventory header icons input =================
-    if (popupOpen && activePopupIndex == BUTTON_INVENTORY)
-    {
-        // Panel is drawn at (0,0) with size INV_PANEL_W x INV_PANEL_H in UI_Draw()
-        const float panelX = 0.0f, panelY = 0.0f;
-        const float leftEdge = panelX - INV_PANEL_W * 0.5f;
-        const float topEdge = panelY + INV_PANEL_H * 0.5f;
-
-        // Use your NORMAL icon size as the "slot" (stable hitbox)
-        // If you switched to per-PNG sizes, keep using the normal sizes for hitboxes.
-        const float slotW = INV_FRUIT_W;
-        const float slotH = INV_FRUIT_H;
-
-        // Compute centers from the same paddings you use in UI_Draw()
-        const float fruitCx = leftEdge + INV_TAB_LEFT_PAD + slotW * 0.5f;
-        const float fruitCy = topEdge - INV_TAB_TOP_PAD - slotH * 0.5f;
-
-        const float seedCx = fruitCx + INV_TAB_SPACING_X;
-        const float seedCy = fruitCy;
-
-        const float hw = slotW * 0.5f;
-        const float hh = slotH * 0.5f;
-
-        auto PtIn = [&](float px, float py, float cx, float cy, float halfW, float halfH) -> bool {
-            return px >= cx - halfW && px <= cx + halfW &&
-                py >= cy - halfH && py <= cy + halfH;
-            };
-
-        if (AEInputCheckTriggered(AEVK_LBUTTON))
-        {
-            if (PtIn(worldX, worldY, fruitCx, fruitCy, hw, hh))
-            {
-                gActiveInvTab = TAB_FRUITS;
-            }
-            else if (PtIn(worldX, worldY, seedCx, seedCy, hw, hh))
-            {
-                gActiveInvTab = TAB_SEEDS; // <- NOTE: assignment, not comparison
-            }
-        }
-    }
 }
 
 
@@ -567,95 +473,11 @@ void UI_Draw()
         switch (activePopupIndex)
         {
         case BUTTON_INVENTORY:
-        {
-            const float panelW = 520.0f;
-            const float panelH = 680.0f;
-            const float panelX = 0.0f;   // centered
-            const float panelY = 0.0f;   // centered
-
-            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
-            AEGfxSetBlendMode(AE_GFX_BM_BLEND);
-            AEGfxSetColorToMultiply(1, 1, 1, 1);
-            AEGfxTextureSet(inventoryBG, 0, 0);
-
-            AEMtx33Scale(&scale, panelW, panelH);
-            AEMtx33Trans(&trans, panelX, panelY);
-            AEMtx33Concat(&transform, &trans, &scale);
-
-            AEGfxSetTransform(transform.m);
-            AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
-
-
-            // --- Fruits / Seeds icons (left-aligned under "Inventory") ---
-            {
-                AEMtx33 scale, trans, transform;
-
-                const float panelX = 0.0f, panelY = 0.0f;
-                const float leftEdge = panelX - INV_PANEL_W * 0.5f;
-                const float topEdge = panelY + INV_PANEL_H * 0.5f;
-
-                // Slot (base) size; both icons are drawn at this size
-                const float slotW = INV_FRUIT_W;
-                const float slotH = INV_FRUIT_H;
-
-                // Centers computed from padding (so it's aligned to the left under the title)
-                const float fruitCx = leftEdge + INV_TAB_LEFT_PAD + slotW * 0.5f;
-                const float fruitCy = topEdge - INV_TAB_TOP_PAD - slotH * 0.5f;
-
-                const float seedCx = fruitCx + INV_TAB_SPACING_X;
-                const float seedCy = fruitCy;
-
-                const bool fruitActive = (gActiveInvTab == TAB_FRUITS);
-                const bool seedActive = (gActiveInvTab == TAB_SEEDS);
-
-                // ----- FRUIT -----
-                {
-                    const float w = fruitActive ? INV_FRUIT_HL_W : INV_FRUIT_W;
-                    const float h = fruitActive ? INV_FRUIT_HL_H : INV_FRUIT_H;
-
-                    AEGfxTextureSet(fruitActive ? invFruitHighlight : invFruit, 0, 0);
-                    AEMtx33Scale(&scale, w, h);
-                    AEMtx33Trans(&trans, fruitCx, fruitCy); // same center
-                    AEMtx33Concat(&transform, &trans, &scale);
-                    AEGfxSetTransform(transform.m);
-                    AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
-                }
-
-                // ----- SEED -----
-                {
-                    const float w = seedActive ? INV_SEED_HL_W : INV_SEED_W;
-                    const float h = seedActive ? INV_SEED_HL_H : INV_SEED_H;
-
-                    AEGfxTextureSet(seedActive ? invSeedHighlight : invSeed, 0, 0);
-                    AEMtx33Scale(&scale, w, h);
-                    AEMtx33Trans(&trans, seedCx, seedCy);
-                    AEMtx33Concat(&transform, &trans, &scale);
-                    AEGfxSetTransform(transform.m);
-                    AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
-                }
-
-            }
-
-
-            // --- Draw capacity text "current/limit" ---
-            const int invcur = (gActiveInvTab == TAB_FRUITS) ? Economy_GetFruitCount() : Economy_GetSeedCount();// from Economy.cpp
-            const int invmax = Economy_GetInventoryLimit();  // from Economy.cpp
-
-            char capText[16];
-            sprintf_s(capText, "%d/%d", invcur, invmax);
-
-            // Position inside the small rounded header box on your PNG.
-            // Nudge the multipliers a little if it’s off by a few pixels.
-            float textX = (panelX + panelW * 0.24f) / 800.0f;
-            float textY = (panelY + panelH * 0.41f) / 450.0f;
-
-            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
-            AEGfxSetColorToMultiply(0, 0, 0, 1); // dark text to match your PNG style
-            AEGfxPrint(fontId, capText, textX, textY, 0.9f, 0, 0, 0, 1);
-
-
+            AEGfxPrint(fontId, "Inventory", xText, yText, 1.0f, 1, 1, 1, 1);
+            AEGfxPrint(fontId, "Your items appear here.",
+                xText, yText - 0.08f,
+                0.8f, 1, 1, 1, 1);
             break;
-        }
 
         case BUTTON_COLLECTION:
             AEGfxPrint(fontId, "Collection", xText, yText, 1.0f, 1, 1, 1, 1);
@@ -1153,18 +975,9 @@ void UI_Exit()
     // free textures here
     AEGfxTextureUnload(menuTexture);
     AEGfxTextureUnload(seedsTexture);
-
     AEGfxTextureUnload(inventoryIcon);
-    AEGfxTextureUnload(inventoryBG);
-    AEGfxTextureUnload(invFruit);
-    AEGfxTextureUnload(invFruitHighlight);
-    AEGfxTextureUnload(invSeed);
-    AEGfxTextureUnload(invSeedHighlight);
-
     AEGfxTextureUnload(collectionIcon);
-
     AEGfxTextureUnload(settingsIcon);
-
     AEGfxTextureUnload(appleSeedIcon);
     AEGfxTextureUnload(appleSeedInfo);
     AEGfxTextureUnload(plotSlotTexture);

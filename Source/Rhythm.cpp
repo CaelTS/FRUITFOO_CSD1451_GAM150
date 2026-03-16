@@ -1,4 +1,4 @@
-#include "Rhythm.h"
+﻿#include "Rhythm.h"
 #include "AEEngine.h"
 #include "AEAudio.h"
 #include <algorithm>
@@ -15,7 +15,6 @@ static const float MISS_WINDOW = 0.150f;  // 150ms
 
 static const float JUDGMENT_LINE_X = -200.0f;
 static const float SPAWN_X = 900.0f;
-static const float NOTE_SPEED = 500.0f;
 static const float NOTE_SIZE = 40.0f;
 
 static const int SCORE_PERFECT = 300;
@@ -23,6 +22,33 @@ static const int SCORE_GOOD = 100;
 
 // Vertical offset to shift game upward (positive = up)
 static const float VERTICAL_OFFSET = 200.0f;
+
+// ================= DIFFICULTY CONFIG =================
+// Each row corresponds to DIFFICULTY_EASY / MEDIUM / HARD.
+// Adjust these values freely to tune the feel of each tier.
+static const RhythmDifficultyConfig DIFFICULTY_CONFIGS[3] = {
+    // EASY   noteSpeed  minSpawn  maxSpawn  doubleChance  premiumChance
+    {  400.0f,  0.6f,    1.2f,     0.05f,    0.15f },
+    // MEDIUM
+    {  500.0f,  0.4f,    1.0f,     0.15f,    0.25f },
+    // HARD
+    {  600.0f,  0.2f,   0.8f,    0.30f,    0.40f },
+};
+
+static RhythmDifficulty        g_difficulty = DIFFICULTY_MEDIUM;
+static RhythmDifficultyConfig  g_difficultyConfig = DIFFICULTY_CONFIGS[DIFFICULTY_MEDIUM];
+
+// ================= PHASE =================
+// Controls which screen is active within the rhythm game state.
+enum RhythmPhase {
+    PHASE_DIFFICULTY_SELECT,  // Player picks Easy / Medium / Hard
+    PHASE_PLAYING,            // Song is running
+    PHASE_FINISHED            // Song complete, waiting for E to exit
+};
+static RhythmPhase g_phase = PHASE_DIFFICULTY_SELECT;
+
+// Difficulty select UI – which button is hovered (0=Easy,1=Med,2=Hard,-1=none)
+static int g_diffSelectHovered = -1;
 
 // ================= TEXT POSITION CONSTANTS =================
 // Each text has its own X and Y position (normalized coordinates: -1.0 to 1.0)
@@ -64,11 +90,17 @@ static const float RETURN_TEXT_Y = -0.05f;
 static const float COUNTDOWN_TEXT_X = -0.3f;
 static const float COUNTDOWN_TEXT_Y = 0.20f;
 
-// Random spawn parameters
-static const float MIN_SPAWN_INTERVAL = 0.2f;   // Minimum time between notes
-static const float MAX_SPAWN_INTERVAL = 0.8f;   // Maximum time between notes
-static const float DOUBLE_NOTE_CHANCE = 0.15f;  // 15% chance for double notes
-static const float PREMIUM_NOTE_CHANCE = 0.25f;    // 25% chance for premium notes
+// Difficulty select screen positions
+static const float DIFF_TITLE_X = -0.30f;
+static const float DIFF_TITLE_Y = 0.55f;
+static const float DIFF_EASY_X = -0.45f;
+static const float DIFF_EASY_Y = 0.20f;
+static const float DIFF_MED_X = -0.45f;
+static const float DIFF_MED_Y = 0.00f;
+static const float DIFF_HARD_X = -0.45f;
+static const float DIFF_HARD_Y = -0.20f;
+static const float DIFF_HINT_X = -0.32f;
+static const float DIFF_HINT_Y = -0.55f;
 
 // ================= STATE =================
 
@@ -113,6 +145,8 @@ static const float WATERING_CAN_ANIM_DURATION = 0.3f;  // Total animation time (
 static bool g_wateringCanIsAnimating = false;  // Whether animation is active
 
 // ================= HELPERS =================
+
+static void StartGameplay();  // Forward declaration – defined after Rhythm_Initialize
 
 static s32 IsValidAudio(AEAudio audio) {
     return AEAudioIsValidAudio(audio);
@@ -169,35 +203,23 @@ static float RandomFloat(float min, float max) {
     return min + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (max - min)));
 }
 
-// Helper function to check if we should spawn a double note
-static bool ShouldSpawnDouble() {
-    return RandomFloat(0.0f, 1.0f) < DOUBLE_NOTE_CHANCE;
-}
-
-// Helper function to get random note type
-static NoteType GetRandomNoteType() {
-    float rng = RandomFloat(0.0f, 1.0f);
-    if (rng < PREMIUM_NOTE_CHANCE) {
-        return NOTE_PREMIUM;
-    }
-    return NOTE_NORMAL;
-}
-
 // Create randomized chart for the song duration
 static void CreateRandomChart(float totalDuration) {
     g_notes.clear();
     g_nextSpawnIndex = 0;
 
+    const RhythmDifficultyConfig& cfg = g_difficultyConfig;
+
     float currentTime = g_audioOffset;
 
     // Continue spawning notes until we reach near the end of the song
     while (currentTime < totalDuration - 2.0f) {
-        // Random interval until next note
-        float interval = RandomFloat(MIN_SPAWN_INTERVAL, MAX_SPAWN_INTERVAL);
+        // Random interval until next note (driven by difficulty config)
+        float interval = RandomFloat(cfg.minSpawnInterval, cfg.maxSpawnInterval);
 
         // Create the main note
         RhythmNote note = {};
-        note.type = GetRandomNoteType();
+        note.type = (RandomFloat(0.0f, 1.0f) < cfg.premiumNoteChance) ? NOTE_PREMIUM : NOTE_NORMAL;
         note.hitTime = currentTime;
         note.xPosition = SPAWN_X;
         note.hit = false;
@@ -206,7 +228,7 @@ static void CreateRandomChart(float totalDuration) {
         g_notes.push_back(note);
 
         // Chance to spawn a double note (quick second note)
-        if (ShouldSpawnDouble()) {
+        if (RandomFloat(0.0f, 1.0f) < cfg.doubleNoteChance) {
             RhythmNote doubleNote = {};
             doubleNote.type = NOTE_NORMAL; // Double notes are always normal
             doubleNote.hitTime = currentTime + 0.15f; // 150ms after first note
@@ -223,8 +245,8 @@ static void CreateRandomChart(float totalDuration) {
         currentTime += interval;
     }
 
-    printf("Generated %d random notes for %.1f second song\n",
-        (int)g_notes.size(), totalDuration);
+    printf("Generated %d random notes for %.1f second song (difficulty: %d)\n",
+        (int)g_notes.size(), totalDuration, (int)g_difficulty);
 }
 
 // ================= LIFECYCLE =================
@@ -287,11 +309,18 @@ void Rhythm_Load() {
 }
 
 void Rhythm_Initialize() {
-    g_isPlaying = false;
+    // Show the difficulty select screen first; the actual game
+    // starts once the player picks a difficulty (see Rhythm_Update).
+    g_phase = PHASE_DIFFICULTY_SELECT;
+    g_diffSelectHovered = -1;
+
+    g_isPlaying = true;   // keeps Update/Render running while on select screen
     g_songTime = 0.0f;
     g_songFinished = false;
     g_score = { 0, 0, 0, 0, 0, 0 };
     g_activeNotes.clear();
+    g_notes.clear();
+    g_nextSpawnIndex = 0;
     g_hitFeedbackTimer = 0.0f;
     g_audioStarted = false;
     g_preSongTimer = 0.0f;
@@ -300,28 +329,51 @@ void Rhythm_Initialize() {
     g_wateringCanRotation = 0.0f;
     g_wateringCanAnimTimer = 0.0f;
     g_wateringCanIsAnimating = false;
+}
+
+// Called internally once the player has chosen a difficulty.
+static void StartGameplay() {
+    g_phase = PHASE_PLAYING;
 
     // SET SONG PARAMETERS HERE
     g_audioOffset = 2.0f;
-    g_songDuration = 75.0f;     // Song length in seconds
+    g_songDuration = 75.0f;
 
-    // Create random chart instead of pattern-based
     CreateRandomChart(g_songDuration);
 
     g_currentSong = AEAudioLoadMusic("Assets/kk.wav");
-
-    g_isPlaying = true;
 }
 
 void Rhythm_Update() {
     if (!g_isPlaying) return;
 
     float dt = (float)AEFrameRateControllerGetFrameTime();
-    // Handle input
-    if (AEInputCheckTriggered(AEVK_W))
-    {
+
+    // ---- DIFFICULTY SELECT PHASE ----
+    if (g_phase == PHASE_DIFFICULTY_SELECT) {
+        // Press 1 / 2 / 3 to pick difficulty and start
+        if (AEInputCheckTriggered(AEVK_1)) {
+            Rhythm_SetDifficulty(DIFFICULTY_EASY);
+            StartGameplay();
+        }
+        else if (AEInputCheckTriggered(AEVK_2)) {
+            Rhythm_SetDifficulty(DIFFICULTY_MEDIUM);
+            StartGameplay();
+        }
+        else if (AEInputCheckTriggered(AEVK_3)) {
+            Rhythm_SetDifficulty(DIFFICULTY_HARD);
+            StartGameplay();
+        }
+        return;  // Skip all gameplay logic while on select screen
+    }
+
+    // ---- GAMEPLAY PHASE ----
+
+    // Handle hit input
+    if (AEInputCheckTriggered(AEVK_W)) {
         Rhythm_Hit();
     }
+
     // Handle countdown
     if (!g_audioStarted) {
         g_preSongTimer += dt;
@@ -342,7 +394,7 @@ void Rhythm_Update() {
     }
 
     // Spawn notes
-    while (g_nextSpawnIndex < g_notes.size()) {
+    while (g_nextSpawnIndex < (int)g_notes.size()) {
         RhythmNote& note = g_notes[g_nextSpawnIndex];
         if (note.hitTime - 1.5f <= g_songTime) {
             g_activeNotes.push_back(note);
@@ -356,7 +408,7 @@ void Rhythm_Update() {
     // Update notes
     for (auto it = g_activeNotes.begin(); it != g_activeNotes.end(); ) {
         float timeUntilHit = it->hitTime - g_songTime;
-        it->xPosition = JUDGMENT_LINE_X + (timeUntilHit * NOTE_SPEED);
+        it->xPosition = JUDGMENT_LINE_X + (timeUntilHit * g_difficultyConfig.noteSpeed);
 
         if (!it->hit && !it->missed && timeUntilHit < -MISS_WINDOW) {
             it->missed = true;
@@ -383,21 +435,16 @@ void Rhythm_Update() {
         float progress;
 
         if (g_wateringCanAnimTimer <= halfDuration) {
-            // First half: rotate anticlockwise to 45 degrees
             progress = g_wateringCanAnimTimer / halfDuration;
-            // Ease out
-            progress = progress * (2.0f - progress);
+            progress = progress * (2.0f - progress);  // Ease out
             g_wateringCanRotation = 45.0f * progress;
         }
         else if (g_wateringCanAnimTimer <= WATERING_CAN_ANIM_DURATION) {
-            // Second half: rotate back to 0 degrees
             progress = (g_wateringCanAnimTimer - halfDuration) / halfDuration;
-            // Ease in
-            progress = progress * progress;
+            progress = progress * progress;  // Ease in
             g_wateringCanRotation = 45.0f * (1.0f - progress);
         }
         else {
-            // Animation complete
             g_wateringCanRotation = 0.0f;
             g_wateringCanIsAnimating = false;
             g_wateringCanAnimTimer = 0.0f;
@@ -408,6 +455,7 @@ void Rhythm_Update() {
     if (g_audioStarted && g_songTime >= g_songDuration && g_activeNotes.empty()) {
         if (!g_songFinished) {
             g_songFinished = true;
+            g_phase = PHASE_FINISHED;
             printf("Song finished! Final Score: %d, Max Combo: %d\n",
                 g_score.totalScore, g_score.maxCombo);
         }
@@ -419,6 +467,32 @@ void Rhythm_Render() {
 
     AEMtx33 scale, trans, transform;
     char buffer[64];
+
+    // ================= DIFFICULTY SELECT SCREEN =================
+    if (g_phase == PHASE_DIFFICULTY_SELECT) {
+        if (g_fontId >= 0) {
+            // Title
+            AEGfxPrint(g_fontId, "SELECT DIFFICULTY",
+                DIFF_TITLE_X, DIFF_TITLE_Y, 1.5f, 1.0f, 1.0f, 0.2f, 1.0f);
+
+            // Easy   – green
+            AEGfxPrint(g_fontId, "[1]  EASY   - Slow notes, relaxed spacing",
+                DIFF_EASY_X, DIFF_EASY_Y, 1.0f, 0.3f, 1.0f, 0.3f, 1.0f);
+
+            // Medium – yellow
+            AEGfxPrint(g_fontId, "[2]  MEDIUM - Moderate speed and density",
+                DIFF_MED_X, DIFF_MED_Y, 1.0f, 1.0f, 0.85f, 0.2f, 1.0f);
+
+            // Hard   – red
+            AEGfxPrint(g_fontId, "[3]  HARD   - Fast notes, tight spacing",
+                DIFF_HARD_X, DIFF_HARD_Y, 1.0f, 1.0f, 0.3f, 0.3f, 1.0f);
+
+            // Hint
+            AEGfxPrint(g_fontId, "Press 1 / 2 / 3 to choose and start",
+                DIFF_HINT_X, DIFF_HINT_Y, 0.8f, 0.7f, 0.7f, 0.7f, 1.0f);
+        }
+        return;  // Don't draw the gameplay scene yet
+    }
 
     // ================= DRAW BACKGROUND FIRST =================
     if (g_pTexBackground) {
@@ -672,6 +746,23 @@ void Rhythm_Hit() {
 bool Rhythm_IsSongFinished() {
     return g_songFinished;
 }
+
+// ================= DIFFICULTY =================
+
+void Rhythm_SetDifficulty(RhythmDifficulty difficulty) {
+    g_difficulty = difficulty;
+    g_difficultyConfig = DIFFICULTY_CONFIGS[difficulty];
+}
+
+RhythmDifficulty Rhythm_GetDifficulty() {
+    return g_difficulty;
+}
+
+const RhythmDifficultyConfig& Rhythm_GetDifficultyConfig() {
+    return g_difficultyConfig;
+}
+
+// ================= GETTERS =================
 
 float Rhythm_GetSongDuration() {
     return g_songDuration;

@@ -24,6 +24,9 @@ constexpr auto PROFILE_NAME_MAX_LEN = 32;
 typedef struct {
     bool exists;
     char name[PROFILE_NAME_MAX_LEN];
+    // Play stats
+    float   play_time;      // total hours played
+    int     session_count;  // number of sessions
     // Economy data
     unsigned long long total_money;
     unsigned long long max_money;
@@ -36,9 +39,9 @@ typedef struct {
 } Profile;
 
 static Profile profiles[MAX_PROFILES] = {
-    { false, "", 0ULL, 255ULL, 1.0f, 0, 0, 0, {0,0,0} },
-    { false, "", 0ULL, 255ULL, 1.0f, 0, 0, 0, {0,0,0} },
-    { false, "", 0ULL, 255ULL, 1.0f, 0, 0, 0, {0,0,0} }
+    { false, "", 0.0f, 0, 0ULL, 255ULL, 1.0f, 0, 0, 0, {0,0,0} },
+    { false, "", 0.0f, 0, 0ULL, 255ULL, 1.0f, 0, 0, 0, {0,0,0} },
+    { false, "", 0.0f, 0, 0ULL, 255ULL, 1.0f, 0, 0, 0, {0,0,0} }
 };
 
 // Popup state
@@ -168,10 +171,74 @@ static void Profiles_Load() {
                 profiles[slotIndex].exists = (atoi(value) != 0);
             else if (strcmp(key, "NAME") == 0)
                 strncpy_s(profiles[slotIndex].name, PROFILE_NAME_MAX_LEN, value, _TRUNCATE);
+            else if (strcmp(key, "play_time") == 0)
+                sscanf_s(value, "%f", &profiles[slotIndex].play_time);
+            else if (strcmp(key, "session_count") == 0)
+                profiles[slotIndex].session_count = atoi(value);
         }
     }
     fclose(f);
     Profiles_Save(); // re-save to upgrade old files missing new sections
+}
+
+// ---------------------------------------------------------------------------
+// Play-time / session tracking
+// ---------------------------------------------------------------------------
+
+static float s_playTimeAccum = 0.0f;    // Seconds since last auto-save
+static float s_sessionStartTime = 0.0f; // Track when current session started
+static bool  s_sessionActive = false;     // Whether a session is currently active
+
+void Profile_StartSession() {
+    int slot = activeSlot;
+    if (slot < 0 || slot >= MAX_PROFILES || !profiles[slot].exists) return;
+
+    if (!s_sessionActive) {
+        // Increment session count once per session
+        profiles[slot].session_count++;
+        s_sessionActive = true;
+        s_sessionStartTime = 0.0f; // Will accumulate via UpdatePlayTime
+        s_playTimeAccum = 0.0f;
+
+        // Save immediately to persist the new session count
+        Profiles_Save();
+    }
+}
+
+void Profile_UpdatePlayTime(float dt) {
+    int slot = activeSlot;
+    if (slot < 0 || slot >= MAX_PROFILES || !profiles[slot].exists) return;
+    if (!s_sessionActive) return; // Don't track if session hasn't started
+
+    // Accumulate play time (convert seconds to hours)
+    profiles[slot].play_time += dt / 3600.0f;
+    s_playTimeAccum += dt;
+
+    // Auto-save every 60 seconds so play time survives a crash
+    if (s_playTimeAccum >= 60.0f) {
+        Profiles_Save();
+        s_playTimeAccum = 0.0f;
+    }
+}
+
+void Profile_EndSession() {
+    int slot = activeSlot;
+    if (slot < 0 || slot >= MAX_PROFILES || !profiles[slot].exists) return;
+
+    if (s_sessionActive) {
+        // Final save to ensure all data is persisted
+        Profiles_Save();
+        s_sessionActive = false;
+        s_playTimeAccum = 0.0f;
+    }
+}
+
+float Profile_GetPlayTime() {
+    return (activeSlot >= 0) ? profiles[activeSlot].play_time : 0.0f;
+}
+
+int Profile_GetSessionCount() {
+    return (activeSlot >= 0) ? profiles[activeSlot].session_count : 0;
 }
 
 // ---------------------------------------------------------------------------
@@ -221,6 +288,8 @@ void Economy_LoadFromProfile(int slot) {
 void Profile_CreateSlot(int slot, const char* name) {
     if (slot < 0 || slot >= MAX_PROFILES) return;
     profiles[slot].exists = true;
+    profiles[slot].play_time = 0.0f;
+    profiles[slot].session_count = 0;
     profiles[slot].total_money = 0ULL;
     profiles[slot].max_money = 255ULL;
     profiles[slot].money_multiplier = 1.0f;
@@ -500,6 +569,8 @@ void ProfileScreen_Update() {
                     mNDC_Y >= yPos - dHalfH && mNDC_Y <= yPos + dHalfH) {
                     profiles[i].exists = false;
                     profiles[i].name[0] = '\0';
+                    profiles[i].play_time = 0.0f;
+                    profiles[i].session_count = 0;
                     profiles[i].total_money = 0ULL;
                     profiles[i].max_money = 255ULL;
                     profiles[i].money_multiplier = 1.0f;
@@ -587,7 +658,7 @@ void ProfileScreen_Render() {
 
                 // coins - inside button, lower half
                 char infoText[64];
-                sprintf_s(infoText, sizeof(infoText), "Coins:%d",
+                sprintf_s(infoText, sizeof(infoText), "Coins:%llu",
                     profiles[i].total_money);
                 AEGfxPrint(fontId, infoText,
                     -0.13f, yPos - 0.03f,

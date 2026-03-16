@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #ifndef RHYTHM_H
 #define RHYTHM_H
@@ -40,6 +40,32 @@ struct RhythmScore {
     int maxCombo;
     int totalScore;
 };
+
+// Difficulty levels
+enum RhythmDifficulty {
+    DIFFICULTY_EASY = 0,
+    DIFFICULTY_MEDIUM,
+    DIFFICULTY_HARD
+};
+
+// Per-difficulty tuning parameters
+// (reward multipliers are intentionally left as placeholders for later)
+struct RhythmDifficultyConfig {
+    float noteSpeed;            // Pixels per second notes travel
+    float minSpawnInterval;     // Minimum seconds between notes
+    float maxSpawnInterval;     // Maximum seconds between notes
+    float doubleNoteChance;     // 0�1 probability of a quick double note
+    float premiumNoteChance;    // 0�1 probability of a premium note
+};
+
+// ================= DIFFICULTY =================
+
+// Set difficulty before calling Rhythm_Start(). Defaults to DIFFICULTY_MEDIUM.
+void Rhythm_SetDifficulty(RhythmDifficulty difficulty);
+RhythmDifficulty Rhythm_GetDifficulty();
+
+// Returns the config that is currently active (useful for UI display)
+const RhythmDifficultyConfig& Rhythm_GetDifficultyConfig();
 
 // ================= LIFECYCLE =================
 

@@ -435,7 +435,7 @@ void MainScreen_Render()
 
 	// Transformation Matrices
 	AEMtx33 scale, trans, transform;
-	char strBuffer[100]{};
+	//char strBuffer[100]{};
 
 
 
