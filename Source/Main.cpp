@@ -179,14 +179,14 @@ void MainScreen_Initialize()
 	//Start Screen Init
 	if (previousState == GS_NEXT_SCREEN && !Profile_WentBack())
 	{
-		// User selected a profile — go straight into the game
+		// User selected a profile ? go straight into the game
 		gStartScreenActive = false;
 		startScreenActive = false;
 	}
 
 	else if (previousState == GS_RHYTHM_SCREEN)
 	{
-		// Returning from rhythm game — skip the start screen entirely
+		// Returning from rhythm game ? skip the start screen entirely
 		gStartScreenActive = false;
 		startScreenActive = false;
 	}
@@ -782,15 +782,29 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			nextState = GS_EXIT;
 		}
 
-		// RHYTHM GAME INPUT - only allow exit after song finishes
-		if (currentState == GS_RHYTHM_SCREEN && Rhythm_IsSongFinished() && AEInputCheckTriggered(AEVK_E))
+		// RHYTHM GAME INPUT
+		if (currentState == GS_RHYTHM_SCREEN)
 		{
-			const RhythmScore& score = Rhythm_GetScore();
-			bool success = (score.perfectHits + score.goodHits) > score.misses;
-			Farm_OnRhythmResult(success);
-			nextState = GS_MAIN_SCREEN;
-		}
+			// Player finishes rhythm normally
+			if (AEInputCheckTriggered(AEVK_E))
+			{
+				bool success = true; // replace with real score logic
 
+				Farm_OnRhythmResult(success);
+				Farm_ClearRhythmRequest();
+				nextState = GS_MAIN_SCREEN;
+			}
+
+			// Player cancels rhythm game
+			if (AEInputCheckTriggered(AEVK_ESCAPE))
+			{
+				bool success = false; // treat as fail or cancel
+
+				Farm_OnRhythmResult(success);
+				Farm_ClearRhythmRequest();
+				nextState = GS_START_SCREEN;
+			}
+		}
 
 		// Check for state transition
 		if (nextState != currentState && !TR_IsActive())
