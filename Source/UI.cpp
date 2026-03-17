@@ -1,3 +1,5 @@
+#define NOMINMAX
+
 #include "UI.h"
 #include "Farm.h"
 #include "Economy.h"
@@ -5,6 +7,10 @@
 #include <vector>
 #include <iostream>
 #include <algorithm>
+#include <cstdio>
+#include <cmath>
+
+
 
 extern AEGfxVertexList* g_pMeshFullScreen;
 extern s8 fontId;
@@ -32,9 +38,21 @@ static AEGfxTexture* plotSlotTexture = nullptr;
 
 static AEGfxTexture* menuTexture = nullptr;
 static AEGfxTexture* seedsTexture = nullptr;
+
 static AEGfxTexture* inventoryIcon = nullptr;
+static AEGfxTexture* inventoryBG = nullptr;
+static AEGfxTexture* invFruit = nullptr;
+static AEGfxTexture* invFruitHighlight = nullptr;
+static AEGfxTexture* invSeed = nullptr;
+static AEGfxTexture* invSeedHighlight = nullptr;
+static AEGfxTexture* invSliderKnob = nullptr;
+static AEGfxTexture* invSliderFill = nullptr;
+
 static AEGfxTexture* collectionIcon = nullptr;
+static AEGfxTexture* collectionBG = nullptr;
+
 static AEGfxTexture* settingsIcon = nullptr;
+
 static AEGfxTexture* appleSeedIcon = nullptr;
 static AEGfxTexture* appleSeedInfo = nullptr;
 
@@ -97,14 +115,87 @@ static const float UP_HOVER_Y_NUDGE = 15.0f;  // px vertical nudge (negative = s
 static const float UP_HOVER_X_OFFSET = -50.0f;  // px horizontal nudge without moving text (negative = left)
 
 
+// -------------------------
+// Inventory panel
+// -------------------------
+
+// =========================
+// Inventory header icons (under title, left-aligned)
+// =========================
+enum InvTab { TAB_FRUITS = 0, TAB_SEEDS = 1 };
+static InvTab gActiveInvTab = TAB_FRUITS;   // default tab
+
+// Your panel is drawn at center (0,0) with size 520x680 in UI_Draw()
+static const float INV_PANEL_W = 520.0f;
+static const float INV_PANEL_H = 680.0f;
+
+// ---- POSITION CONTROLS  ----
+static const float INV_TAB_LEFT_PAD = 48.0f;   // px from panel LEFT edge to left icon's LEFT edge
+static const float INV_TAB_TOP_PAD = 120.0f;  // px from panel TOP edge down to icon's TOP edge
+static const float INV_TAB_SPACING_X = 96.0f;   // horizontal gap between Fruit and Seed
+
+// Icon draw size 
+static const float INV_FRUIT_W = 64.0f;
+static const float INV_FRUIT_H = 64.0f;
+static const float INV_FRUIT_HL_W = 72.0f;
+static const float INV_FRUIT_HL_H = 72.0f;
+
+static const float INV_SEED_W = 64.0f;
+static const float INV_SEED_H = 64.0f;
+static const float INV_SEED_HL_W = 72.0f;
+static const float INV_SEED_HL_H = 72.0f;
+
+// ---------- Slider label & value positions ----------
+static const float INV_SLD_LABEL_LEFT_XPAD = -10.0f;  // + = move min label right
+static const float INV_SLD_LABEL_RIGHT_XPAD = 6.0f;  // + = move max label left
+static const float INV_SLD_LABEL_Y_OFFSET = -20.0f;  //-+ = move labels DOWN 
+
+static const float INV_SLD_VALUE_Y_OFFSET = 30.0f;  // distance ABOVE the knob
+static const float INV_SLD_VALUE_SCALE = 0.5f;   // size of the number above the knob
+
+// ----------- Slider track position & size ---------
+static const float INV_SLD_LEFT_PAD = 110.0f;
+static const float INV_SLD_TOP_PAD = 590.0f;
+static const float INV_SLD_TRACK_W = 230.0f;
+static const float INV_SLD_FILL_H = 14.0f;
+
+// Knob size
+static const float INV_SLD_KNOB_W = 35.0f;
+static const float INV_SLD_KNOB_H = 48.0f;
+
+// Slider state (you already declared similar variables; if so, reuse)
+static int  gInvSliderValue = 1;     // selection
+static bool gInvSliderDragging = false; // dragging flag
+
+// ---- Trough & bubble alignment knobs ----
+static const float INV_SLD_FILL_Y_OFFSET = -10.0f;  // - moves fill DOWN, + moves UP  (start -4)
+static const float INV_SLD_TRACK_CAP_INSET = -60.0f;  // px eaten from both ends to sit inside rounded caps (start 10)
+static const float INV_SLD_FILL_THICKNESS = 10.0f;  // visual thickness of stripe (start 10)
+
+// Value bubble (number) above the trough, centered on the knob's X
+static const float INV_SLD_KNOB_ANCHOR_Y = 10.0f;
+static const float INV_SLD_TEXT_FROM_PNG_CENTER_Y = 5.0f;
+static const float INV_SLD_TEXT_X_OFFSET = -5.0f; // negative = left, positive = right
 
 void UI_Init()
 {
     menuTexture = AEGfxTextureLoad("Assets/MenuMockup.PNG");
     seedsTexture = AEGfxTextureLoad("Assets/SeedsPanel.png");
+
     inventoryIcon = AEGfxTextureLoad("Assets/Inventory.png");
+    inventoryBG = AEGfxTextureLoad("Assets/InventoryPanelBG.png");
+    invFruit = AEGfxTextureLoad("Assets/InvFruit.png");
+    invFruitHighlight = AEGfxTextureLoad("Assets/InvFruitHighlight.png");
+    invSeed = AEGfxTextureLoad("Assets/InvSeed.png");
+    invSeedHighlight = AEGfxTextureLoad("Assets/InvSeedHighlight.png");
+    invSliderKnob = AEGfxTextureLoad("Assets/InvSliderKnob.png");
+    invSliderFill = AEGfxTextureLoad("Assets/InvSliderFill.png");
+
     collectionIcon = AEGfxTextureLoad("Assets/Collection.png");
+    collectionBG = AEGfxTextureLoad("Assets/collectionBG.png");
+
     settingsIcon = AEGfxTextureLoad("Assets/Settings.png");
+
     appleSeedIcon = AEGfxTextureLoad("Assets/AppleSeed.png");
     appleSeedInfo = AEGfxTextureLoad("Assets/AppleSeedInfo.png");
     plotSlotTexture = AEGfxTextureLoad("Assets/Plot1.png");
@@ -122,14 +213,12 @@ void UI_Init()
         menuButtons.push_back({ menuCenterX + (i - 1) * buttonSpacing, buttonY, buttonSize, buttonSize, false, buttonOrder[i] });
     }
 
+
+    //plot setup
     plotPlusButton.x = -630.0f;
     plotPlusButton.y = 150.0f;
     plotPlusButton.width = 120.0f;
     plotPlusButton.height = 120.0f;
-
-    plotSlots.clear();
-
-    //plot setup
 
     float slotSize = 120.0f;
     float spacing = 150.0f;
@@ -152,7 +241,7 @@ void UI_Init()
     {
         for (int col = 0; col < cols; col++)
         {
-            PlotSlot slot = {};
+            PlotSlot slot{};
             slot.x = startX + col * spacing;
             slot.y = startY - row * spacing;
             slot.width = slotSize;
@@ -174,13 +263,7 @@ void UI_Input()
         menuOpen = !menuOpen;
 
     if (menuOpen)
-    {
-        // Close any open popup with Q - handled here, not in Draw
-        if (popupOpen && AEInputCheckTriggered(AEVK_Q))
-            popupOpen = false;
-
         UI_UpdateButtons();
-    }
 }
 
 void UI_UpdateButtons()
@@ -204,9 +287,20 @@ void UI_UpdateButtons()
 
         if (button.isHovered && AEInputCheckTriggered(AEVK_LBUTTON))
         {
-            popupOpen = true;
-            activePopupIndex = button.type;
+            if (popupOpen && activePopupIndex == button.type)
+            {
+                // Clicking the same button closes the popup
+                popupOpen = false;
+                activePopupIndex = -1;
+            }
+            else
+            {
+                // Open or switch to this button's popup
+                popupOpen = true;
+                activePopupIndex = button.type;
+            }
         }
+
     }
 
     // -------------------------------------------------
@@ -275,7 +369,7 @@ void UI_UpdateButtons()
 
     hoveredPlotIndex = -1;
 
-    for (int i = 0; i < plotSlots.size(); i++)
+    for (size_t i = 0; i < plotSlots.size(); i++)
     {
         PlotSlot& slot = plotSlots[i];
 
@@ -287,7 +381,7 @@ void UI_UpdateButtons()
 
         if (isOver)
         {
-            hoveredPlotIndex = i;
+            hoveredPlotIndex = static_cast<int>(i);
 
             if (AEInputCheckTriggered(AEVK_LBUTTON))
             {
@@ -301,7 +395,7 @@ void UI_UpdateButtons()
                 else
                 {
                     seedsPopupOpen = true;
-                    activePlotIndex = i;
+                    activePlotIndex = static_cast<int>(i);
                     selectedSeed = SEED_APPLE;   // SHOW INFO IMMEDIATELY
                 }
             }
@@ -311,9 +405,9 @@ void UI_UpdateButtons()
     }
 
     // DELETE SEED BUTTON (CLICK LOGIC ONLY)
-    for (int i = 0; i < plotSlots.size(); i++)
+    for (size_t i = 0; i < plotSlots.size(); i++)
     {
-        if (!Farm_IsPlotPlanted(i))
+        if (!Farm_IsPlotPlanted(static_cast<int>(i)))
             continue;
 
         float xSize = 25.0f;
@@ -332,7 +426,7 @@ void UI_UpdateButtons()
 
         if (overDelete && AEInputCheckTriggered(AEVK_LBUTTON))
         {
-            Farm_ClearPlot(i);
+            Farm_ClearPlot(static_cast<int>(i));
             break;
         }
     }
@@ -366,8 +460,6 @@ void UI_UpdateButtons()
 
         const float hoverY = rowCenterY + UP_HOVER_Y_NUDGE;
 
-        ;
-
         const bool over =
             worldX >= hoverX - hoverW * 0.5f && worldX <= hoverX + hoverW * 0.5f &&
             worldY >= hoverY - hoverH * 0.5f && worldY <= hoverY + hoverH * 0.5f;
@@ -378,6 +470,124 @@ void UI_UpdateButtons()
             break;
         }
         ++shownUp;
+    }
+
+    // ================= Inventory header icons input =================
+    if (popupOpen && activePopupIndex == BUTTON_INVENTORY)
+    {
+        // Panel is drawn at (0,0) with size INV_PANEL_W x INV_PANEL_H in UI_Draw()
+        const float invpanelX = 0.0f, invpanelY = 0.0f;
+        const float leftEdge = invpanelX - INV_PANEL_W * 0.5f;
+        const float topEdge = invpanelY + INV_PANEL_H * 0.5f;
+
+        // Use your NORMAL icon size as the "slot" (stable hitbox)
+        // If you switched to per-PNG sizes, keep using the normal sizes for hitboxes.
+        const float slotW = INV_FRUIT_W;
+        const float slotH = INV_FRUIT_H;
+
+        // Compute centers from the same paddings you use in UI_Draw()
+        const float fruitCx = leftEdge + INV_TAB_LEFT_PAD + slotW * 0.5f;
+        const float fruitCy = topEdge - INV_TAB_TOP_PAD - slotH * 0.5f;
+
+        const float seedCx = fruitCx + INV_TAB_SPACING_X;
+        const float seedCy = fruitCy;
+
+        const float hw = slotW * 0.5f;
+        const float hh = slotH * 0.5f;
+
+        auto PtIn = [&](float px, float py, float cx, float cy, float halfW, float halfH) -> bool {
+            return px >= cx - halfW && px <= cx + halfW &&
+                py >= cy - halfH && py <= cy + halfH;
+            };
+
+        if (AEInputCheckTriggered(AEVK_LBUTTON))
+        {
+            if (PtIn(worldX, worldY, fruitCx, fruitCy, hw, hh))
+            {
+                gActiveInvTab = TAB_FRUITS;
+            }
+            else if (PtIn(worldX, worldY, seedCx, seedCy, hw, hh))
+            {
+                gActiveInvTab = TAB_SEEDS;
+            }
+        }
+    }
+
+    // ================= Inventory slider input =================
+    if (popupOpen && activePopupIndex == BUTTON_INVENTORY)
+    {
+        // Panel edges
+        const float panelCenterX = 0.0f, panelCenterY = 0.0f;
+        const float leftEdge = panelCenterX - INV_PANEL_W * 0.5f;
+        const float topEdge = panelCenterY + INV_PANEL_H * 0.5f;
+
+        // Base endpoints from paddings
+        const float baseX0 = leftEdge + INV_SLD_LEFT_PAD;
+        const float baseX1 = baseX0 + INV_SLD_TRACK_W;
+
+        // Inside rounded caps
+        const float trackX0 = baseX0 + INV_SLD_TRACK_CAP_INSET;
+        const float trackX1 = baseX1 - INV_SLD_TRACK_CAP_INSET;
+
+        // Trough centerline (+ vertical nudge)
+        const float trackY = (topEdge - INV_SLD_TOP_PAD) + INV_SLD_FILL_Y_OFFSET;
+
+        // Active tab stock -> range
+        const int curCount = (gActiveInvTab == TAB_FRUITS)
+            ? Economy_GetFruitCount()
+            : Economy_GetSeedCount();
+
+        // If you want min to be 0 like your mock, set minVal=0 here.
+        const int minVal = (curCount > 0) ? 1 : 0;  // <- change to 0 if you prefer [0..N]
+        const int maxVal = curCount;
+
+        gInvSliderValue = (std::max)(minVal, (std::min)(maxVal, gInvSliderValue));
+
+        // Current knob (for hit-tests)
+        float t = (maxVal > minVal) ? float(gInvSliderValue - minVal) / float(maxVal - minVal) : 0.0f;
+        float knobX = trackX0 + t * (trackX1 - trackX0);
+        float knobY = trackY;
+
+        auto PtIn = [](float px, float py, float cx, float cy, float hw, float hh)->bool {
+            return (px >= cx - hw) && (px <= cx + hw) && (py >= cy - hh) && (py <= cy + hh);
+            };
+
+        // Generous hitboxes that match the visible stripe
+        const float knobHW = (std::max)(INV_SLD_KNOB_W * 0.6f, 18.0f);
+        const float knobHH = (std::max)(INV_SLD_KNOB_H * 0.6f, 18.0f);
+        const float trackHW = (trackX1 - trackX0) * 0.5f;
+        const float trackHH = (std::max)(INV_SLD_FILL_THICKNESS * 0.8f, 10.0f);
+
+        const bool overKnob = PtIn(worldX, worldY, knobX, knobY, knobHW, knobHH);
+        const bool overTrack = PtIn(worldX, worldY, 0.5f * (trackX0 + trackX1), trackY, trackHW, trackHH);
+
+        // AE input: held vs pressed
+        const bool mouseDown = AEInputCheckCurr(AEVK_LBUTTON) != 0;
+        const bool mousePress = AEInputCheckTriggered(AEVK_LBUTTON) != 0;
+
+        // Snap on press if clicking the track, or start drag on knob
+        if (mousePress && overTrack && maxVal >= minVal && (trackX1 > trackX0))
+        {
+            float clampedX = (worldX < trackX0) ? trackX0 : ((worldX > trackX1) ? trackX1 : worldX);
+            float tt = (clampedX - trackX0) / (trackX1 - trackX0);
+            int newVal = (int)std::round((float)minVal + tt * (float)(maxVal - minVal));
+            gInvSliderValue = (std::max)(minVal, (std::min)(maxVal, newVal));
+            gInvSliderDragging = true;
+        }
+        else if (mousePress && overKnob)
+        {
+            gInvSliderDragging = true;
+        }
+
+        if (!mouseDown) gInvSliderDragging = false;
+
+        if (gInvSliderDragging && maxVal >= minVal && (trackX1 > trackX0))
+        {
+            float clampedX = (worldX < trackX0) ? trackX0 : ((worldX > trackX1) ? trackX1 : worldX);
+            float tt = (clampedX - trackX0) / (trackX1 - trackX0);
+            int newVal = (int)std::round((float)minVal + tt * (float)(maxVal - minVal));
+            gInvSliderValue = (std::max)(minVal, (std::min)(maxVal, newVal));
+        }
     }
 
 }
@@ -473,28 +683,241 @@ void UI_Draw()
         switch (activePopupIndex)
         {
         case BUTTON_INVENTORY:
-            AEGfxPrint(fontId, "Inventory", xText, yText, 1.0f, 1, 1, 1, 1);
-            AEGfxPrint(fontId, "Your items appear here.",
-                xText, yText - 0.08f,
-                0.8f, 1, 1, 1, 1);
+
+        {
+            const float panelW = 520.0f;
+            const float panelH = 680.0f;
+            const float panelX = 0.0f;   // centered
+            const float panelY = 0.0f;   // centered
+
+            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+            AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+            AEGfxSetColorToMultiply(1, 1, 1, 1);
+            AEGfxTextureSet(inventoryBG, 0, 0);
+
+            AEMtx33Scale(&scale, panelW, panelH);
+            AEMtx33Trans(&trans, panelX, panelY);
+            AEMtx33Concat(&transform, &trans, &scale);
+
+            AEGfxSetTransform(transform.m);
+            AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+
+            // --- Fruits / Seeds icons (left-aligned under "Inventory") ---
+            {
+
+
+                const float leftEdge = panelX - INV_PANEL_W * 0.5f;
+                const float topEdge = panelY + INV_PANEL_H * 0.5f;
+
+                // Slot (base) size; both icons are drawn at this size
+                const float slotW = INV_FRUIT_W;
+                const float slotH = INV_FRUIT_H;
+
+                // Centers computed from padding (so it's aligned to the left under the title)
+                const float fruitCx = leftEdge + INV_TAB_LEFT_PAD + slotW * 0.5f;
+                const float fruitCy = topEdge - INV_TAB_TOP_PAD - slotH * 0.5f;
+
+                const float seedCx = fruitCx + INV_TAB_SPACING_X;
+                const float seedCy = fruitCy;
+
+                const bool fruitActive = (gActiveInvTab == TAB_FRUITS);
+                const bool seedActive = (gActiveInvTab == TAB_SEEDS);
+
+                // ----- FRUIT -----
+                {
+                    const float w = fruitActive ? INV_FRUIT_HL_W : INV_FRUIT_W;
+                    const float h = fruitActive ? INV_FRUIT_HL_H : INV_FRUIT_H;
+
+                    AEGfxTextureSet(fruitActive ? invFruitHighlight : invFruit, 0, 0);
+                    AEMtx33Scale(&scale, w, h);
+                    AEMtx33Trans(&trans, fruitCx, fruitCy); // same center
+                    AEMtx33Concat(&transform, &trans, &scale);
+                    AEGfxSetTransform(transform.m);
+                    AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+                }
+
+                // ----- SEED -----
+                {
+                    const float w = seedActive ? INV_SEED_HL_W : INV_SEED_W;
+                    const float h = seedActive ? INV_SEED_HL_H : INV_SEED_H;
+
+                    AEGfxTextureSet(seedActive ? invSeedHighlight : invSeed, 0, 0);
+                    AEMtx33Scale(&scale, w, h);
+                    AEMtx33Trans(&trans, seedCx, seedCy);
+                    AEMtx33Concat(&transform, &trans, &scale);
+                    AEGfxSetTransform(transform.m);
+                    AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+                }
+
+            }
+
+            // --- Draw capacity text "current/limit" ---
+            const int invcur = (gActiveInvTab == TAB_FRUITS) ? Economy_GetFruitCount() : Economy_GetSeedCount();// from Economy.cpp
+            const int invmax = Economy_GetInventoryLimit();  // from Economy.cpp
+
+            char capText[16];
+            sprintf_s(capText, "%d/%d", invcur, invmax);
+
+            // Position inside the small rounded header box on your PNG.
+            // Nudge the multipliers a little if it’s off by a few pixels.
+            float textX = (panelX + panelW * 0.24f) / 800.0f;
+            float textY = (panelY + panelH * 0.41f) / 450.0f;
+
+            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+            AEGfxSetColorToMultiply(0, 0, 0, 1); // dark text to match your PNG style
+            AEGfxPrint(fontId, capText, textX, textY, 0.9f, 0, 0, 0, 1);
+
+            // --- Slider fill + knob + min/max labels (single scope) ---
+            // Panel edges
+            const float panelCenterX = 0.0f, panelCenterY = 0.0f;
+            const float leftEdge = panelCenterX - INV_PANEL_W * 0.5f;
+            const float topEdge = panelCenterY + INV_PANEL_H * 0.5f;
+
+            // Base endpoints from paddings
+            const float baseX0 = leftEdge + INV_SLD_LEFT_PAD;
+            const float baseX1 = baseX0 + INV_SLD_TRACK_W;
+
+            // Inside rounded caps
+            const float trackX0 = baseX0 + INV_SLD_TRACK_CAP_INSET;
+            const float trackX1 = baseX1 - INV_SLD_TRACK_CAP_INSET;
+
+            // Trough centerline (+ vertical nudge)
+            const float trackY = (topEdge - INV_SLD_TOP_PAD) + INV_SLD_FILL_Y_OFFSET;
+
+            // Range
+            const int curCount = (gActiveInvTab == TAB_FRUITS)
+                ? Economy_GetFruitCount()
+                : Economy_GetSeedCount();
+            const int minVal = (curCount > 0) ? 1 : 0;   // set to 0 if you prefer [0..N]
+            const int maxVal = curCount;
+
+            gInvSliderValue = (std::max)(minVal, (std::min)(maxVal, gInvSliderValue));
+
+            // Fraction and positions
+            const float t = (maxVal > minVal)
+                ? (float)(gInvSliderValue - minVal) / (float)(maxVal - minVal)
+                : 0.0f;
+            const float knobX = trackX0 + (trackX1 - trackX0) * t;
+            const float knobY = trackY;
+            const float stripeH = INV_SLD_FILL_THICKNESS;
+            const float fillW = (trackX1 - trackX0) * t;
+            const float pngCenterY = knobY + INV_SLD_KNOB_ANCHOR_Y;
+
+            // -------- 1) FILL (left-anchored) --------
+            if (fillW > 0.5f) {
+                AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+                if (invSliderFill) {
+                    AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+                    AEGfxSetColorToMultiply(1.00f, 0.95f, 0.80f, 1.0f); // optional warm tint
+                    AEGfxTextureSet(invSliderFill, 0, 0);
+                }
+                else {
+                    AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+                    AEGfxSetColorToMultiply(1.0f, 0.92f, 0.6f, 1.0f);
+                }
+                AEMtx33Scale(&scale, fillW, stripeH);
+                AEMtx33Trans(&trans, trackX0 + 0.5f * fillW, trackY);
+                AEMtx33Concat(&transform, &trans, &scale);
+                AEGfxSetTransform(transform.m);
+                AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+            }
+
+            // -------- KNOB + BUBBLE (single PNG) --------
+            if (invSliderKnob)
+            {
+                AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+                AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+                AEGfxSetColorToMultiply(1, 1, 1, 1);
+                AEGfxTextureSet(invSliderKnob, 0, 0);
+
+                AEMtx33Scale(&scale, INV_SLD_KNOB_W, INV_SLD_KNOB_H);
+                AEMtx33Trans(&trans, knobX, pngCenterY);
+                AEMtx33Concat(&transform, &trans, &scale);
+
+                AEGfxSetTransform(transform.m);
+                AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+            }
+
+
+            // -------- Labels (define lb/rb + half sizes here) --------
+            char lb[8], rb[8];
+            sprintf_s(lb, "%d", minVal);
+            sprintf_s(rb, "%d", maxVal);
+            const float halfW = 800.0f, halfH = 450.0f;
+
+            const float leftLabelX = (trackX0 + INV_SLD_LABEL_LEFT_XPAD) / halfW;
+            const float leftLabelY = (trackY + INV_SLD_LABEL_Y_OFFSET) / halfH;
+            const float rightLabelX = (trackX1 - INV_SLD_LABEL_RIGHT_XPAD) / halfW;
+            const float rightLabelY = leftLabelY;
+
+            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+            AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+            AEGfxSetColorToMultiply(0, 0, 0, 1);
+            AEGfxPrint(fontId, lb, leftLabelX, leftLabelY, 0.8f, 0, 0, 0, 1);
+            AEGfxPrint(fontId, rb, rightLabelX, rightLabelY, 0.8f, 0, 0, 0, 1);
+            // -------- Value text INSIDE bubble (centered) --------
+            {
+                char valTxt[8];
+                sprintf_s(valTxt, "%d", gInvSliderValue);
+
+                const float vhalfW = 800.0f;
+                const float vhalfH = 450.0f;
+
+                // Bubble center
+                const float textWorldX = knobX + INV_SLD_TEXT_X_OFFSET;
+                const float textWorldY = knobY + INV_SLD_KNOB_ANCHOR_Y + INV_SLD_TEXT_FROM_PNG_CENTER_Y;
+
+                // Approx width per character in normalized coordinates (tweak if needed)
+                float charWidth = 0.012f; // ~1.2% of screen width per character
+                int len = static_cast<int>(strlen(valTxt));
+                float adjX = textWorldX / vhalfW - charWidth * (len - 1) * 0.5f;
+                float vtextY = textWorldY / vhalfH;
+
+                // Main text
+                AEGfxSetColorToMultiply(0, 0, 0, 1);
+                AEGfxPrint(fontId, valTxt, adjX, vtextY, 0.8f, 0, 0, 0, 1);
+            }
             break;
+        }
 
         case BUTTON_COLLECTION:
-            AEGfxPrint(fontId, "Collection", xText, yText, 1.0f, 1, 1, 1, 1);
-            AEGfxPrint(fontId, "Your discovered fruits.",
-                xText, yText - 0.08f,
-                0.8f, 1, 1, 1, 1);
-            break;
+        {
+            const float panelW = 800.0f;
+            const float panelH = 600.0f;
+            const float panelX = 180.0f;   // to the right
+            const float panelY = 0.0f;   // centered
 
+            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+            AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+            AEGfxSetColorToMultiply(1, 1, 1, 1);
+            AEGfxTextureSet(collectionBG, 0, 0);
+
+            AEMtx33Scale(&scale, panelW, panelH);
+            AEMtx33Trans(&trans, panelX, panelY);
+            AEMtx33Concat(&transform, &trans, &scale);
+
+            AEGfxSetTransform(transform.m);
+            AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+            break;
+        }
         case BUTTON_SETTINGS:
+        {
             AEGfxPrint(fontId, "Settings", xText, yText, 1.0f, 1, 1, 1, 1);
             AEGfxPrint(fontId, "Game options here.",
                 xText, yText - 0.08f,
                 0.8f, 1, 1, 1, 1);
             break;
         }
+        }
     }
-    // Note: Q to close popup is handled in UI_Input(), not here
+
+
+    if (popupOpen && AEInputCheckTriggered(AEVK_Q))
+    {
+        popupOpen = false;
+    }
 
     // --- Upgrades Panel ---
 
@@ -572,21 +995,22 @@ void UI_Draw()
     // --- Seeds Panel ---
     if (seedsPopupOpen)
     {
+
         AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
         AEGfxSetBlendMode(AE_GFX_BM_BLEND);
         AEGfxSetColorToMultiply(1, 1, 1, 1);
         AEGfxSetTransparency(1.0f);
-        float seedsPanelX = -100.0f;
-        float seedsPanelY = 0.0f;
+        float seedspanelX = -100.0f;
+        float seedspanelY = 0.0f;
 
         AEGfxTextureSet(seedsTexture, 0, 0);
         AEMtx33Scale(&scale, 400, 550);
-        AEMtx33Trans(&trans, seedsPanelX, seedsPanelY);
+        AEMtx33Trans(&trans, seedspanelX, seedspanelY);
         AEMtx33Concat(&transform, &trans, &scale);
         AEGfxSetTransform(transform.m);
         AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
 
-        float seedY = seedsPanelY + 120.0f;
+        float seedY = seedspanelY + 120.0f;
 
         // Highlight
         if (hoveredSeed == SEED_APPLE)
@@ -596,7 +1020,7 @@ void UI_Draw()
             AEGfxSetColorToMultiply(1.0f, 0.55f, 0.0f, 0.9f);
 
             AEMtx33Scale(&scale, 112, 112);   // slightly larger than icon
-            AEMtx33Trans(&trans, seedsPanelX, seedY);
+            AEMtx33Trans(&trans, seedspanelX, seedY);
             AEMtx33Concat(&transform, &trans, &scale);
 
             AEGfxSetTransform(transform.m);
@@ -613,7 +1037,7 @@ void UI_Draw()
         AEGfxTextureSet(appleSeedIcon, 0, 0);
 
         AEMtx33Scale(&scale, 100, 100);
-        AEMtx33Trans(&trans, seedsPanelX, seedY);
+        AEMtx33Trans(&trans, seedspanelX, seedY);
         AEMtx33Concat(&transform, &trans, &scale);
         AEGfxSetTransform(transform.m);
         AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
@@ -624,7 +1048,7 @@ void UI_Draw()
     AEGfxSetColorToMultiply(1, 1, 1, 1);
     AEGfxTextureSet(plotSlotTexture, 0, 0);
 
-    for (int i = 0; i < plotSlots.size(); i++)
+    for (size_t i = 0; i < plotSlots.size(); i++)
     {
         PlotSlot& slot = plotSlots[i];
 
@@ -685,17 +1109,19 @@ void UI_Draw()
         AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
     }
 
-
-
 }
 bool UI_IsMenuOpen()
 {
     return menuOpen;
 }
 
+
 // ============================
 // Crate hover + tints
 // ============================
+
+// Build crate hover rectangles so they align with the wooden bins on the stall.
+// Uses the SAME transform in MainScreen_Render() for the stall image.
 
 static void UI_ResetCrateConfigToDefaults()
 {
@@ -975,9 +1401,21 @@ void UI_Exit()
     // free textures here
     AEGfxTextureUnload(menuTexture);
     AEGfxTextureUnload(seedsTexture);
+
     AEGfxTextureUnload(inventoryIcon);
+    AEGfxTextureUnload(inventoryBG);
+    AEGfxTextureUnload(invFruit);
+    AEGfxTextureUnload(invFruitHighlight);
+    AEGfxTextureUnload(invSeed);
+    AEGfxTextureUnload(invSeedHighlight);
+    AEGfxTextureUnload(invSliderKnob);
+    AEGfxTextureUnload(invSliderFill);
+
     AEGfxTextureUnload(collectionIcon);
+    AEGfxTextureUnload(collectionBG);
+
     AEGfxTextureUnload(settingsIcon);
+
     AEGfxTextureUnload(appleSeedIcon);
     AEGfxTextureUnload(appleSeedInfo);
     AEGfxTextureUnload(plotSlotTexture);
