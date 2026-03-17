@@ -113,6 +113,12 @@ bool Crate_AddFruit(int crateIndex, int amount)
     return added;
 }
 
+bool Crate_AddFruitTyped(int fruitType, int amount)
+{
+    if (fruitType < 0 || fruitType >= CRATE_COUNT) return false;
+    return Crate_AddFruit(fruitType, amount);
+}
+
 bool Crate_RemoveFruit(int crateIndex)
 {
     return Crate_RemoveFruitAmount(crateIndex, 1);
@@ -131,4 +137,10 @@ bool Crate_RemoveFruitAmount(int crateIndex, int amount)
     std::cout << "Crate[" << crateIndex << "] -" << amount << " fruit -> stock="
         << g_crates[crateIndex].fruitCount << "\n";
     return true;
+}
+
+bool Crate_RemoveFruitTyped(int fruitType, int amount)
+{
+    if (fruitType < 0 || fruitType >= CRATE_COUNT) return false;
+    return Crate_RemoveFruitAmount(fruitType, amount);
 }

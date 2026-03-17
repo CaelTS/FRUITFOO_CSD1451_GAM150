@@ -527,6 +527,25 @@ void Farm_Unload()
 
 void Farm_PlantSeed(int plotIndex, int seedType)
 {
+    // Check first using getter
+    bool hasEnough = false;
+    switch (seedType) {
+    case 0: hasEnough = (GetAppleSeedCount() >= 1); break;
+    case 1: hasEnough = (GetPearSeedCount() >= 1); break;
+    case 2: hasEnough = (GetBananaSeedCount() >= 1); break;
+    }
+
+    if (!hasEnough) {
+        std::cout << "No seeds of type " << seedType << " available!\n";
+        return;
+    }
+
+    // Now remove (will succeed)
+    if (!Inventory_RemoveSeed(1, static_cast<u8>(seedType))) {
+        return;  // Shouldn't happen, but safety check
+    }
+
+
     g_rhythmUsed = false;
 
     if (plotIndex < 0 || plotIndex >= farmPlots.size())

@@ -44,6 +44,12 @@ bool Crate_RemoveFruit(int crateIndex);
 // Returns true if the full amount was available and removed.
 bool Crate_RemoveFruitAmount(int crateIndex, int amount);
 
+//Add specific fruit type to its corresponding crate(0 = apple, 1 = pear, 2 = banana)
+bool Crate_AddFruitTyped(int fruitType, int amount);
+
+// Remove fruit from specific crate by fruit type (0=apple, 1=pear, 2=banana)
+bool Crate_RemoveFruitTyped(int fruitType, int amount);
+
 // ------------------------------------------------------------
 // Profile bridge  (called internally and by Profile.cpp)
 // ------------------------------------------------------------
