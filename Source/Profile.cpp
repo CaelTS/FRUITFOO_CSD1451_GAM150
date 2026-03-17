@@ -990,7 +990,7 @@ void ProfileScreen_Render() {
 
                 // Show edit hint on hover (same row as name, to the right)
                 if (hoveredProfileSlot == i) {
-                    const char* hint = selectMode ? "[click to load]" : "[click to rename]";
+                    const char* hint = "[click to load]";
                     AEGfxPrint(fontId, hint,
                         0.05f, yPos + 0.045f,
                         0.45f, 1.0f, 0.9f, 0.5f, 1.0f);

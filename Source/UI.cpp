@@ -682,16 +682,25 @@ void UI_UpdateButtons()
                     worldY >= y - 20 && worldY <= y + 20;
             };
 
-        // YES
         if (Btn(-60, -40) && AEInputCheckTriggered(AEVK_LBUTTON))
         {
-            if (gSelectedInvItem == INV_ITEM_APPLE)
-                Inventory_RemoveFruit(static_cast<u8>(gInvSliderValue));
-            else
-                Inventory_RemoveSeed(static_cast<u8>(gInvSliderValue));
+            bool removed = false;
 
-            gInvConfirmOpen = false;
-            gSelectedInvItem = INV_ITEM_NONE;
+            switch (gSelectedInvItem)
+            {
+            case INV_ITEM_APPLE:
+                removed = Inventory_RemoveFruitTyped(static_cast<u8>(gInvSliderValue), 0);
+                break;
+            case INV_ITEM_APPLE_SEED:
+                removed = Inventory_RemoveSeed(static_cast<u8>(gInvSliderValue), 0);
+                break;
+            }
+
+            if (removed)
+            {
+                gInvConfirmOpen = false;
+                gSelectedInvItem = INV_ITEM_NONE;
+            }
         }
 
         // NO
