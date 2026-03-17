@@ -36,6 +36,8 @@ typedef struct {
     unsigned long long max_money;
     float money_multiplier;
     // Inventory data
+    int total_fruits;   // apples + pears + bananas (cached sum)
+    int total_seeds;    // seed_apple + seed_pear + seed_banana (cached sum)
     int apples;
     int pears;
     int bananas;
@@ -53,15 +55,15 @@ typedef struct {
 } Profile;
 
 static Profile profiles[MAX_PROFILES] = {
-    { false, "", 0.0f, 0, 0ULL, 255ULL, 1.0f, 0, 0, 0, {0,0,0},
+    { false, "", 0.0f, 0, 0ULL, 255ULL, 1.0f, /*total_fruits*/0, /*total_seeds*/0, 0, 0, 0, {0,0,0},
       {true,false,false,false}, {false,false,false,false}, {false,false,false,false},
       {0.0f,0.0f,0.0f,0.0f}, {-1,-1,-1,-1},
       {true,false,false}, {0,0,0} },
-    { false, "", 0.0f, 0, 0ULL, 255ULL, 1.0f, 0, 0, 0, {0,0,0},
+    { false, "", 0.0f, 0, 0ULL, 255ULL, 1.0f, /*total_fruits*/0, /*total_seeds*/0, 0, 0, 0, {0,0,0},
       {true,false,false,false}, {false,false,false,false}, {false,false,false,false},
       {0.0f,0.0f,0.0f,0.0f}, {-1,-1,-1,-1},
       {true,false,false}, {0,0,0} },
-    { false, "", 0.0f, 0, 0ULL, 255ULL, 1.0f, 0, 0, 0, {0,0,0},
+    { false, "", 0.0f, 0, 0ULL, 255ULL, 1.0f, /*total_fruits*/0, /*total_seeds*/0, 0, 0, 0, {0,0,0},
       {true,false,false,false}, {false,false,false,false}, {false,false,false,false},
       {0.0f,0.0f,0.0f,0.0f}, {-1,-1,-1,-1},
       {true,false,false}, {0,0,0} }
@@ -126,6 +128,8 @@ static void Profiles_Save() {
             fprintf(f, "money_multiplier=%.3f\n", profiles[i].money_multiplier);
             fprintf(f, "\n");
             fprintf(f, "[inventory]\n");
+            fprintf(f, "total_fruits=%d\n", profiles[i].apples + profiles[i].pears + profiles[i].bananas);
+            fprintf(f, "total_seeds=%d\n", profiles[i].seeds[0] + profiles[i].seeds[1] + profiles[i].seeds[2]);
             fprintf(f, "apples=%d\n", profiles[i].apples);
             fprintf(f, "pears=%d\n", profiles[i].pears);
             fprintf(f, "bananas=%d\n", profiles[i].bananas);
@@ -236,7 +240,9 @@ static void Profiles_Load() {
                 profiles[slotIndex].money_multiplier = (float)atof(value);
         }
         else if (inInventory) {
-            if (strcmp(key, "apples") == 0) profiles[slotIndex].apples = atoi(value);
+            if (strcmp(key, "total_fruits") == 0) profiles[slotIndex].total_fruits = atoi(value);
+            else if (strcmp(key, "total_seeds") == 0) profiles[slotIndex].total_seeds = atoi(value);
+            else if (strcmp(key, "apples") == 0) profiles[slotIndex].apples = atoi(value);
             else if (strcmp(key, "pears") == 0) profiles[slotIndex].pears = atoi(value);
             else if (strcmp(key, "bananas") == 0) profiles[slotIndex].bananas = atoi(value);
             else if (strcmp(key, "seeds") == 0)
@@ -426,6 +432,9 @@ void Profile_SaveInventory(int slot, int apples, int pears, int bananas,
     profiles[slot].seeds[0] = seedApple;
     profiles[slot].seeds[1] = seedPear;
     profiles[slot].seeds[2] = seedBanana;
+    // Keep cached totals in sync
+    profiles[slot].total_fruits = apples + pears + bananas;
+    profiles[slot].total_seeds = seedApple + seedPear + seedBanana;
     Profiles_Save();
 }
 
@@ -564,6 +573,8 @@ void Profile_CreateSlot(int slot, const char* name) {
     profiles[slot].seeds[0] = 10;  // apple seeds
     profiles[slot].seeds[1] = 0;   // pear seeds
     profiles[slot].seeds[2] = 0;   // banana seeds
+    profiles[slot].total_fruits = 10; // apples only at start
+    profiles[slot].total_seeds = 10; // apple seeds only at start
     // Default farm state: plot 0 unlocked, all empty
     profiles[slot].plot_unlocked[0] = true;
     profiles[slot].plot_unlocked[1] = false;

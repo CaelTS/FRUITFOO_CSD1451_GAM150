@@ -27,6 +27,8 @@ struct SSProfile
     bool exists = false;
     char name[PROFILE_NAME_MAX] = "";
     int  coins = 0;
+    int  total_fruits = 0;  // apples + pears + bananas (mirrors Profile.cpp)
+    int  total_seeds = 0;  // seed sums (mirrors Profile.cpp)
     // Farm plot data (mirrors Profile.cpp's farm fields)
     bool plot_unlocked[MAX_FARM_PLOTS] = { true, false, false, false };
     bool plot_planted[MAX_FARM_PLOTS] = { false, false, false, false };
@@ -84,11 +86,12 @@ static void SS_Profiles_Load()
         if (len == 0) continue;
 
         if (line[0] == '[') {
-            if (strcmp(line, "[economy]") == 0) { inEconomy = true;  inInventory = false; inFarm = false; }
-            else if (strcmp(line, "[inventory]") == 0) { inInventory = true; inEconomy = false;  inFarm = false; }
-            else if (strcmp(line, "[farm]") == 0) { inFarm = true;     inEconomy = false;   inInventory = false; }
+            if (strcmp(line, "[economy]") == 0) { inEconomy = true;  inInventory = false; inFarm = false;  inCrate = false; }
+            else if (strcmp(line, "[inventory]") == 0) { inInventory = true; inEconomy = false;  inFarm = false;  inCrate = false; }
+            else if (strcmp(line, "[farm]") == 0) { inFarm = true;     inEconomy = false;   inInventory = false; inCrate = false; }
+            else if (strcmp(line, "[crate]") == 0) { inCrate = true;    inFarm = false;      inEconomy = false;   inInventory = false; }
             else {
-                inEconomy = false; inInventory = false; inFarm = false;
+                inEconomy = false; inInventory = false; inFarm = false; inCrate = false;
                 sscanf_s(line, "[PROFILE_%d]", &slot);
             }
             continue;
@@ -111,7 +114,11 @@ static void SS_Profiles_Load()
         else if (inEconomy) {
             if (strcmp(key, "total_money") == 0) g_profiles[slot].coins = atoi(val);
         }
-        // Ignore [inventory] section - we don't need it in StartScreen
+        // Parse [inventory] section for total counts displayed on profile slots
+        else if (inInventory) {
+            if (strcmp(key, "total_fruits") == 0) g_profiles[slot].total_fruits = atoi(val);
+            else if (strcmp(key, "total_seeds") == 0)  g_profiles[slot].total_seeds = atoi(val);
+        }
         else if (inFarm) {
             int v0, v1, v2, v3;
             float f0, f1, f2, f3;
