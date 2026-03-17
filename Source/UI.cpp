@@ -48,6 +48,11 @@ static AEGfxTexture* invSeed = nullptr;
 static AEGfxTexture* invSeedHighlight = nullptr;
 static AEGfxTexture* invSliderKnob = nullptr;
 static AEGfxTexture* invSliderFill = nullptr;
+static AEGfxTexture* appleIcon = nullptr;
+static AEGfxTexture* trashIcon = nullptr;
+static AEGfxTexture* confirmBG = nullptr;
+static AEGfxTexture* confirmYes = nullptr;
+static AEGfxTexture* confirmNo = nullptr;
 
 static AEGfxTexture* collectionIcon = nullptr;
 static AEGfxTexture* collectionBG = nullptr;
@@ -178,6 +183,31 @@ static const float INV_SLD_KNOB_ANCHOR_Y = 10.0f;
 static const float INV_SLD_TEXT_FROM_PNG_CENTER_Y = 5.0f;
 static const float INV_SLD_TEXT_X_OFFSET = -5.0f; // negative = left, positive = right
 
+// ================= Inventory item selection =================
+enum InvItem
+{
+    INV_ITEM_NONE = -1,
+    INV_ITEM_APPLE = 0,
+    INV_ITEM_APPLE_SEED = 1
+};
+
+static int gSelectedInvItem = INV_ITEM_NONE;
+static bool gInvConfirmOpen = false;
+static bool gHoverYes = false;
+static bool gHoverNo = false;
+static bool gHoverApple = false;
+static bool gHoverTrash = false;
+
+// Inventory item (apple / seed)
+static const float INV_ITEM_X = -180.0f;
+static const float INV_ITEM_Y = 90.0f;
+static const float INV_ITEM_SIZE = 90.0f;
+
+// Trash button
+static const float INV_TRASH_X = 180.0f;
+static const float INV_TRASH_Y = -250.0f;
+static const float INV_TRASH_SIZE = 48.0f;
+
 void UI_Init()
 {
     menuTexture = AEGfxTextureLoad("Assets/MenuMockup.PNG");
@@ -191,6 +221,12 @@ void UI_Init()
     invSeedHighlight = AEGfxTextureLoad("Assets/InvSeedHighlight.png");
     invSliderKnob = AEGfxTextureLoad("Assets/InvSliderKnob.png");
     invSliderFill = AEGfxTextureLoad("Assets/InvSliderFill.png");
+    appleIcon = AEGfxTextureLoad("Assets/HarvestApple.png");
+    trashIcon = AEGfxTextureLoad("Assets/Trash.png");
+
+    confirmBG = AEGfxTextureLoad("Assets/ConfirmBG.png");
+    confirmYes = AEGfxTextureLoad("Assets/Yes.png");
+    confirmNo = AEGfxTextureLoad("Assets/No.png");
 
     collectionIcon = AEGfxTextureLoad("Assets/Collection.png");
     collectionBG = AEGfxTextureLoad("Assets/collectionBG.png");
@@ -364,7 +400,7 @@ void UI_UpdateButtons()
         }
     }
 
-    // -------------------------------------------------
+// -------------------------------------------------
 // PLOT SLOT HOVER
 // -------------------------------------------------
 
@@ -589,6 +625,104 @@ void UI_UpdateButtons()
             int newVal = (int)std::round((float)minVal + tt * (float)(maxVal - minVal));
             gInvSliderValue = (std::max)(minVal, (std::min)(maxVal, newVal));
         }
+    }
+
+    // ================= Inventory item click =================
+    if (popupOpen && activePopupIndex == BUTTON_INVENTORY)
+    {
+
+        const float invpanelX = 0.0f;
+        const float invpanelY = 0.0f;
+
+        float itemX = invpanelX + INV_ITEM_X;
+        float itemY = invpanelY + INV_ITEM_Y;
+
+        gHoverApple =
+            worldX >= itemX - INV_ITEM_SIZE * 0.5f &&
+            worldX <= itemX + INV_ITEM_SIZE * 0.5f &&
+            worldY >= itemY - INV_ITEM_SIZE * 0.5f &&
+            worldY <= itemY + INV_ITEM_SIZE * 0.5f;
+
+        if (gHoverApple && AEInputCheckTriggered(AEVK_LBUTTON))
+        {
+            gSelectedInvItem = (gActiveInvTab == TAB_FRUITS) ? INV_ITEM_APPLE : INV_ITEM_APPLE_SEED;
+
+            gInvSliderValue = 1;
+        }
+
+    }
+    // Trash
+    if (popupOpen && activePopupIndex == BUTTON_INVENTORY && gSelectedInvItem != INV_ITEM_NONE)
+    {
+        const float invpanelX = 0.0f;
+        const float invpanelY = 0.0f;
+
+        float tx = invpanelX + INV_TRASH_X;
+        float ty = invpanelY + INV_TRASH_Y;
+
+        gHoverTrash =
+            worldX >= tx - INV_TRASH_SIZE * 0.5f &&
+            worldX <= tx + INV_TRASH_SIZE * 0.5f &&
+            worldY >= ty - INV_TRASH_SIZE * 0.5f &&
+            worldY <= ty + INV_TRASH_SIZE * 0.5f;
+
+        if (gHoverTrash && AEInputCheckTriggered(AEVK_LBUTTON))
+        {
+            if (gSelectedInvItem != INV_ITEM_NONE)
+                gInvConfirmOpen = true;
+        }
+    }
+
+    //Confirmation
+    if (gInvConfirmOpen)
+    {
+        auto Btn = [&](float x, float y)
+            {
+                return worldX >= x - 40 && worldX <= x + 40 &&
+                    worldY >= y - 20 && worldY <= y + 20;
+            };
+
+        // YES
+        if (Btn(-60, -40) && AEInputCheckTriggered(AEVK_LBUTTON))
+        {
+            if (gSelectedInvItem == INV_ITEM_APPLE)
+                Inventory_RemoveFruit(static_cast<u8>(gInvSliderValue));
+            else
+                Inventory_RemoveSeed(static_cast<u8>(gInvSliderValue));
+
+            gInvConfirmOpen = false;
+            gSelectedInvItem = INV_ITEM_NONE;
+        }
+
+        // NO
+        if (Btn(60, -40) && AEInputCheckTriggered(AEVK_LBUTTON))
+        {
+            gInvConfirmOpen = false;
+        }
+
+        // ================= Confirm buttons hover =================
+
+        const float btnW = 80.0f;
+        const float btnH = 40.0f;
+
+        const float yesX = -60.0f;
+        const float yesY = -40.0f;
+
+        const float noX = 60.0f;
+        const float noY = -40.0f;
+
+        gHoverYes =
+            worldX >= yesX - btnW * 0.5f &&
+            worldX <= yesX + btnW * 0.5f &&
+            worldY >= yesY - btnH * 0.5f &&
+            worldY <= yesY + btnH * 0.5f;
+
+        gHoverNo =
+            worldX >= noX - btnW * 0.5f &&
+            worldX <= noX + btnW * 0.5f &&
+            worldY >= noY - btnH * 0.5f &&
+            worldY <= noY + btnH * 0.5f;
+
     }
 
 }
@@ -879,6 +1013,120 @@ void UI_Draw()
                 AEGfxSetColorToMultiply(0, 0, 0, 1);
                 AEGfxPrint(fontId, valTxt, adjX, vtextY, 0.8f, 0, 0, 0, 1);
             }
+
+            // ================= Inventory items =================
+            {
+                const float itemX = panelX + INV_ITEM_X;
+                const float itemY = panelY + INV_ITEM_Y;
+
+                const float iconSize = 90.0f;
+
+                if (gActiveInvTab == TAB_FRUITS)
+                {
+                    if (GetFruitCount() > 0)
+                    {
+
+                        AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+                        AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+                        AEGfxSetColorToMultiply(1, 1, 1, 1);
+                        AEGfxTextureSet(appleIcon, 0, 0);
+
+                        AEMtx33Scale(&scale, iconSize, iconSize);
+                        AEMtx33Trans(&trans, itemX, itemY);
+                        AEMtx33Concat(&transform, &trans, &scale);
+                        AEGfxSetTransform(transform.m);
+                        AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+                        // Count
+                        char cnt[8];
+                        sprintf_s(cnt, "%d", GetFruitCount());
+                        AEGfxPrint(fontId, cnt, (itemX + 40) / 800.0f, (itemY - 40) / 450.0f, 0.7f, 0, 0, 0, 1);
+                    }
+                }
+                else // SEEDS
+                {
+                    if (GetSeedCount() > 0)
+                    {
+                        AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+                        AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+                        AEGfxSetColorToMultiply(1, 1, 1, 1);
+                        AEGfxTextureSet(appleSeedIcon, 0, 0);
+
+                        AEMtx33Scale(&scale, iconSize, iconSize);
+                        AEMtx33Trans(&trans, itemX, itemY);
+                        AEMtx33Concat(&transform, &trans, &scale);
+                        AEGfxSetTransform(transform.m);
+                        AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+                        /** char cnt[8];
+                         sprintf_s(cnt, "%d", Economy_GetSeedCount());
+                         AEGfxPrint(fontId, cnt,(itemX + 40) / 800.0f, (itemY - 40) / 450.0f,0.7f, 0, 0, 0, 1);
+                         **/
+                    }
+                }
+            }
+
+            // ================= Trash button =================
+            if (gSelectedInvItem != INV_ITEM_NONE)
+            {
+                float tx = panelX + INV_TRASH_X;
+                float ty = panelY + INV_TRASH_Y;
+
+                AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+                AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+                AEGfxSetColorToMultiply(1, 1, 1, 1);
+
+                AEGfxTextureSet(trashIcon, 0, 0);
+                AEMtx33Scale(&scale, INV_TRASH_SIZE, INV_TRASH_SIZE);
+                AEMtx33Trans(&trans, tx, ty);
+                AEMtx33Concat(&transform, &trans, &scale);
+                AEGfxSetTransform(transform.m);
+                AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+            }
+
+            // Confirmation popup
+            if (gInvConfirmOpen)
+            {
+                AEGfxTextureSet(confirmBG, 0, 0);
+                AEMtx33Scale(&scale, 300, 180);
+                AEMtx33Trans(&trans, 0, 0);
+                AEMtx33Concat(&transform, &trans, &scale);
+                AEGfxSetTransform(transform.m);
+                AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+                // YES
+
+                AEGfxSetColorToMultiply(
+                    1.0f,
+                    gHoverYes ? 0.9f : 1.0f,
+                    gHoverYes ? 0.9f : 1.0f,
+                    1.0f
+                );
+
+                AEGfxTextureSet(confirmYes, 0, 0);
+                AEMtx33Scale(&scale, 80, 40);
+                AEMtx33Trans(&trans, -60, -40);
+                AEMtx33Concat(&transform, &trans, &scale);
+                AEGfxSetTransform(transform.m);
+                AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+                // NO
+
+                AEGfxSetColorToMultiply(
+                    1.0f,
+                    gHoverNo ? 0.9f : 1.0f,
+                    gHoverNo ? 0.9f : 1.0f,
+                    1.0f
+                );
+
+                AEGfxTextureSet(confirmNo, 0, 0);
+                AEMtx33Scale(&scale, 80, 40);
+                AEMtx33Trans(&trans, 60, -40);
+                AEMtx33Concat(&transform, &trans, &scale);
+                AEGfxSetTransform(transform.m);
+                AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+            }
+
             break;
         }
 
@@ -1306,14 +1554,14 @@ void UI_DrawFruitBasketTooltips()
             inventoryText = "Inventory: 10"; // demo
             break;
         case FRUIT_PEAR:
-            fruitName = "Pear";
-            stockText = "Stock: 2";
-            inventoryText = "Inventory: 5";
+            fruitName = "";
+            stockText = "";
+            inventoryText = "";
             break;
         case FRUIT_BANANA:
-            fruitName = "Banana";
-            stockText = "Stock: 4";
-            inventoryText = "Inventory: 8";
+            fruitName = "";
+            stockText = "";
+            inventoryText = "";
             break;
         }
 

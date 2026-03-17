@@ -44,6 +44,13 @@ void Inventory_RemoveFruit(u8 amount) {
 	Inventory_SaveToProfile(Profile_GetActiveSlot());
 }
 
+//placeholder to remove seedds
+void Inventory_RemoveSeed(u8 amount) {
+	total_fruits -= amount;
+	printf("Removed %d seeds from inventory.\n", amount);
+	printf("Seeds left in inventory: %d\n", total_fruits);
+}
+
 // inventory panel getters
 
 int GetInventoryCount()
