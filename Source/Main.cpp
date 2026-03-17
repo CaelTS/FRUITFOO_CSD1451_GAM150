@@ -802,7 +802,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 				Farm_OnRhythmResult(success);
 				Farm_ClearRhythmRequest();
-				nextState = GS_START_SCREEN;
+				nextState = GS_MAIN_SCREEN;
 			}
 		}
 
