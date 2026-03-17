@@ -59,6 +59,8 @@ static void SS_Profiles_Load()
     if (fopen_s(&f, PROFILES_FILE, "r") != 0 || !f) return;
 
     int  slot = -1;
+    bool inEconomy = false;
+    bool inInventory = false;
     char line[128] = {};
     while (fgets(line, sizeof(line), f))
     {
@@ -67,7 +69,15 @@ static void SS_Profiles_Load()
         if (len > 0 && line[len - 1] == '\r') line[--len] = '\0';
         if (len == 0) continue;
 
-        if (line[0] == '[') { sscanf_s(line, "[PROFILE_%d]", &slot); continue; }
+        if (line[0] == '[') {
+            if (strcmp(line, "[economy]") == 0) { inEconomy = true; inInventory = false; }
+            else if (strcmp(line, "[inventory]") == 0) { inInventory = true; inEconomy = false; }
+            else {
+                inEconomy = false; inInventory = false;
+                sscanf_s(line, "[PROFILE_%d]", &slot);
+            }
+            continue;
+        }
         if (slot < 0 || slot >= MAX_PROFILES) continue;
 
         char* eq = strchr(line, '=');
@@ -76,13 +86,24 @@ static void SS_Profiles_Load()
         const char* key = line;
         const char* val = eq + 1;
 
-        if (strcmp(key, "EXISTS") == 0) g_profiles[slot].exists = (atoi(val) != 0);
-        else if (strcmp(key, "NAME") == 0) strncpy_s(g_profiles[slot].name, PROFILE_NAME_MAX, val, _TRUNCATE);
-        else if (strcmp(key, "coins") == 0) g_profiles[slot].coins = atoi(val);
+        // Only parse top-level profile fields (not in [economy] or [inventory])
+        if (!inEconomy && !inInventory) {
+            if (strcmp(key, "EXISTS") == 0) g_profiles[slot].exists = (atoi(val) != 0);
+            else if (strcmp(key, "NAME") == 0) strncpy_s(g_profiles[slot].name, PROFILE_NAME_MAX, val, _TRUNCATE);
+            else if (strcmp(key, "coins") == 0) g_profiles[slot].coins = atoi(val); // backward compat
+        }
+        // Read from [economy] section for display purposes
+        else if (inEconomy) {
+            if (strcmp(key, "total_money") == 0) g_profiles[slot].coins = atoi(val);
+        }
+        // Ignore [inventory] section - we don't need it in StartScreen
     }
     fclose(f);
 }
 
+// OLD SAVE FUNCTION - NO LONGER USED
+// Now using unified Profile_CreateSlot() and Profile_SetActiveSlot() instead
+/*
 static void SS_Profiles_Save()
 {
     FILE* f = nullptr;
@@ -96,6 +117,7 @@ static void SS_Profiles_Save()
     }
     fclose(f);
 }
+*/
 
 // ============================================================
 // Inline "New Game" name-entry popup
@@ -233,10 +255,19 @@ static void ConfirmNewGame()
         return;
     }
 
+    // Use the new unified profile system instead of old local save
+    Profile_CreateSlot(slot, popupBuf);
+
+    // Ensure Profile.cpp's internal array is loaded from disk
+    ProfileScreen_Load();
+
+    // Set as active slot to initialize Economy and Inventory globals
+    Profile_SetActiveSlot(slot);
+
+    // Update local cache to match
     g_profiles[slot].exists = true;
     strncpy_s(g_profiles[slot].name, PROFILE_NAME_MAX, popupBuf, _TRUNCATE);
     g_profiles[slot].coins = 0;
-    SS_Profiles_Save();
 
     ClosePopup();
     hasSave = true;
@@ -310,15 +341,28 @@ AEGfxVertexList* createMesh()
     return AEGfxMeshEnd();
 }
 
+// ============================================================
+// Public interface implementation
+// ============================================================
+
 bool StartScreen_IsActive()
 {
     return startScreenActive; // from your start screen cpp
 }
 
-void StartScreen_Init()
+void StartScreen_Load()
 {
+    // Load profile data from disk to check if saves exist
     SS_Profiles_Load();
     hasSave = (CountProfiles() > 0);
+}
+
+void StartScreen_Init()
+{
+    // Reload profile data to ensure we have latest state
+    SS_Profiles_Load();
+    hasSave = (CountProfiles() > 0);
+
     pMeshPopup = createMesh();
 
     ssFont = AEGfxCreateFont("Assets/liberation-mono.ttf", 24);
@@ -328,29 +372,28 @@ void StartScreen_Init()
         if (ssFont < 0)
             OutputDebugStringA("StartScreen: WARNING - failed to load popup font.\\n");
     }
+
+    // Only load textures/meshes if not already loaded (should be in Load function)
     if (!pTexPanel) pTexPanel = AEGfxTextureLoad("Assets/panel_brown.png");
     if (!pTexInputRect) pTexInputRect = AEGfxTextureLoad("Assets/input_outline_rectangle.png");
-    // Check if save file exists to determine if "Continue" button should be shown
-    // Should be implemented in Profile.cpp, but for now we can just check if the file exists here
-    //hasSave = SaveSystem_HasSaveFile();
-    hasSave = false;
 
-    logoTexture = AEGfxTextureLoad("Assets/StartScreen_Logo.png");
-    gradientBlur = AEGfxTextureLoad("Assets/StartScreen_GradientBlur.png");
-    pMeshLogo = createMesh();
-    pMeshGradientBlur = createMesh();
-    pMeshNewGameButton = createMesh();
-    pMeshNewGameButton_Selected = createMesh();
-    pMeshContinueButton = createMesh();
-    pMeshContinueButton_Selected = createMesh();
-    pMeshProfileButton = createMesh();
-    pMeshProfileButton_Selected = createMesh();
-    pMeshExitButton = createMesh();
-    pMeshExitButton_Selected = createMesh();
+    if (!logoTexture) logoTexture = AEGfxTextureLoad("Assets/StartScreen_Logo.png");
+    if (!gradientBlur) gradientBlur = AEGfxTextureLoad("Assets/StartScreen_GradientBlur.png");
+
+    if (!pMeshLogo) pMeshLogo = createMesh();
+    if (!pMeshGradientBlur) pMeshGradientBlur = createMesh();
+    if (!pMeshNewGameButton) pMeshNewGameButton = createMesh();
+    if (!pMeshNewGameButton_Selected) pMeshNewGameButton_Selected = createMesh();
+    if (!pMeshContinueButton) pMeshContinueButton = createMesh();
+    if (!pMeshContinueButton_Selected) pMeshContinueButton_Selected = createMesh();
+    if (!pMeshProfileButton) pMeshProfileButton = createMesh();
+    if (!pMeshProfileButton_Selected) pMeshProfileButton_Selected = createMesh();
+    if (!pMeshExitButton) pMeshExitButton = createMesh();
+    if (!pMeshExitButton_Selected) pMeshExitButton_Selected = createMesh();
 
     // Initialize "Exit" button (always shown)
-    exitButton.normal = AEGfxTextureLoad("Assets/StartScreen_Exit.png");
-    exitButton.hover = AEGfxTextureLoad("Assets/StartScreen_Exit_Selected.png");
+    if (!exitButton.normal) exitButton.normal = AEGfxTextureLoad("Assets/StartScreen_Exit.png");
+    if (!exitButton.hover) exitButton.hover = AEGfxTextureLoad("Assets/StartScreen_Exit_Selected.png");
     exitButton.x = logoPosX - 102.0f;
     exitButton.y = 45.0f;
     exitButton.x_selected = exitButton.x; // slide left on hover
@@ -361,8 +404,8 @@ void StartScreen_Init()
     exitButton.y_selected_save = exitButton.y_save;
 
     // Initialize "Continue" button 
-    continueButton.normal = AEGfxTextureLoad("Assets/StartScreen_Continue.png");
-    continueButton.hover = AEGfxTextureLoad("Assets/StartScreen_Continue_Selected.png");
+    if (!continueButton.normal) continueButton.normal = AEGfxTextureLoad("Assets/StartScreen_Continue.png");
+    if (!continueButton.hover) continueButton.hover = AEGfxTextureLoad("Assets/StartScreen_Continue_Selected.png");
     continueButton.x = logoPosX - 50.0f;
     continueButton.y = 100.0f;
     continueButton.x_selected = continueButton.x; // slide left on hover
@@ -373,8 +416,8 @@ void StartScreen_Init()
     continueButton.y_selected_save = continueButton.y;
 
     // Initialize "Profile" button
-    profileButton.normal = AEGfxTextureLoad("Assets/StartScreen_Profile.png");
-    profileButton.hover = AEGfxTextureLoad("Assets/StartScreen_Profile_Selected.png");
+    if (!profileButton.normal) profileButton.normal = AEGfxTextureLoad("Assets/StartScreen_Profile.png");
+    if (!profileButton.hover) profileButton.hover = AEGfxTextureLoad("Assets/StartScreen_Profile_Selected.png");
     profileButton.x = logoPosX - 72.0f;
     profileButton.y = 45.0f;
     profileButton.x_selected = profileButton.x; // slide left on hover
@@ -385,18 +428,25 @@ void StartScreen_Init()
     profileButton.y_selected_save = profileButton.y;
 
     // Initialize "New Game" button
-    newGameButton.normal = AEGfxTextureLoad("Assets/StartScreen_NewGameButton.png");
-    newGameButton.hover = AEGfxTextureLoad("Assets/StartScreen_NewGameButton_Selected.png");
+    if (!newGameButton.normal) newGameButton.normal = AEGfxTextureLoad("Assets/StartScreen_NewGameButton.png");
+    if (!newGameButton.hover) newGameButton.hover = AEGfxTextureLoad("Assets/StartScreen_NewGameButton_Selected.png");
     newGameButton.x = logoPosX - 32.0f;
     newGameButton.y = 100.0f;
     newGameButton.x_selected = newGameButton.x; // slide left on hover
     newGameButton.y_selected = newGameButton.y;
 
-
+    // Reset animation state
+    isExiting = false;
+    exitAnimProgress = 0.0f;
+    exitAnimFadeOut = 1.0f;
+    startScreenActive = true;
 }
 
 void StartScreen_Update(float dt)
 {
+    // Refresh profile check every frame in case profiles were deleted/added
+    int currentProfileCount = CountProfiles();
+    hasSave = (currentProfileCount > 0);
 
     int mouseX, mouseY;
     AEInputGetCursorPosition(&mouseX, &mouseY);

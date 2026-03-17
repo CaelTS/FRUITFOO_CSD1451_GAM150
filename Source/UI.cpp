@@ -3,6 +3,7 @@
 #include "UI.h"
 #include "Farm.h"
 #include "Economy.h"
+#include "Inventory.h"
 #include "AEEngine.h"
 #include <vector>
 #include <iostream>
@@ -534,8 +535,8 @@ void UI_UpdateButtons()
 
         // Active tab stock -> range
         const int curCount = (gActiveInvTab == TAB_FRUITS)
-            ? Economy_GetFruitCount()
-            : Economy_GetSeedCount();
+            ? GetFruitCount()
+            : GetSeedCount();
 
         // If you want min to be 0 like your mock, set minVal=0 here.
         const int minVal = (curCount > 0) ? 1 : 0;  // <- change to 0 if you prefer [0..N]
@@ -753,8 +754,8 @@ void UI_Draw()
             }
 
             // --- Draw capacity text "current/limit" ---
-            const int invcur = (gActiveInvTab == TAB_FRUITS) ? Economy_GetFruitCount() : Economy_GetSeedCount();// from Economy.cpp
-            const int invmax = Economy_GetInventoryLimit();  // from Economy.cpp
+            const int invcur = (gActiveInvTab == TAB_FRUITS) ? GetFruitCount() : GetSeedCount();// from Economy.cpp
+            const int invmax = GetInventoryLimit();  // from Economy.cpp
 
             char capText[16];
             sprintf_s(capText, "%d/%d", invcur, invmax);
@@ -787,8 +788,8 @@ void UI_Draw()
 
             // Range
             const int curCount = (gActiveInvTab == TAB_FRUITS)
-                ? Economy_GetFruitCount()
-                : Economy_GetSeedCount();
+                ? GetFruitCount()
+                : GetSeedCount();
             const int minVal = (curCount > 0) ? 1 : 0;   // set to 0 if you prefer [0..N]
             const int maxVal = curCount;
 

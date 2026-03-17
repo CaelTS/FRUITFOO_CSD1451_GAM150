@@ -1,9 +1,10 @@
-#include <crtdbg.h>
+﻿#include <crtdbg.h>
 #include "AEEngine.h"
 #include "Transition.h"
 #include "GameStateManager.h"
 #include "StartScreen.h"
 #include "Economy.h"
+#include "Inventory.h"
 
 extern AEGfxVertexList* g_pMeshFullScreen;
 extern s8 fontId;
@@ -175,9 +176,33 @@ static void Profiles_Load() {
                 sscanf_s(value, "%f", &profiles[slotIndex].play_time);
             else if (strcmp(key, "session_count") == 0)
                 profiles[slotIndex].session_count = atoi(value);
+            // Backward compatibility: old 'coins' field → total_money
+            else if (strcmp(key, "coins") == 0)
+                profiles[slotIndex].total_money = (unsigned long long)_strtoui64(value, nullptr, 10);
         }
     }
     fclose(f);
+
+    // Migration: Initialize inventory for existing profiles that have all-zero inventory
+    for (int i = 0; i < MAX_PROFILES; i++) {
+        if (profiles[i].exists) {
+            // Check if this profile has no inventory (all zeros) - indicates old profile
+            bool hasNoInventory = (profiles[i].apples == 0 &&
+                profiles[i].pears == 0 &&
+                profiles[i].bananas == 0 &&
+                profiles[i].seeds[0] == 0 &&
+                profiles[i].seeds[1] == 0 &&
+                profiles[i].seeds[2] == 0);
+
+            if (hasNoInventory) {
+                // Set default starting inventory for migrated profiles
+                profiles[i].apples = 10;
+                profiles[i].seeds[0] = 10;  // apple seeds
+                // pears, bananas, and other seeds remain 0
+            }
+        }
+    }
+
     Profiles_Save(); // re-save to upgrade old files missing new sections
 }
 
@@ -293,10 +318,13 @@ void Profile_CreateSlot(int slot, const char* name) {
     profiles[slot].total_money = 0ULL;
     profiles[slot].max_money = 255ULL;
     profiles[slot].money_multiplier = 1.0f;
-    profiles[slot].apples = 0;
+    // Default starting inventory: 10 apples and 10 apple seeds
+    profiles[slot].apples = 10;
     profiles[slot].pears = 0;
     profiles[slot].bananas = 0;
-    profiles[slot].seeds[0] = profiles[slot].seeds[1] = profiles[slot].seeds[2] = 0;
+    profiles[slot].seeds[0] = 10;  // apple seeds
+    profiles[slot].seeds[1] = 0;   // pear seeds
+    profiles[slot].seeds[2] = 0;   // banana seeds
     strncpy_s(profiles[slot].name, PROFILE_NAME_MAX_LEN, name, _TRUNCATE);
     Profiles_Save();
 }
@@ -307,7 +335,9 @@ void Profile_SetActiveSlot(int slot) {
     if (slot < 0 || slot >= MAX_PROFILES || !profiles[slot].exists) return;
     activeSlot = slot;
     Economy_LoadFromProfile(slot);
+    Inventory_LoadFromProfile(slot);  // Load inventory state from profile
     Economy_SaveToProfile(slot);
+    Inventory_SaveToProfile(slot);  // Save inventory state to profile
 }
 
 

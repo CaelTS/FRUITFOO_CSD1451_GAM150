@@ -50,6 +50,12 @@ void Economy_SaveToProfile(int slot);
 void Economy_LoadFromProfile(int slot);
 
 // ---------------------------------------------------------------------------
+// Inventory <-> Profile
+// ---------------------------------------------------------------------------
+void Inventory_SaveToProfile(int slot);
+void Inventory_LoadFromProfile(int slot);
+
+// ---------------------------------------------------------------------------
 // Profile slot management
 // ---------------------------------------------------------------------------
 

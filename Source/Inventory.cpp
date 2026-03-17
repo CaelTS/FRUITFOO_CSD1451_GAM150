@@ -1,0 +1,226 @@
+#include "Inventory.h"
+#include "Profile.h"
+#include <AETypes.h>
+#include <stdio.h>
+
+// Global inventory variables
+u8 total_fruits = 10;
+u8 total_seeds = 10;
+
+// Separate fruit types (for future use)
+u8 apples = 10;
+u8 pears = 0;
+u8 bananas = 0;
+
+// Separate seed types
+u8 seed_apple = 10;
+u8 seed_pear = 0;
+u8 seed_banana = 0;
+
+//placeholder inventory stock function
+u8 Inventory_GetFruitStock() {
+	return total_fruits; //assume always have fruit for now
+}
+//placeholder function to remove fruit from inventory function
+void Inventory_RemoveFruit(u8 amount) {
+	// For now, remove from apples (can be enhanced to remove from mixed types)
+	if (apples >= amount) {
+		apples -= amount;
+	}
+	else {
+		// If not enough apples, remove what we can from total_fruits
+		if (total_fruits >= amount) {
+			total_fruits -= amount;
+		}
+	}
+
+	// Update totals
+	total_fruits = apples + pears + bananas;
+
+	printf("Removed %d fruits from inventory.\n", amount);
+	printf("Fruits left in inventory: %d\n", total_fruits);
+
+	// Save to active profile
+	Inventory_SaveToProfile(Profile_GetActiveSlot());
+}
+
+// inventory panel getters
+
+int GetInventoryCount()
+{
+	return static_cast<int>(total_fruits);
+}
+
+int GetInventoryLimit()
+{
+	return 10; // or inventory_capacity if you add it
+}
+
+
+int GetFruitCount()
+{
+	return static_cast<int>(total_fruits);
+}
+
+int GetSeedCount()
+{
+	return static_cast<int>(total_seeds);
+}
+
+// Individual fruit type getters
+int GetAppleCount()
+{
+	return static_cast<int>(apples);
+}
+
+int GetPearCount()
+{
+	return static_cast<int>(pears);
+}
+
+int GetBananaCount()
+{
+	return static_cast<int>(bananas);
+}
+
+// Individual seed type getters
+int GetAppleSeedCount()
+{
+	return static_cast<int>(seed_apple);
+}
+
+int GetPearSeedCount()
+{
+	return static_cast<int>(seed_pear);
+}
+
+int GetBananaSeedCount()
+{
+	return static_cast<int>(seed_banana);
+}
+
+// ---------------------------------------------------------------------------
+// Inventory modification functions (with auto-save)
+// ---------------------------------------------------------------------------
+
+void Inventory_AddFruit(u8 amount, u8 fruitType) {
+	switch (fruitType) {
+	case 0: // Apple
+		apples += amount;
+		break;
+	case 1: // Pear
+		pears += amount;
+		break;
+	case 2: // Banana
+		bananas += amount;
+		break;
+	default:
+		apples += amount; // default to apples
+		break;
+	}
+
+	// Update totals
+	total_fruits = apples + pears + bananas;
+
+	printf("Added %d fruits to inventory.\n", amount);
+	printf("Fruits in inventory: %d (A:%d P:%d B:%d)\n", total_fruits, apples, pears, bananas);
+
+	// Save to active profile
+	Inventory_SaveToProfile(Profile_GetActiveSlot());
+}
+
+void Inventory_AddSeed(u8 amount, u8 seedType) {
+	switch (seedType) {
+	case 0: // Apple seed
+		seed_apple += amount;
+		break;
+	case 1: // Pear seed
+		seed_pear += amount;
+		break;
+	case 2: // Banana seed
+		seed_banana += amount;
+		break;
+	default:
+		seed_apple += amount; // default to apple seeds
+		break;
+	}
+
+	// Update totals
+	total_seeds = seed_apple + seed_pear + seed_banana;
+
+	printf("Added %d seeds to inventory.\n", amount);
+	printf("Seeds in inventory: %d (A:%d P:%d B:%d)\n", total_seeds, seed_apple, seed_pear, seed_banana);
+
+	// Save to active profile
+	Inventory_SaveToProfile(Profile_GetActiveSlot());
+}
+
+void Inventory_RemoveSeed(u8 amount, u8 seedType) {
+	switch (seedType) {
+	case 0: // Apple seed
+		if (seed_apple >= amount) {
+			seed_apple -= amount;
+		}
+		break;
+	case 1: // Pear seed
+		if (seed_pear >= amount) {
+			seed_pear -= amount;
+		}
+		break;
+	case 2: // Banana seed
+		if (seed_banana >= amount) {
+			seed_banana -= amount;
+		}
+		break;
+	default:
+		if (seed_apple >= amount) {
+			seed_apple -= amount;
+		}
+		break;
+	}
+
+	// Update totals
+	total_seeds = seed_apple + seed_pear + seed_banana;
+
+	printf("Removed %d seeds from inventory.\n", amount);
+	printf("Seeds in inventory: %d (A:%d P:%d B:%d)\n", total_seeds, seed_apple, seed_pear, seed_banana);
+
+	// Save to active profile
+	Inventory_SaveToProfile(Profile_GetActiveSlot());
+}
+
+// ---------------------------------------------------------------------------
+// Inventory <-> Profile bridge (mirrors Economy pattern)
+// ---------------------------------------------------------------------------
+
+// Save current inventory state to profile slot
+void Inventory_SaveToProfile(int slot) {
+	// Update total counts
+	total_fruits = apples + pears + bananas;
+	total_seeds = seed_apple + seed_pear + seed_banana;
+
+	// Save to profile (uses the existing Profile_SaveInventory function)
+	Profile_SaveInventory(slot,
+		static_cast<int>(apples),
+		static_cast<int>(pears),
+		static_cast<int>(bananas),
+		static_cast<int>(seed_apple),
+		static_cast<int>(seed_pear),
+		static_cast<int>(seed_banana));
+}
+
+// Load inventory state from profile slot
+void Inventory_LoadFromProfile(int slot) {
+	// Load from profile getters
+	apples = static_cast<u8>(Profile_GetApples());
+	pears = static_cast<u8>(Profile_GetPears());
+	bananas = static_cast<u8>(Profile_GetBananas());
+
+	seed_apple = static_cast<u8>(Profile_GetSeed(0));
+	seed_pear = static_cast<u8>(Profile_GetSeed(1));
+	seed_banana = static_cast<u8>(Profile_GetSeed(2));
+
+	// Update total counts
+	total_fruits = apples + pears + bananas;
+	total_seeds = seed_apple + seed_pear + seed_banana;
+}

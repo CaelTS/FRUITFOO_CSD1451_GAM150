@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include "Profile.h"
+#include "Inventory.h"
 
 // Global variables - remove 'static' since they're extern in the header
 u64 total_money = 0;
@@ -17,22 +18,7 @@ f32 money_multiplier = 1.0f;
 static f32 timer = 0.0f;
 static f32 next_sale_time = 0.0f; //seconds
 
-static u8 total_fruits = 10;
 bool timer_reset = true;
-
-//inventory
-static u8 total_seeds = 10;
-
-//placeholder inventory stock function
-u8 static Inventory_GetFruitStock() {
-	return total_fruits; //assume always have fruit for now
-}
-//placeholder function to remove fruit from inventory function
-void Inventory_RemoveFruit(u8 amount) {
-	total_fruits -= amount;
-	printf("Removed %d fruits from inventory.\n", amount);
-	printf("Fruits left in inventory: %d\n", total_fruits);
-}
 
 //placeholder for base price
 u8 base_fruit_price = 5;
@@ -182,25 +168,3 @@ float Economy_GetMultiplier() {
 	return money_multiplier;
 }
 
-// inventory panel getters
-
-int Economy_GetInventoryCount()
-{
-	return static_cast<int>(total_fruits);
-}
-
-int Economy_GetInventoryLimit()
-{
-	return 10; // or inventory_capacity if you add it
-}
-
-
-int Economy_GetFruitCount()
-{
-	return static_cast<int>(total_fruits);
-}
-
-int Economy_GetSeedCount()
-{
-	return static_cast<int>(total_seeds);
-}
