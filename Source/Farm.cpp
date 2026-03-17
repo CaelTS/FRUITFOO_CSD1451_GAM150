@@ -1,6 +1,7 @@
 #include "Farm.h"
 #include "AEEngine.h"
 #include "UI.h"
+#include "Profile.h"
 #include <iostream>
 #include <vector>
 
@@ -83,9 +84,32 @@ void Farm_Initialize()
     farmPlots.clear();
     farmPlots.resize(4);
 
-    farmPlots[0].isUnlocked = true; // first plot available
+    // Load farm state from active profile
+    for (int i = 0; i < 4; i++) {
+        farmPlots[i].isUnlocked = Profile_GetPlotUnlocked(i);
+        farmPlots[i].isPlanted = Profile_GetPlotPlanted(i);
+        farmPlots[i].isReady = Profile_GetPlotReady(i);
+        farmPlots[i].growTimer = Profile_GetPlotTimer(i);
+        farmPlots[i].seedType = Profile_GetPlotSeedType(i);
+        farmPlots[i].rhythmTriggered = false;
+        farmPlots[i].waitingForRhythm = false;
+    }
 
+    // Migration guard: old save files have no [farm] section so all plots come
+    // back locked. If every plot is locked that is invalid - ensure plot 0 is
+    // always unlocked and write it back to disk so it persists.
+    bool anyUnlocked = false;
+    for (int i = 0; i < 4; i++)
+        if (farmPlots[i].isUnlocked) { anyUnlocked = true; break; }
 
+    if (!anyUnlocked)
+    {
+        farmPlots[0].isUnlocked = true;
+        Profile_SetPlotUnlocked(0, true);
+        std::cout << "Farm migration: plot 0 force-unlocked (no farm data in save)\n";
+    }
+
+    std::cout << "Farm initialized from profile\n";
 }
 
 // ------------------------------------------------------------
@@ -95,10 +119,8 @@ void Farm_Initialize()
 //getter for unlocked plots/locked plots
 bool Farm_IsPlotLocked(int index)
 {
-    if (index == 0)
-        return false;   // first plot always unlocked
-
-    return true;        // others locked for now
+    if (index < 0 || index >= (int)farmPlots.size()) return true;
+    return !farmPlots[index].isUnlocked;
 }
 
 void Farm_Update()
@@ -119,8 +141,9 @@ void Farm_Update()
     if (AEInputCheckTriggered(AEVK_SPACE))
     {
 
-        for (auto& plot : farmPlots)
+        for (int i = 0; i < farmPlots.size(); i++)
         {
+            auto& plot = farmPlots[i];
             if (plot.isReady)
             {
                 plot.isPlanted = false;
@@ -129,6 +152,11 @@ void Farm_Update()
                 plot.growTimer = 0.0f;
                 plot.rhythmTriggered = false;
                 plot.waitingForRhythm = false;
+
+                // Save to profile
+                Profile_SetPlotData(i, false, false, 0.0f, -1);
+
+                std::cout << "Harvested plot " << i << "\n";
             }
         }
     }
@@ -204,8 +232,20 @@ void Farm_Update()
             g_rhythmPlotIndex = i;
         }
 
-        if (ratio >= 1.0f)
+        if (ratio >= 1.0f && !plot.isReady)
+        {
             plot.isReady = true;
+            // Save to profile when plant becomes ready
+            Profile_SetPlotData(i, plot.isPlanted, plot.isReady, plot.growTimer, plot.seedType);
+            std::cout << "Plot " << i << " is ready for harvest!\n";
+        }
+
+        // Periodically save growth timer (every ~1 second of growth to avoid excessive saves)
+        static float lastSaveTimer[4] = { -1.0f, -1.0f, -1.0f, -1.0f };
+        if (plot.growTimer - lastSaveTimer[i] >= 1.0f) {
+            Profile_SetPlotData(i, plot.isPlanted, plot.isReady, plot.growTimer, plot.seedType);
+            lastSaveTimer[i] = plot.growTimer;
+        }
     }
 
 
@@ -503,6 +543,11 @@ void Farm_PlantSeed(int plotIndex, int seedType)
     plot.isReady = false;
     plot.seedType = seedType;
     plot.growTimer = 0.0f;
+
+    // Save to profile
+    Profile_SetPlotData(plotIndex, plot.isPlanted, plot.isReady, plot.growTimer, plot.seedType);
+
+    std::cout << "Planted seed " << seedType << " in plot " << plotIndex << "\n";
 }
 
 bool Farm_IsPlotPlanted(int plotIndex)
@@ -522,12 +567,18 @@ void Farm_ClearPlot(int index)
     farmPlots[index].isReady = false;
     farmPlots[index].growTimer = 0.0f;
     farmPlots[index].seedType = -1;
+
+    // Save to profile
+    Profile_SetPlotData(index, false, false, 0.0f, -1);
+
+    std::cout << "Cleared plot " << index << "\n";
 }
 
 void Farm_OnRhythmResult(bool success)
 {
-    for (auto& plot : farmPlots)
+    for (int i = 0; i < farmPlots.size(); i++)
     {
+        auto& plot = farmPlots[i];
         if (plot.waitingForRhythm)
         {
             plot.waitingForRhythm = false;
@@ -536,6 +587,7 @@ void Farm_OnRhythmResult(bool success)
             {
                 // resume growth past rhythm point
                 plot.growTimer = GROW_TIME * 0.5f + 0.01f;
+                std::cout << "Rhythm success! Plot " << i << " growth boosted\n";
             }
             else
             {
@@ -543,7 +595,12 @@ void Farm_OnRhythmResult(bool success)
 
                 if (plot.growTimer < 0.0f)
                     plot.growTimer = 0.0f;
+
+                std::cout << "Rhythm failed! Plot " << i << " growth reduced\n";
             }
+
+            // Save to profile
+            Profile_SetPlotData(i, plot.isPlanted, plot.isReady, plot.growTimer, plot.seedType);
 
             break;
         }

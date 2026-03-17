@@ -21,6 +21,7 @@ AEGfxTexture* pTexPanel = NULL;
 // Profile data structure
 constexpr auto MAX_PROFILES = 3;
 constexpr auto PROFILE_NAME_MAX_LEN = 32;
+constexpr auto MAX_FARM_PLOTS = 4;
 
 typedef struct {
     bool exists;
@@ -37,12 +38,24 @@ typedef struct {
     int pears;
     int bananas;
     int seeds[3];   // seeds[0]=apple, seeds[1]=pear, seeds[2]=banana
+    // Farm plot data (4 plots)
+    bool plot_unlocked[MAX_FARM_PLOTS];
+    bool plot_planted[MAX_FARM_PLOTS];
+    bool plot_ready[MAX_FARM_PLOTS];
+    float plot_timer[MAX_FARM_PLOTS];
+    int plot_seed_type[MAX_FARM_PLOTS];
 } Profile;
 
 static Profile profiles[MAX_PROFILES] = {
-    { false, "", 0.0f, 0, 0ULL, 255ULL, 1.0f, 0, 0, 0, {0,0,0} },
-    { false, "", 0.0f, 0, 0ULL, 255ULL, 1.0f, 0, 0, 0, {0,0,0} },
-    { false, "", 0.0f, 0, 0ULL, 255ULL, 1.0f, 0, 0, 0, {0,0,0} }
+    { false, "", 0.0f, 0, 0ULL, 255ULL, 1.0f, 0, 0, 0, {0,0,0},
+      {true,false,false,false}, {false,false,false,false}, {false,false,false,false},
+      {0.0f,0.0f,0.0f,0.0f}, {-1,-1,-1,-1} },
+    { false, "", 0.0f, 0, 0ULL, 255ULL, 1.0f, 0, 0, 0, {0,0,0},
+      {true,false,false,false}, {false,false,false,false}, {false,false,false,false},
+      {0.0f,0.0f,0.0f,0.0f}, {-1,-1,-1,-1} },
+    { false, "", 0.0f, 0, 0ULL, 255ULL, 1.0f, 0, 0, 0, {0,0,0},
+      {true,false,false,false}, {false,false,false,false}, {false,false,false,false},
+      {0.0f,0.0f,0.0f,0.0f}, {-1,-1,-1,-1} }
 };
 
 // Popup state
@@ -109,6 +122,38 @@ static void Profiles_Save() {
             fprintf(f, "bananas=%d\n", profiles[i].bananas);
             fprintf(f, "seeds=%d,%d,%d\n",
                 profiles[i].seeds[0], profiles[i].seeds[1], profiles[i].seeds[2]);
+            fprintf(f, "\n");
+            fprintf(f, "[farm]\n");
+            // Plot unlocked states (1=unlocked, 0=locked)
+            fprintf(f, "plot_unlocked=%d,%d,%d,%d\n",
+                profiles[i].plot_unlocked[0] ? 1 : 0,
+                profiles[i].plot_unlocked[1] ? 1 : 0,
+                profiles[i].plot_unlocked[2] ? 1 : 0,
+                profiles[i].plot_unlocked[3] ? 1 : 0);
+            // Plot planted states
+            fprintf(f, "plot_planted=%d,%d,%d,%d\n",
+                profiles[i].plot_planted[0] ? 1 : 0,
+                profiles[i].plot_planted[1] ? 1 : 0,
+                profiles[i].plot_planted[2] ? 1 : 0,
+                profiles[i].plot_planted[3] ? 1 : 0);
+            // Plot ready states
+            fprintf(f, "plot_ready=%d,%d,%d,%d\n",
+                profiles[i].plot_ready[0] ? 1 : 0,
+                profiles[i].plot_ready[1] ? 1 : 0,
+                profiles[i].plot_ready[2] ? 1 : 0,
+                profiles[i].plot_ready[3] ? 1 : 0);
+            // Plot timers (growth progress)
+            fprintf(f, "plot_timer=%.3f,%.3f,%.3f,%.3f\n",
+                profiles[i].plot_timer[0],
+                profiles[i].plot_timer[1],
+                profiles[i].plot_timer[2],
+                profiles[i].plot_timer[3]);
+            // Plot seed types (-1=empty)
+            fprintf(f, "plot_seed_type=%d,%d,%d,%d\n",
+                profiles[i].plot_seed_type[0],
+                profiles[i].plot_seed_type[1],
+                profiles[i].plot_seed_type[2],
+                profiles[i].plot_seed_type[3]);
         }
         fprintf(f, "\n");
     }
@@ -123,6 +168,7 @@ static void Profiles_Load() {
     int  slotIndex = -1;
     bool inEconomy = false;
     bool inInventory = false;
+    bool inFarm = false;
     char line[256] = "";
 
     while (fgets(line, sizeof(line), f)) {
@@ -132,10 +178,17 @@ static void Profiles_Load() {
         if (len == 0) continue;
 
         if (line[0] == '[') {
-            if (strcmp(line, "[economy]") == 0) { inEconomy = true;  inInventory = false; }
-            else if (strcmp(line, "[inventory]") == 0) { inInventory = true; inEconomy = false; }
+            if (strcmp(line, "[economy]") == 0) {
+                inEconomy = true; inInventory = false; inFarm = false;
+            }
+            else if (strcmp(line, "[inventory]") == 0) {
+                inInventory = true; inEconomy = false; inFarm = false;
+            }
+            else if (strcmp(line, "[farm]") == 0) {
+                inFarm = true; inEconomy = false; inInventory = false;
+            }
             else {
-                inEconomy = false; inInventory = false;
+                inEconomy = false; inInventory = false; inFarm = false;
                 sscanf_s(line, "[PROFILE_%d]", &slotIndex);
             }
             continue;
@@ -166,6 +219,46 @@ static void Profiles_Load() {
                     &profiles[slotIndex].seeds[0],
                     &profiles[slotIndex].seeds[1],
                     &profiles[slotIndex].seeds[2]);
+        }
+        else if (inFarm) {
+            if (strcmp(key, "plot_unlocked") == 0) {
+                int u0, u1, u2, u3;
+                sscanf_s(value, "%d,%d,%d,%d", &u0, &u1, &u2, &u3);
+                profiles[slotIndex].plot_unlocked[0] = (u0 != 0);
+                profiles[slotIndex].plot_unlocked[1] = (u1 != 0);
+                profiles[slotIndex].plot_unlocked[2] = (u2 != 0);
+                profiles[slotIndex].plot_unlocked[3] = (u3 != 0);
+            }
+            else if (strcmp(key, "plot_planted") == 0) {
+                int p0, p1, p2, p3;
+                sscanf_s(value, "%d,%d,%d,%d", &p0, &p1, &p2, &p3);
+                profiles[slotIndex].plot_planted[0] = (p0 != 0);
+                profiles[slotIndex].plot_planted[1] = (p1 != 0);
+                profiles[slotIndex].plot_planted[2] = (p2 != 0);
+                profiles[slotIndex].plot_planted[3] = (p3 != 0);
+            }
+            else if (strcmp(key, "plot_ready") == 0) {
+                int r0, r1, r2, r3;
+                sscanf_s(value, "%d,%d,%d,%d", &r0, &r1, &r2, &r3);
+                profiles[slotIndex].plot_ready[0] = (r0 != 0);
+                profiles[slotIndex].plot_ready[1] = (r1 != 0);
+                profiles[slotIndex].plot_ready[2] = (r2 != 0);
+                profiles[slotIndex].plot_ready[3] = (r3 != 0);
+            }
+            else if (strcmp(key, "plot_timer") == 0) {
+                sscanf_s(value, "%f,%f,%f,%f",
+                    &profiles[slotIndex].plot_timer[0],
+                    &profiles[slotIndex].plot_timer[1],
+                    &profiles[slotIndex].plot_timer[2],
+                    &profiles[slotIndex].plot_timer[3]);
+            }
+            else if (strcmp(key, "plot_seed_type") == 0) {
+                sscanf_s(value, "%d,%d,%d,%d",
+                    &profiles[slotIndex].plot_seed_type[0],
+                    &profiles[slotIndex].plot_seed_type[1],
+                    &profiles[slotIndex].plot_seed_type[2],
+                    &profiles[slotIndex].plot_seed_type[3]);
+            }
         }
         else {
             if (strcmp(key, "EXISTS") == 0)
@@ -300,6 +393,68 @@ int   Profile_GetPears() { return (activeSlot >= 0) ? profiles[activeSlot].pears
 int   Profile_GetBananas() { return (activeSlot >= 0) ? profiles[activeSlot].bananas : 0; }
 int   Profile_GetSeed(int idx) { return (activeSlot >= 0 && idx >= 0 && idx < 3) ? profiles[activeSlot].seeds[idx] : 0; }
 
+// ---------------------------------------------------------------------------
+// Farm <-> Profile bridge (similar to Inventory)
+// ---------------------------------------------------------------------------
+
+// Save farm plot data to profile slot
+void Farm_SaveToProfile(int slot) {
+    if (slot < 0 || slot >= MAX_PROFILES || !profiles[slot].exists) return;
+    // Farm plot data is already in profiles[slot], just save to disk
+    Profiles_Save();
+}
+
+// Load farm plot data from profile slot
+void Farm_LoadFromProfile(int slot) {
+    if (slot < 0 || slot >= MAX_PROFILES || !profiles[slot].exists) return;
+    // Farm plot data is already in profiles[slot] after Profiles_Load()
+    // No need to copy anywhere, Farm.cpp will read it via getters
+}
+
+// Setters for farm plots (called by Farm.cpp)
+void Profile_SetPlotUnlocked(int plotIndex, bool unlocked) {
+    if (activeSlot < 0 || activeSlot >= MAX_PROFILES) return;
+    if (plotIndex < 0 || plotIndex >= MAX_FARM_PLOTS) return;
+    profiles[activeSlot].plot_unlocked[plotIndex] = unlocked;
+    Profiles_Save();
+}
+
+void Profile_SetPlotData(int plotIndex, bool planted, bool ready, float timer, int seedType) {
+    if (activeSlot < 0 || activeSlot >= MAX_PROFILES) return;
+    if (plotIndex < 0 || plotIndex >= MAX_FARM_PLOTS) return;
+    profiles[activeSlot].plot_planted[plotIndex] = planted;
+    profiles[activeSlot].plot_ready[plotIndex] = ready;
+    profiles[activeSlot].plot_timer[plotIndex] = timer;
+    profiles[activeSlot].plot_seed_type[plotIndex] = seedType;
+    Profiles_Save();
+}
+
+// Getters for farm plots (read from active slot)
+bool Profile_GetPlotUnlocked(int plotIndex) {
+    if (activeSlot < 0 || plotIndex < 0 || plotIndex >= MAX_FARM_PLOTS) return false;
+    return profiles[activeSlot].plot_unlocked[plotIndex];
+}
+
+bool Profile_GetPlotPlanted(int plotIndex) {
+    if (activeSlot < 0 || plotIndex < 0 || plotIndex >= MAX_FARM_PLOTS) return false;
+    return profiles[activeSlot].plot_planted[plotIndex];
+}
+
+bool Profile_GetPlotReady(int plotIndex) {
+    if (activeSlot < 0 || plotIndex < 0 || plotIndex >= MAX_FARM_PLOTS) return false;
+    return profiles[activeSlot].plot_ready[plotIndex];
+}
+
+float Profile_GetPlotTimer(int plotIndex) {
+    if (activeSlot < 0 || plotIndex < 0 || plotIndex >= MAX_FARM_PLOTS) return 0.0f;
+    return profiles[activeSlot].plot_timer[plotIndex];
+}
+
+int Profile_GetPlotSeedType(int plotIndex) {
+    if (activeSlot < 0 || plotIndex < 0 || plotIndex >= MAX_FARM_PLOTS) return -1;
+    return profiles[activeSlot].plot_seed_type[plotIndex];
+}
+
 // Call this after a profile is loaded to restore economy state from the slot.
 void Economy_LoadFromProfile(int slot) {
     if (slot < 0 || slot >= MAX_PROFILES || !profiles[slot].exists) return;
@@ -325,6 +480,17 @@ void Profile_CreateSlot(int slot, const char* name) {
     profiles[slot].seeds[0] = 10;  // apple seeds
     profiles[slot].seeds[1] = 0;   // pear seeds
     profiles[slot].seeds[2] = 0;   // banana seeds
+    // Default farm state: plot 0 unlocked, all empty
+    profiles[slot].plot_unlocked[0] = true;
+    profiles[slot].plot_unlocked[1] = false;
+    profiles[slot].plot_unlocked[2] = false;
+    profiles[slot].plot_unlocked[3] = false;
+    for (int i = 0; i < MAX_FARM_PLOTS; i++) {
+        profiles[slot].plot_planted[i] = false;
+        profiles[slot].plot_ready[i] = false;
+        profiles[slot].plot_timer[i] = 0.0f;
+        profiles[slot].plot_seed_type[i] = -1;
+    }
     strncpy_s(profiles[slot].name, PROFILE_NAME_MAX_LEN, name, _TRUNCATE);
     Profiles_Save();
 }
@@ -336,8 +502,10 @@ void Profile_SetActiveSlot(int slot) {
     activeSlot = slot;
     Economy_LoadFromProfile(slot);
     Inventory_LoadFromProfile(slot);  // Load inventory state from profile
+    Farm_LoadFromProfile(slot);  // Load farm state from profile
     Economy_SaveToProfile(slot);
     Inventory_SaveToProfile(slot);  // Save inventory state to profile
+    Farm_SaveToProfile(slot);  // Save farm state to profile
 }
 
 

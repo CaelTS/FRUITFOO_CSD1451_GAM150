@@ -13,6 +13,7 @@
 // ============================================================
 static constexpr int   MAX_PROFILES = 3;
 static constexpr int   PROFILE_NAME_MAX = 32; //name limit
+static constexpr int   MAX_FARM_PLOTS = 4;
 static const char* PROFILES_FILE = "profiles.txt";
 
 static AEGfxVertexList* pMeshPopup = nullptr;
@@ -25,6 +26,12 @@ struct SSProfile
     bool exists = false;
     char name[PROFILE_NAME_MAX] = "";
     int  coins = 0;
+    // Farm plot data (mirrors Profile.cpp's farm fields)
+    bool plot_unlocked[MAX_FARM_PLOTS] = { true, false, false, false };
+    bool plot_planted[MAX_FARM_PLOTS] = { false, false, false, false };
+    bool plot_ready[MAX_FARM_PLOTS] = { false, false, false, false };
+    float plot_timer[MAX_FARM_PLOTS] = { 0.0f, 0.0f, 0.0f, 0.0f };
+    int  plot_seed_type[MAX_FARM_PLOTS] = { -1, -1, -1, -1 };
 };
 static SSProfile g_profiles[MAX_PROFILES];
 
@@ -61,7 +68,8 @@ static void SS_Profiles_Load()
     int  slot = -1;
     bool inEconomy = false;
     bool inInventory = false;
-    char line[128] = {};
+    bool inFarm = false;
+    char line[256] = {};
     while (fgets(line, sizeof(line), f))
     {
         int len = (int)strlen(line);
@@ -70,10 +78,11 @@ static void SS_Profiles_Load()
         if (len == 0) continue;
 
         if (line[0] == '[') {
-            if (strcmp(line, "[economy]") == 0) { inEconomy = true; inInventory = false; }
-            else if (strcmp(line, "[inventory]") == 0) { inInventory = true; inEconomy = false; }
+            if (strcmp(line, "[economy]") == 0) { inEconomy = true;  inInventory = false; inFarm = false; }
+            else if (strcmp(line, "[inventory]") == 0) { inInventory = true; inEconomy = false;  inFarm = false; }
+            else if (strcmp(line, "[farm]") == 0) { inFarm = true;     inEconomy = false;   inInventory = false; }
             else {
-                inEconomy = false; inInventory = false;
+                inEconomy = false; inInventory = false; inFarm = false;
                 sscanf_s(line, "[PROFILE_%d]", &slot);
             }
             continue;
@@ -86,8 +95,8 @@ static void SS_Profiles_Load()
         const char* key = line;
         const char* val = eq + 1;
 
-        // Only parse top-level profile fields (not in [economy] or [inventory])
-        if (!inEconomy && !inInventory) {
+        // Only parse top-level profile fields (not in [economy], [inventory], or [farm])
+        if (!inEconomy && !inInventory && !inFarm) {
             if (strcmp(key, "EXISTS") == 0) g_profiles[slot].exists = (atoi(val) != 0);
             else if (strcmp(key, "NAME") == 0) strncpy_s(g_profiles[slot].name, PROFILE_NAME_MAX, val, _TRUNCATE);
             else if (strcmp(key, "coins") == 0) g_profiles[slot].coins = atoi(val); // backward compat
@@ -97,6 +106,50 @@ static void SS_Profiles_Load()
             if (strcmp(key, "total_money") == 0) g_profiles[slot].coins = atoi(val);
         }
         // Ignore [inventory] section - we don't need it in StartScreen
+        else if (inFarm) {
+            int v0, v1, v2, v3;
+            float f0, f1, f2, f3;
+            if (strcmp(key, "plot_unlocked") == 0) {
+                if (sscanf_s(val, "%d,%d,%d,%d", &v0, &v1, &v2, &v3) == 4) {
+                    g_profiles[slot].plot_unlocked[0] = (v0 != 0);
+                    g_profiles[slot].plot_unlocked[1] = (v1 != 0);
+                    g_profiles[slot].plot_unlocked[2] = (v2 != 0);
+                    g_profiles[slot].plot_unlocked[3] = (v3 != 0);
+                }
+            }
+            else if (strcmp(key, "plot_planted") == 0) {
+                if (sscanf_s(val, "%d,%d,%d,%d", &v0, &v1, &v2, &v3) == 4) {
+                    g_profiles[slot].plot_planted[0] = (v0 != 0);
+                    g_profiles[slot].plot_planted[1] = (v1 != 0);
+                    g_profiles[slot].plot_planted[2] = (v2 != 0);
+                    g_profiles[slot].plot_planted[3] = (v3 != 0);
+                }
+            }
+            else if (strcmp(key, "plot_ready") == 0) {
+                if (sscanf_s(val, "%d,%d,%d,%d", &v0, &v1, &v2, &v3) == 4) {
+                    g_profiles[slot].plot_ready[0] = (v0 != 0);
+                    g_profiles[slot].plot_ready[1] = (v1 != 0);
+                    g_profiles[slot].plot_ready[2] = (v2 != 0);
+                    g_profiles[slot].plot_ready[3] = (v3 != 0);
+                }
+            }
+            else if (strcmp(key, "plot_timer") == 0) {
+                if (sscanf_s(val, "%f,%f,%f,%f", &f0, &f1, &f2, &f3) == 4) {
+                    g_profiles[slot].plot_timer[0] = f0;
+                    g_profiles[slot].plot_timer[1] = f1;
+                    g_profiles[slot].plot_timer[2] = f2;
+                    g_profiles[slot].plot_timer[3] = f3;
+                }
+            }
+            else if (strcmp(key, "plot_seed_type") == 0) {
+                if (sscanf_s(val, "%d,%d,%d,%d", &v0, &v1, &v2, &v3) == 4) {
+                    g_profiles[slot].plot_seed_type[0] = v0;
+                    g_profiles[slot].plot_seed_type[1] = v1;
+                    g_profiles[slot].plot_seed_type[2] = v2;
+                    g_profiles[slot].plot_seed_type[3] = v3;
+                }
+            }
+        }
     }
     fclose(f);
 }

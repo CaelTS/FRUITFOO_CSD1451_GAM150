@@ -56,6 +56,23 @@ void Inventory_SaveToProfile(int slot);
 void Inventory_LoadFromProfile(int slot);
 
 // ---------------------------------------------------------------------------
+// Farm <-> Profile
+// ---------------------------------------------------------------------------
+void Farm_SaveToProfile(int slot);
+void Farm_LoadFromProfile(int slot);
+
+// Setters for farm plots (auto-save)
+void Profile_SetPlotUnlocked(int plotIndex, bool unlocked);
+void Profile_SetPlotData(int plotIndex, bool planted, bool ready, float timer, int seedType);
+
+// Getters for farm plots (read from active slot)
+bool Profile_GetPlotUnlocked(int plotIndex);
+bool Profile_GetPlotPlanted(int plotIndex);
+bool Profile_GetPlotReady(int plotIndex);
+float Profile_GetPlotTimer(int plotIndex);
+int Profile_GetPlotSeedType(int plotIndex);
+
+// ---------------------------------------------------------------------------
 // Profile slot management
 // ---------------------------------------------------------------------------
 
