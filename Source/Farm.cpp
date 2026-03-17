@@ -4,6 +4,7 @@
 #include "Profile.h"
 #include <iostream>
 #include <vector>
+#include "Inventory.h"
 
 extern AEGfxVertexList* g_pMeshFullScreen;
 
@@ -536,6 +537,9 @@ void Farm_PlantSeed(int plotIndex, int seedType)
     if (plot.isPlanted)
         return;
 
+    // Remove from Inventory (this auto-saves to profile)
+    Inventory_RemoveSeed(1, static_cast<u8>(seedType));
+
     plot.isPlanted = true;
     plot.isReady = false;
     plot.seedType = seedType;
@@ -544,7 +548,7 @@ void Farm_PlantSeed(int plotIndex, int seedType)
     // Save to profile
     Profile_SetPlotData(plotIndex, plot.isPlanted, plot.isReady, plot.growTimer, plot.seedType);
 
-    std::cout << "Planted seed " << seedType << " in plot " << plotIndex << "\n";
+    std::cout << "Planted seed " << seedType << " in plot " << plotIndex << " (1 seed removed from inventory)\n";
 }
 
 bool Farm_IsPlotPlanted(int plotIndex)
