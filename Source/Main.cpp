@@ -1,4 +1,4 @@
-// ---------------------------------------------------------------------------
+ï»¿// ---------------------------------------------------------------------------
 // includes
 
 #include <crtdbg.h> // To check for memory leaks
@@ -18,6 +18,7 @@
 #include <iostream>
 #include "Profile.h"
 #include "StartScreen.h"
+#include "Utilities.h"
 
 // ---------------------------------------------------------------------------
 // Game State Variables
@@ -28,6 +29,20 @@ const std::vector<FruitBasket>& GetFruitBaskets()
 	return gFruitBaskets;
 }
 
+//struct Fruit
+//{
+//	int type; // 0: Apple, 1: Pear, 2: Banana
+//	float x, y;
+//	bool active;
+//};
+
+//// Game Variables
+//int gold = 0;
+//int energy = 50;
+//const int MAX_ENERGY = 50;
+//const int ENERGY_COST = 5;
+//const int FRUIT_PRICE = 10;
+
 //Image Scale
 float rescale = 70.0f;
 
@@ -36,6 +51,28 @@ float gScaleY = 900.0f / 1080.0f;
 
 // Start Screen
 bool gStartScreenActive = true;
+
+//// Inventory System
+//int inventory[3] = { 0, 0, 0 }; // 0: Apple, 1: Pear, 2: Banana
+//const int MAX_INVENTORY = 30;
+//int selectedFruit = 0;
+//
+//// Energy Regeneration
+//float energyTimer = 0.0f;
+//const float REGEN_TIME = 10.0f;
+//
+//// Fruit Growth Logic
+//float fruitGrowthTimer = 0.0f;
+//const float FRUIT_GROWTH_TIME = 10.0f;
+//std::vector<Fruit> fruits;
+//
+//// Pre-defined positions for fruits on trees
+//struct Point { float x, y; } treePositions[] = {
+//	{-600.0f, 200.0f}, {-500.0f, 300.0f}, {-700.0f, 100.0f}, // Left Tree
+//	{600.0f, 200.0f}, {500.0f, 300.0f}, {700.0f, 100.0f},    // Right Tree
+//	{-550.0f, 150.0f}, {650.0f, 250.0f}
+//};
+//int maxFruits = sizeof(treePositions) / sizeof(Point);
 
 // Graphics Resources
 s8 fontId = -1;
@@ -54,54 +91,159 @@ AEGfxVertexList* pMeshFruit = NULL;
 AEGfxVertexList* g_pMeshFullScreen = NULL;
 AEGfxTexture* pTexPlus = nullptr;
 
+// ---------------------------------------------------------------------------
+// Pause Popup
+// ---------------------------------------------------------------------------
+static AEGfxTexture* pTexPausePanel = nullptr;  // panel_brown.png
+static AEGfxTexture* pTexPauseBtn = nullptr;  // input_outline_rectangle.png (reused as button bg)
+static AEGfxVertexList* pMeshPauseQuad = nullptr;
+
+static bool g_pauseOpen = false;
+static int  g_pauseHovered = -1;   // 0 = Main Menu, 1 = Exit
+
+// Layout constants (pixel-space, origin = screen centre)
+static const float PAUSE_PANEL_W = 400.0f;
+static const float PAUSE_PANEL_H = 260.0f;
+static const float PAUSE_BTN_W = 300.0f;
+static const float PAUSE_BTN_H = 55.0f;
+static const float PAUSE_BTN_Y0 = 20.0f;
+static const float PAUSE_BTN_Y1 = -60.0f;
+
+
+//// Random number generator
+//std::random_device rd;
+//std::mt19937 gen(rd());
+//// Fruit basket (hover)
+//std::vector<FruitBasket> gFruitBaskets;
+//const std::vector<FruitBasket>& GetFruitBaskets()
+//{
+//	return gFruitBaskets;
+//}
+//void SaveGame(int goldParam, int energyParam, int inventoryparam[3])
+//{
+//	std::ofstream outFile("savegame.txt");
+//	if (outFile.is_open())
+//	{
+//		outFile << goldParam << "\n";
+//		outFile << energyParam << "\n";
+//		outFile << inventoryparam[0] << "\n";
+//		outFile << inventoryparam[1] << "\n";
+//		outFile << inventoryparam[2] << "\n";
+//		outFile.close();
+//		OutputDebugStringA("Game Saved Successfully.\n");
+//	}
+//	else
+//	{
+//		OutputDebugStringA("ERROR: Could not save game.\n");
+//	}
+//}
+//
+//bool LoadGame(int goldParam, int energyParam, int inventoryparam[3])
+//{
+//	std::ifstream inFile("savegame.txt");
+//	if (inFile.is_open())
+//	{
+//		inFile >> goldParam;
+//		inFile >> energyParam;
+//		inFile >> inventoryparam[0];
+//		inFile >> inventoryparam[1];
+//		inFile >> inventoryparam[2];
+//		inFile.close();
+//		OutputDebugStringA("Game Loaded Successfully.\n");
+//		return true;
+//	}
+//	return false;
+//}
+
+//int GetGold() { return gold; }
+//int GetEnergy() { return energy; }
+//int GetSelectedFruit() { return selectedFruit; }
+//int GetInventory(int index) { return inventory[index]; }
+//float GetEnergyTimer() { return energyTimer; }
+//float GetFruitGrowthTimer() { return fruitGrowthTimer; }
+//const std::vector<Fruit>& GetFruits() { return fruits; }
+
 void MainScreen_Load()
 {
+	// Load Textures
 	pBackground = AEGfxTextureLoad("Assets/MainMenu_Background.png");
 	pGrass = AEGfxTextureLoad("Assets/MainMenu_Background_Grass.png");
 	pBaseStall = AEGfxTextureLoad("Assets/base level 1 with apple.png");
+
 	pTexApple = AEGfxTextureLoad("Assets/Apple.png");
 	pTexPear = AEGfxTextureLoad("Assets/Pear.png");
 	pTexBanana = AEGfxTextureLoad("Assets/Banana.png");
 	pTexPlus = AEGfxTextureLoad("Assets/Plus.png");
 	Farm_Load();
 
+	// Pause popup assets (same textures used by StartScreen popup)
+	pTexPausePanel = AEGfxTextureLoad("Assets/panel_brown.png");
+	pTexPauseBtn = AEGfxTextureLoad("Assets/input_outline_rectangle.png");
+	AEGfxMeshStart();
+	AEGfxTriAdd(-0.5f, -0.5f, 0xFFFFFFFF, 0.0f, 1.0f, 0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f, -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
+	AEGfxTriAdd(0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f, 0.5f, 0.5f, 0xFFFFFFFF, 1.0f, 0.0f, -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
+	pMeshPauseQuad = AEGfxMeshEnd();
+
+
 	if (!pBackground) OutputDebugStringA("ERROR: Failed to load 'Assets/MainMenu_Background.png'.\n");
-	if (!pBaseStall)  OutputDebugStringA("ERROR: Failed to load 'Assets/base level 1 with apple.png'.\n");
-	if (!pTexApple)   OutputDebugStringA("ERROR: Failed to load 'Assets/Apple.png'.\n");
-	if (!pTexPear)    OutputDebugStringA("ERROR: Failed to load 'Assets/Pear.png'.\n");
-	if (!pTexBanana)  OutputDebugStringA("ERROR: Failed to load 'Assets/Banana.png'.\n");
+	if (!pBaseStall) OutputDebugStringA("ERROR: Failed to load 'Assets/base level 1 with apple.png'.\n");
+	if (!pTexApple) OutputDebugStringA("ERROR: Failed to load 'Assets/Apple.png'.\n");
+	if (!pTexPear) OutputDebugStringA("ERROR: Failed to load 'Assets/Pear.png'.\n");
+	if (!pTexBanana) OutputDebugStringA("ERROR: Failed to load 'Assets/Banana.png'.\n");
+
 }
 
 void MainScreen_Initialize()
 {
-	// Start Screen Init
+	//// Reset game state
+	//gold = 0;
+	//energy = 50;
+	//energyTimer = 0.0f;
+	//fruitGrowthTimer = 0.0f;
+	//selectedFruit = 0;
+	//fruits.clear();
+	//inventory[0] = inventory[1] = inventory[2] = 0;
+
+	//Start Screen Init
 	if (previousState == GS_NEXT_SCREEN && !Profile_WentBack())
 	{
+		// User selected a profile ? go straight into the game
 		gStartScreenActive = false;
 		startScreenActive = false;
 	}
+
 	else if (previousState == GS_RHYTHM_SCREEN)
 	{
-		// Returning from rhythm game — skip start screen entirely
+		// Returning from rhythm game ? skip the start screen entirely
 		gStartScreenActive = false;
 		startScreenActive = false;
 	}
+
 	else
 	{
+		// First launch, returning from rhythm, or ESC'd back from profile
 		gStartScreenActive = true;
 		StartScreen_Init();
 	}
 
-	Economy_Init();
-	SpawnFruit_Init();
-	UI_Init();
+	// Reset pause popup state
+	g_pauseOpen = false;
+	g_pauseHovered = -1;
 
+	//Economy Init
+	Economy_Init();
+
+	//Spawn Fruits Init
+	SpawnFruit_Init();
+
+
+	UI_Init();
 	if (previousState != GS_RHYTHM_SCREEN)
 	{
 		Farm_Initialize();
 	}
 
-	// Build crate rectangles to match the stall's current transform
+	// Build crate rectangles to match the stall's current transform:
 	{
 		float stallW = 702.0f * gScaleX;
 		float stallH = 716.0f * gScaleY;
@@ -110,10 +252,20 @@ void MainScreen_Initialize()
 		UI_RebuildCrateHitboxesFromStall(stallX, stallY, stallW, stallH);
 	}
 
+	//gFruitBaskets.clear();
+	//gFruitBaskets.push_back({ 0, -350.0f, -250.0f, 120.0f, 120.0f }); // Apple
+	//gFruitBaskets.push_back({ 1, -150.0f, -250.0f, 120.0f, 120.0f }); // Pear
+	//gFruitBaskets.push_back({ 2,   50.0f, -250.0f, 120.0f, 120.0f }); // Banana
+
+	//// Load saved game
+	//LoadGame(gold, energy, inventory);
+
+	// Load font
 	fontId = AEGfxCreateFont("Assets/Crayon pastel.otf", 26);
 	if (fontId < 0)
 		OutputDebugStringA("ERROR: Failed to load 'Assets/Crayon pastel.otf'.\n");
 
+	// Create meshes
 	AEGfxMeshStart();
 	AEGfxTriAdd(-0.5f, -0.5f, 0xFFFFFFFF, 0.0f, 1.0f, 0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f, -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
 	AEGfxTriAdd(0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f, 0.5f, 0.5f, 0xFFFFFFFF, 1.0f, 0.0f, -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
@@ -137,49 +289,224 @@ void MainScreen_Initialize()
 
 void MainScreen_Update()
 {
+	// Get Delta Time
 	float dt = (float)AEFrameRateControllerGetFrameTime();
 
 	if (gStartScreenActive)
 	{
+		// --- Update start screen ---
 		StartScreen_Update(dt);
-		if (!StartScreen_IsActive())
+
+		// Check if the animation is finished
+		if (!StartScreen_IsActive()) // you?ll make this function
 			gStartScreenActive = false;
 	}
 
+	//Get Mouse Position
 	s32 mouseX, mouseY;
 	AEInputGetCursorPosition(&mouseX, &mouseY);
 
-	// Farm gets first pick of all clicks so its prompts aren't stolen by UI
-	Farm_Update();
-
-	// UI only runs when no farm prompt is visible
-	if (!Farm_IsRhythmPaused() && !Farm_IsWaitingForRhythm())
+	// ---------------------------------------------------------------
+	// Pause popup  (only while in-game, not on start screen)
+	// ---------------------------------------------------------------
+	if (!gStartScreenActive)
 	{
-		UI_Input();
+		// Toggle popup with ESC (suppress when inventory menu is open)
+		if (AEInputCheckTriggered(AEVK_ESCAPE) && !UI_IsMenuOpen())
+			g_pauseOpen = !g_pauseOpen;
+
+		if (g_pauseOpen)
+		{
+			// Update hover using IsMouseOverRect(centreX, centreY, width, height)
+			g_pauseHovered = -1;
+			if (IsMouseOverRect(0.0f, PAUSE_BTN_Y0, PAUSE_BTN_W, PAUSE_BTN_H)) g_pauseHovered = 0;
+			else if (IsMouseOverRect(0.0f, PAUSE_BTN_Y1, PAUSE_BTN_W, PAUSE_BTN_H)) g_pauseHovered = 1;
+
+			// Handle clicks using ClickedOnRect(centreX, centreY, width, height)
+			if (ClickedOnRect(0.0f, PAUSE_BTN_Y0, PAUSE_BTN_W, PAUSE_BTN_H))
+			{
+				Profile_EndSession();
+				g_pauseOpen = false;
+				nextState = GS_START_SCREEN;
+			}
+			else if (ClickedOnRect(0.0f, PAUSE_BTN_Y1, PAUSE_BTN_W, PAUSE_BTN_H))
+			{
+				Profile_EndSession();
+				g_pauseOpen = false;
+				nextState = GS_EXIT;
+			}
+
+			// Swallow all other input while paused
+			return;
+		}
 	}
 
-
+	UI_Input();
+	Farm_Update();
 	Economy_Update(dt);
+
 	UpdateSpawnFruits(dt);
 	UpdateFruitSpawner(dt);
 	CheckForFruitClicks(mouseX, mouseY);
 
-	// Check if farm triggered rhythm
+
+	// ---- Check if farm triggered rhythm ----
 	if (Farm_ShouldStartRhythm())
 	{
 		OutputDebugStringA("Farm requested rhythm game\n");
-		Farm_ClearRhythmFlag();   // clears request flag but keeps g_rhythmPlotIndex
+
+		Farm_ClearRhythmRequest();
 		nextState = GS_RHYTHM_SCREEN;
 	}
+
+	//// Energy Regeneration Logic
+	//if (energy < MAX_ENERGY)
+	//{
+	//	energyTimer += dt;
+	//	if (energyTimer >= REGEN_TIME)
+	//	{
+	//		energy++;
+	//		energyTimer -= REGEN_TIME;
+	//		if (energy > MAX_ENERGY) energy = MAX_ENERGY;
+	//	}
+	//}
+
+	//// Fruit Growth Logic
+	//if (fruits.size() < maxFruits)
+	//{
+	//	fruitGrowthTimer += dt;
+	//	if (fruitGrowthTimer >= FRUIT_GROWTH_TIME)
+	//	{
+	//		fruitGrowthTimer = 0.0f;
+
+	//		// Find an empty spot
+	//		if (fruits.size() < maxFruits)
+	//		{
+	//			Fruit newFruit{};
+	//			newFruit.type = gen() % 3; // Random fruit type: 0, 1, or 2
+	//			newFruit.x = treePositions[fruits.size()].x;
+	//			newFruit.y = treePositions[fruits.size()].y;
+	//			newFruit.active = true;
+	//			fruits.push_back(newFruit);
+	//		}
+	//	}
+	//}
+
+	//// Input Logic: Mouse Click to Pluck Fruits
+	//if (AEInputCheckTriggered(AEVK_LBUTTON))
+	//{
+	//	s32 mouseX, mouseY;
+	//	AEInputGetCursorPosition(&mouseX, &mouseY);
+
+	//	// Convert screen coordinates to world coordinates
+	//	float worldX = (float)mouseX - 800.0f;
+	//	float worldY = 450.0f - (float)mouseY;
+
+	//	// Check collision with fruits
+	//	for (auto it = fruits.begin(); it != fruits.end(); )
+	//	{
+	//		if (it->active)
+	//		{
+	//			// Simple AABB collision (Fruit size is approx 64x64)
+	//			float halfSize = 32.0f;
+	//			if (worldX >= it->x - halfSize && worldX <= it->x + halfSize &&
+	//				worldY >= it->y - halfSize && worldY <= it->y + halfSize)
+	//			{
+	//				// Check inventory capacity
+	//				if (inventory[it->type] < MAX_INVENTORY)
+	//				{
+	//					// Add to inventory
+	//					inventory[it->type]++;
+
+	//					// Remove fruit from tree
+	//					it = fruits.erase(it);
+	//					continue; // Skip incrementing iterator since we erased
+	//				}
+	//			}
+	//		}
+	//		++it;
+	//	}
+	//}
+
+	//// Input Logic: Select Fruit to Sell
+	//if (AEInputCheckTriggered(AEVK_1)) selectedFruit = 0; // Apple
+	//if (AEInputCheckTriggered(AEVK_2)) selectedFruit = 1; // Pear
+	//if (AEInputCheckTriggered(AEVK_3)) selectedFruit = 2; // Banana
+
+	//// Check for "Activity" (Selling Selected Fruit)
+	//if (AEInputCheckTriggered(AEVK_SPACE))
+	//{
+	//	// Check if we have the selected fruit to sell
+	//	if (inventory[selectedFruit] > 0)
+	//	{
+	//		if (energy >= ENERGY_COST)
+	//		{
+	//			energy -= ENERGY_COST;
+	//			inventory[selectedFruit]--; // Remove 1 fruit
+	//			gold += FRUIT_PRICE;
+	//		}
+	//	}
+	//}
+
+	//// Input Logic: Mouse Click to Pluck Fruits
+	//if (AEInputCheckTriggered(AEVK_LBUTTON))
+	//{
+	//	s32 mouseX, mouseY;
+	//	AEInputGetCursorPosition(&mouseX, &mouseY);
+
+	//	// Convert screen coordinates to world coordinates
+	//	float worldX = (float)mouseX - 800.0f;
+	//	float worldY = 450.0f - (float)mouseY;
+
+	//	// Check collision with fruits
+	//	for (auto it = fruits.begin(); it != fruits.end(); )
+	//	{
+	//		if (it->active)
+	//		{
+	//			// Simple AABB collision (Fruit size is approx 64x64)
+	//			float halfSize = 32.0f;
+	//			if (worldX >= it->x - halfSize && worldX <= it->x + halfSize &&
+	//				worldY >= it->y - halfSize && worldY <= it->y + halfSize)
+	//			{
+	//				// Check inventory capacity
+	//				if (inventory[it->type] < MAX_INVENTORY)
+	//				{
+	//					// Add to inventory
+	//					inventory[it->type]++;
+
+	//					// Remove fruit from tree
+	//					it = fruits.erase(it);
+	//					continue; // Skip incrementing iterator since we erased
+	//				}
+	//			}
+	//		}
+	//		++it;
+	//	}
+
+	//	if (UI_IsMenuOpen())	
+	//		return;
+	//}
+
+	//// Switch to Rhythm game when pressing R
+	//if (AEInputCheckTriggered(AEVK_R))
+	//{
+	//	OutputDebugStringA("Switching to RHYTHM state\n");
+	//	nextState = GS_RHYTHM_SCREEN;
+	//}
 }
 
 void MainScreen_Render()
 {
-	AEGfxSetBackgroundColor(0.2f, 0.2f, 0.2f);
+	// Clear screen
+	AEGfxSetBackgroundColor(0.2f, 0.2f, 0.2f); // Dark Gray
 
+	// Transformation Matrices
 	AEMtx33 scale, trans, transform;
+	//char strBuffer[100]{};
 
-	// Draw Background
+
+
+	// --- Draw Background (Center) ---
 	if (pBackground)
 	{
 		AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
@@ -194,9 +521,13 @@ void MainScreen_Render()
 		AEGfxSetRenderMode(AE_GFX_RM_COLOR);
 	}
 
+
+
+	// Scale: 1600x900 pixels (Full Screen)
 	AEMtx33Scale(&scale, 1920 * gScaleX, 1080.0f * gScaleY);
 	AEMtx33Trans(&trans, 0.0f, 0.0f);
 	AEMtx33Concat(&transform, &trans, &scale);
+
 	AEGfxSetTransform(transform.m);
 	AEGfxMeshDraw(pMeshBackground, AE_GFX_MDM_TRIANGLES);
 
@@ -208,11 +539,23 @@ void MainScreen_Render()
 		AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
 		AEGfxSetBlendMode(AE_GFX_BM_BLEND);
 		AEGfxSetTransparency(1.0f);
+
+		// Set the texture
 		AEGfxTextureSet(pBaseStall, 0, 0);
+
+		// Scale (size of stall)
 		AEMtx33Scale(&scale, 702.0f * gScaleX, 716.0f * gScaleY);
+
+		// Position
 		AEMtx33Trans(&trans, 330.0f * gScaleX, -15.0f * gScaleY);
+
+		// Combine scale and translation
 		AEMtx33Concat(&transform, &trans, &scale);
+
+		// Apply transformation
 		AEGfxSetTransform(transform.m);
+
+		// Draw mesh (usually this is a quad mesh you created earlier)
 		AEGfxMeshDraw(pMeshStall, AE_GFX_MDM_TRIANGLES);
 	}
 
@@ -224,15 +567,162 @@ void MainScreen_Render()
 		AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
 		AEGfxSetBlendMode(AE_GFX_BM_BLEND);
 		AEGfxSetTransparency(1.0f);
+
+		// Set the texture
 		AEGfxTextureSet(pGrass, 0, 0);
+
+		// Scale (size of stall)
 		AEMtx33Scale(&scale, 1920.0f * gScaleX, 1080.0f * gScaleY);
+
+		// Position (center of screen)
 		AEMtx33Trans(&trans, 0.0f, 0.0f);
+
+		// Combine scale and translation
 		AEMtx33Concat(&transform, &trans, &scale);
+
+		// Apply transformation
 		AEGfxSetTransform(transform.m);
+
+		// Draw mesh (usually this is a quad mesh you created earlier)
 		AEGfxMeshDraw(pMeshGrass, AE_GFX_MDM_TRIANGLES);
 	}
 
+	//crate hover tint
 	UI_DrawCrateHoverTint_Yellow();
+
+	//// --- Draw Fruits ---
+	//AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+	//AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+	//AEGfxSetTransparency(1.0f);
+
+
+	//
+	//for (const auto& fruit : fruits)
+	//{
+	//	if (!fruit.active) continue;
+
+	//	AEGfxTexture* pCurrentTex = 0;
+	//	if (fruit.type == 0) pCurrentTex = pTexApple;
+	//	else if (fruit.type == 1) pCurrentTex = pTexPear;
+	//	else if (fruit.type == 2) pCurrentTex = pTexBanana;
+
+	//	if (pCurrentTex)
+	//	{
+	//		AEGfxTextureSet(pCurrentTex, 0, 0);
+
+	//		// Scale: 64x64 pixels for fruits
+	//		AEMtx33Scale(&scale, 64.0f, 64.0f);
+	//		AEMtx33Trans(&trans, fruit.x, fruit.y);
+	//		AEMtx33Concat(&transform, &trans, &scale);
+
+	//		AEGfxSetTransform(transform.m);
+	//		AEGfxMeshDraw(pMeshFruit, AE_GFX_MDM_TRIANGLES);
+	//	}
+	//}
+
+
+	//// --- Draw UI Borders ---
+	//float uiX = -700.0f;
+	//float uiY_Gold = 400.0f;
+	//float uiY_Energy = 340.0f;
+	//float uiWidth = 250.0f;
+	//float uiHeight = 50.0f;
+	//float borderSize = 4.0f;
+
+	//// 1. Gold Border (Yellow)
+	//AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+	//AEGfxSetColorToMultiply(1.0f, 1.0f, 0.0f, 1.0f);
+
+	//AEMtx33Scale(&scale, uiWidth, uiHeight);
+	//AEMtx33Trans(&trans, uiX, uiY_Gold);
+	//AEMtx33Concat(&transform, &trans, &scale);
+	//AEGfxSetTransform(transform.m);
+	//AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+	//// 1b. Gold Background (Black)
+	//AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 1.0f);
+	//AEMtx33Scale(&scale, uiWidth - (borderSize * 2), uiHeight - (borderSize * 2));
+	//AEMtx33Trans(&trans, uiX, uiY_Gold);
+	//AEMtx33Concat(&transform, &trans, &scale);
+	//AEGfxSetTransform(transform.m);
+	//AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+	//// 2. Energy Border (Green)
+	//AEGfxSetColorToMultiply(0.0f, 1.0f, 0.0f, 1.0f);
+
+	//AEMtx33Scale(&scale, uiWidth, uiHeight);
+	//AEMtx33Trans(&trans, uiX, uiY_Energy);
+	//AEMtx33Concat(&transform, &trans, &scale);
+	//AEGfxSetTransform(transform.m);
+	//AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+	//// 2b. Energy Background (Black)
+	//AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 1.0f);
+	//AEMtx33Scale(&scale, uiWidth - (borderSize * 2), uiHeight - (borderSize * 2));
+	//AEMtx33Trans(&trans, uiX, uiY_Energy);
+	//AEMtx33Concat(&transform, &trans, &scale);
+	//AEGfxSetTransform(transform.m);
+	//AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+	//// 3. Inventory UI (Right Side)
+	//float invX = 650.0f;
+	//float invY = 400.0f;
+	//float invHeight = 160.0f;
+
+	//// Inventory Border (Blue)
+	//AEGfxSetColorToMultiply(0.0f, 0.5f, 1.0f, 1.0f);
+	//AEMtx33Scale(&scale, uiWidth, invHeight);
+	//AEMtx33Trans(&trans, invX, invY - 50.0f);
+	//AEMtx33Concat(&transform, &trans, &scale);
+	//AEGfxSetTransform(transform.m);
+	//AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+	//// Inventory Background (Black)
+	//AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 1.0f);
+	//AEMtx33Scale(&scale, uiWidth - (borderSize * 2), invHeight - (borderSize * 2));
+	//AEMtx33Trans(&trans, invX, invY - 50.0f);
+	//AEMtx33Concat(&transform, &trans, &scale);
+	//AEGfxSetTransform(transform.m);
+	//AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+	//// Reset Color Multiplier
+	//AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
+
+	//// --- Draw Text (Top Left) ---
+	//if (fontId >= 0)
+	//{
+	//	// 1. Gold Display
+	//	sprintf_s(strBuffer, "Gold: %d", gold);
+	//	AEGfxPrint(fontId, strBuffer, -0.99f, 0.87f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f);
+
+	//	// 2. Energy Display
+	//	sprintf_s(strBuffer, "Energy: %d/%d", energy, MAX_ENERGY);
+	//	AEGfxPrint(fontId, strBuffer, -0.99f, 0.74f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f);
+
+	//	// 3. Inventory Display (Right Side)
+	//	float textX = 0.67f;
+	//	float textY = 0.87f;
+	//	float lineSpacing = 0.12f;
+
+	//	// Helper to draw selection marker
+	//	const char* marker0 = (selectedFruit == 0) ? "> " : "  ";
+	//	const char* marker1 = (selectedFruit == 1) ? "> " : "  ";
+	//	const char* marker2 = (selectedFruit == 2) ? "> " : "  ";
+
+	//	sprintf_s(strBuffer, "%sApples: %d/%d", marker0, inventory[0], MAX_INVENTORY);
+	//	if (selectedFruit == 0) AEGfxPrint(fontId, strBuffer, textX, textY, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f);
+	//	else AEGfxPrint(fontId, strBuffer, textX, textY, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
+
+	//	sprintf_s(strBuffer, "%sPears:  %d/%d", marker1, inventory[1], MAX_INVENTORY);
+	//	if (selectedFruit == 1) AEGfxPrint(fontId, strBuffer, textX, textY - lineSpacing, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f);
+	//	else AEGfxPrint(fontId, strBuffer, textX, textY - lineSpacing, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
+
+	//	sprintf_s(strBuffer, "%sBananas:%d/%d", marker2, inventory[2], MAX_INVENTORY);
+	//	if (selectedFruit == 2) AEGfxPrint(fontId, strBuffer, textX, textY - (lineSpacing * 2), 1.0f, 1.0f, 0.0f, 1.0f, 1.0f);
+	//	else AEGfxPrint(fontId, strBuffer, textX, textY - (lineSpacing * 2), 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
+	//}
+
+	//Draw Fruits
 	RenderSpawnFruits();
 
 	if (TR_IsActive())
@@ -253,33 +743,138 @@ void MainScreen_Render()
 	UI_DrawFruitBasketTooltips();
 
 	if (gStartScreenActive)
+	{
 		StartScreen_Draw();
+	}
+
+	// ---------------------------------------------------------------
+	// Pause popup rendering (drawn last so it sits on top)
+	// ---------------------------------------------------------------
+	if (g_pauseOpen)
+	{
+		AEMtx33 pScale, pTrans, pTransform;
+
+		// 1. Dim overlay
+		AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+		AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+		AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 0.6f);
+		AEMtx33Scale(&pScale, 1600.0f, 900.0f);
+		AEMtx33Trans(&pTrans, 0.0f, 0.0f);
+		AEMtx33Concat(&pTransform, &pTrans, &pScale);
+		AEGfxSetTransform(pTransform.m);
+		AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+		// 2. Panel background (panel_brown.png)
+		if (pTexPausePanel && pMeshPauseQuad)
+		{
+			AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+			AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+			AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
+			AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
+			AEGfxSetTransparency(1.0f);
+			AEGfxTextureSet(pTexPausePanel, 0, 0);
+			AEMtx33Scale(&pScale, PAUSE_PANEL_W * gScaleX, PAUSE_PANEL_H * gScaleY);
+			AEMtx33Trans(&pTrans, 0.0f, 0.0f);
+			AEMtx33Concat(&pTransform, &pTrans, &pScale);
+			AEGfxSetTransform(pTransform.m);
+			AEGfxMeshDraw(pMeshPauseQuad, AE_GFX_MDM_TRIANGLES);
+		}
+
+		// 3. "Main Menu" button (input_outline_rectangle.png, tinted on hover)
+		if (pTexPauseBtn && pMeshPauseQuad)
+		{
+			float tint0 = (g_pauseHovered == 0) ? 1.3f : 1.0f;
+			AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+			AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+			AEGfxSetColorToMultiply(tint0, tint0, tint0, 1.0f);
+			AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
+			AEGfxSetTransparency(1.0f);
+			AEGfxTextureSet(pTexPauseBtn, 0, 0);
+			AEMtx33Scale(&pScale, PAUSE_BTN_W * gScaleX, PAUSE_BTN_H * gScaleY);
+			AEMtx33Trans(&pTrans, 0.0f, PAUSE_BTN_Y0 * gScaleY);
+			AEMtx33Concat(&pTransform, &pTrans, &pScale);
+			AEGfxSetTransform(pTransform.m);
+			AEGfxMeshDraw(pMeshPauseQuad, AE_GFX_MDM_TRIANGLES);
+		}
+
+		// 4. "Exit" button
+		if (pTexPauseBtn && pMeshPauseQuad)
+		{
+			float tint1 = (g_pauseHovered == 1) ? 1.3f : 1.0f;
+			AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+			AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+			AEGfxSetColorToMultiply(tint1, tint1, tint1, 1.0f);
+			AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
+			AEGfxSetTransparency(1.0f);
+			AEGfxTextureSet(pTexPauseBtn, 0, 0);
+			AEMtx33Scale(&pScale, PAUSE_BTN_W * gScaleX, PAUSE_BTN_H * gScaleY);
+			AEMtx33Trans(&pTrans, 0.0f, PAUSE_BTN_Y1 * gScaleY);
+			AEMtx33Concat(&pTransform, &pTrans, &pScale);
+			AEGfxSetTransform(pTransform.m);
+			AEGfxMeshDraw(pMeshPauseQuad, AE_GFX_MDM_TRIANGLES);
+		}
+
+		// 5. Text labels
+		if (fontId >= 0)
+		{
+			AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+			AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+			AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
+			// "PAUSED" title - centered at top of panel
+			AEGfxPrint(fontId, "PAUSED", -0.056f, 0.13f, 0.9f, 1.0f, 0.95f, 0.75f, 1.0f);
+
+			// "Main Menu" - centered on button (scale 0.8, 9 chars * 0.0075 â‰ˆ 0.0675 width, half = ~0.034)
+			AEGfxPrint(fontId, "Main Menu", -0.067f, 0.015f, 0.8f, 0.2f, 0.12f, 0.05f, 1.0f);
+
+			// "Exit" - centered on button (scale 0.8, 4 chars * 0.0075 â‰ˆ 0.03 width, half = ~0.015)
+			AEGfxPrint(fontId, "Exit", -0.032f, -0.13f, 0.8f, 0.2f, 0.12f, 0.05f, 1.0f);
+		}
+	}
+
 }
+
 
 void MainScreen_Free()
 {
+	// Free meshes
 	if (pMeshBackground) AEGfxMeshFree(pMeshBackground);
-	if (pMeshGrass)      AEGfxMeshFree(pMeshGrass);
-	if (pMeshStall)      AEGfxMeshFree(pMeshStall);
-	if (pMeshFruit)      AEGfxMeshFree(pMeshFruit);
+	if (pMeshGrass) AEGfxMeshFree(pMeshGrass);
+	if (pMeshStall) AEGfxMeshFree(pMeshStall);
+	if (pMeshFruit) AEGfxMeshFree(pMeshFruit);
 
-	if (pBackground) AEGfxTextureUnload(pBackground);
-	if (pTexApple)   AEGfxTextureUnload(pTexApple);
-	if (pTexPear)    AEGfxTextureUnload(pTexPear);
-	if (pTexBanana)  AEGfxTextureUnload(pTexBanana);
+	// Free textures
+	if (pBackground)  AEGfxTextureUnload(pBackground);
+	if (pTexApple)  AEGfxTextureUnload(pTexApple);
+	if (pTexPear)   AEGfxTextureUnload(pTexPear);
+	if (pTexBanana) AEGfxTextureUnload(pTexBanana);
 
+	// Free font
 	if (fontId >= 0)
 	{
 		AEGfxDestroyFont(fontId);
 		fontId = -1;
 	}
 
+	//// Clear STL containers
+	//fruits.clear();
+	//fruits.shrink_to_fit();
+
+	// Free pause popup assets
+	if (pTexPausePanel) { AEGfxTextureUnload(pTexPausePanel); pTexPausePanel = nullptr; }
+	if (pTexPauseBtn) { AEGfxTextureUnload(pTexPauseBtn);   pTexPauseBtn = nullptr; }
+	if (pMeshPauseQuad) { AEGfxMeshFree(pMeshPauseQuad);     pMeshPauseQuad = nullptr; }
+
+	// Reset pointers
 	pMeshBackground = pMeshStall = pMeshFruit = nullptr;
+
 	pBackground = pTexApple = pTexPear = pTexBanana = nullptr;
 }
 
+
 void MainScreen_Unload()
 {
+	//// Save game when leaving MainScreen
+	//SaveGame(gold, energy, inventory);
 }
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
@@ -291,62 +886,82 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	// _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
 
+
 	UNREFERENCED_PARAMETER(hPrevInstance);
 	UNREFERENCED_PARAMETER(lpCmdLine);
 
 	int gGameRunning = 1;
 
+	// ---------------------------------------------------------------------------
+	// Initialization
+	// ---------------------------------------------------------------------------
+
+	// Window Size: 1600x900
 	AESysInit(hInstance, nCmdShow, 1600, 900, 1, 60, false, NULL);
+
+	// Changing the window title
 	AESysSetWindowTitle("Fruit Stall Game");
+
+	// reset the system modules
 	AESysReset();
+
+	// Initialize Font System
 	AEGfxFontSystemStart();
 
+	// create shared full-screen quad once
 	AEGfxMeshStart();
 	AEGfxTriAdd(-0.5f, -0.5f, 0xFFFFFFFF, 0, 1, 0.5f, -0.5f, 0xFFFFFFFF, 1, 1, -0.5f, 0.5f, 0xFFFFFFFF, 0, 0);
 	AEGfxTriAdd(0.5f, -0.5f, 0xFFFFFFFF, 1, 1, 0.5f, 0.5f, 0xFFFFFFFF, 1, 0, -0.5f, 0.5f, 0xFFFFFFFF, 0, 0);
 	g_pMeshFullScreen = AEGfxMeshEnd();
 
+	// Initialize Game State Manager
 	GSM_Initialize(GS_MAIN_SCREEN);
 
+	// Load and initialize first state
+	//if (fpLoad) fpLoad();
+	//if (fpInitialize) fpInitialize();
+
+	// ---------------------------------------------------------------------------
+	// Game Loop
+	// ---------------------------------------------------------------------------
 	while (gGameRunning)
 	{
+		// Informing the system about the loop's start
 		AESysFrameStart();
 
-		// Global ESC to exit
-		// Excluded: main screen, profile popup, rhythm screen (handled below)
-		if ((AEInputCheckTriggered(AEVK_ESCAPE)
-			&& !ProfileScreen_IsPopupActive()
-			&& currentState != GS_MAIN_SCREEN
-			&& currentState != GS_NEXT_SCREEN
-			&& currentState != GS_RHYTHM_SCREEN)
-			|| 0 == AESysDoesWindowExist())
-		{
+		// Check for ESCAPE key to exit
+		// Do NOT exit if the profile name popup is currently open
+		if ((AEInputCheckTriggered(AEVK_ESCAPE) && !ProfileScreen_IsPopupActive()
+			&& currentState != GS_MAIN_SCREEN  // ESC in main screen handled by pause popup
+			&& currentState != GS_NEXT_SCREEN) || 0 == AESysDoesWindowExist()) {
 			nextState = GS_EXIT;
 		}
 
 		// RHYTHM GAME INPUT
 		if (currentState == GS_RHYTHM_SCREEN)
 		{
-			// Player completes rhythm normally
+			// Player finishes rhythm normally
 			if (AEInputCheckTriggered(AEVK_E))
 			{
-				Farm_OnRhythmResult(true);
+				bool success = true; // replace with real score logic
+
+				Farm_OnRhythmResult(success);
 				Farm_ClearRhythmRequest();
 				nextState = GS_MAIN_SCREEN;
 			}
 
-			// Player ESCs out — pause growth and return to farm
-			// Farm_SetRhythmPaused MUST come before Farm_ClearRhythmRequest
-			// so g_rhythmPlotIndex is still valid when saved into g_rhythmPausedPlotIndex
+			// Player cancels rhythm game
 			if (AEInputCheckTriggered(AEVK_ESCAPE))
 			{
-				Farm_SetRhythmPaused(true);
+				bool success = false; // treat as fail or cancel
+
+				Farm_OnRhythmResult(success);
 				Farm_ClearRhythmRequest();
-				nextState = GS_MAIN_SCREEN;
+				nextState = GS_START_SCREEN;
 			}
 		}
 
-		// State transition
+		// Check for state transition
 		if (nextState != currentState && !TR_IsActive())
 		{
 			TR_Start(currentState, nextState);
@@ -368,19 +983,25 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			}
 		}
 
-		if (currentState != GS_EXIT)
-		{
+		// Update and draw current state
+		if (currentState != GS_EXIT) {
 			if (fpUpdate) fpUpdate();
-			if (fpDraw)   fpDraw();
+			if (fpDraw) fpDraw();
 		}
-		else
-		{
-			gGameRunning = 0;
+		else {
+			gGameRunning = 0;  // Exit game loop
 		}
 
+		// Informing the system about the loop's end
 		AESysFrameEnd();
 	}
 
+	// ---------------------------------------------------------------------------
+	// Cleanup
+	// ---------------------------------------------------------------------------
+
+	// Free the system
 	AESysExit();
+
 	return 0;
 }
