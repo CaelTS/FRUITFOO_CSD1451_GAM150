@@ -73,6 +73,20 @@ float Profile_GetPlotTimer(int plotIndex);
 int Profile_GetPlotSeedType(int plotIndex);
 
 // ---------------------------------------------------------------------------
+// Crate <-> Profile
+// ---------------------------------------------------------------------------
+void Crate_SaveToProfile(int slot);
+void Crate_LoadFromProfile(int slot);
+
+// Setters (auto-save on each call)
+void Profile_SetCrateUnlocked(int crateIndex, bool unlocked);
+void Profile_SetCrateFruitCount(int crateIndex, int count);
+
+// Getters (read from active slot)
+bool Profile_GetCrateUnlocked(int crateIndex);
+int  Profile_GetCrateFruitCount(int crateIndex);
+
+// ---------------------------------------------------------------------------
 // Profile slot management
 // ---------------------------------------------------------------------------
 

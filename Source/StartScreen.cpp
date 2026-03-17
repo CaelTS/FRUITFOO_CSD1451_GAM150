@@ -14,6 +14,7 @@
 static constexpr int   MAX_PROFILES = 3;
 static constexpr int   PROFILE_NAME_MAX = 32; //name limit
 static constexpr int   MAX_FARM_PLOTS = 4;
+static constexpr int   MAX_CRATES = 3;
 static const char* PROFILES_FILE = "profiles.txt";
 
 static AEGfxVertexList* pMeshPopup = nullptr;
@@ -32,6 +33,10 @@ struct SSProfile
     bool plot_ready[MAX_FARM_PLOTS] = { false, false, false, false };
     float plot_timer[MAX_FARM_PLOTS] = { 0.0f, 0.0f, 0.0f, 0.0f };
     int  plot_seed_type[MAX_FARM_PLOTS] = { -1, -1, -1, -1 };
+    // Crate data (mirrors Profile.cpp's crate fields)
+    // Crate 0 always unlocked; crates 1 & 2 purchasable
+    bool crate_unlocked[MAX_CRATES] = { true, false, false };
+    int  crate_fruit_count[MAX_CRATES] = { 0, 0, 0 };
 };
 static SSProfile g_profiles[MAX_PROFILES];
 
@@ -69,6 +74,7 @@ static void SS_Profiles_Load()
     bool inEconomy = false;
     bool inInventory = false;
     bool inFarm = false;
+    bool inCrate = false;
     char line[256] = {};
     while (fgets(line, sizeof(line), f))
     {
@@ -96,7 +102,7 @@ static void SS_Profiles_Load()
         const char* val = eq + 1;
 
         // Only parse top-level profile fields (not in [economy], [inventory], or [farm])
-        if (!inEconomy && !inInventory && !inFarm) {
+        if (!inEconomy && !inInventory && !inFarm && !inCrate) {
             if (strcmp(key, "EXISTS") == 0) g_profiles[slot].exists = (atoi(val) != 0);
             else if (strcmp(key, "NAME") == 0) strncpy_s(g_profiles[slot].name, PROFILE_NAME_MAX, val, _TRUNCATE);
             else if (strcmp(key, "coins") == 0) g_profiles[slot].coins = atoi(val); // backward compat
@@ -147,6 +153,23 @@ static void SS_Profiles_Load()
                     g_profiles[slot].plot_seed_type[1] = v1;
                     g_profiles[slot].plot_seed_type[2] = v2;
                     g_profiles[slot].plot_seed_type[3] = v3;
+                }
+            }
+        }
+        else if (inCrate) {
+            int v0, v1, v2;
+            if (strcmp(key, "crate_unlocked") == 0) {
+                if (sscanf_s(val, "%d,%d,%d", &v0, &v1, &v2) == 3) {
+                    g_profiles[slot].crate_unlocked[0] = (v0 != 0);
+                    g_profiles[slot].crate_unlocked[1] = (v1 != 0);
+                    g_profiles[slot].crate_unlocked[2] = (v2 != 0);
+                }
+            }
+            else if (strcmp(key, "crate_fruit_count") == 0) {
+                if (sscanf_s(val, "%d,%d,%d", &v0, &v1, &v2) == 3) {
+                    g_profiles[slot].crate_fruit_count[0] = v0;
+                    g_profiles[slot].crate_fruit_count[1] = v1;
+                    g_profiles[slot].crate_fruit_count[2] = v2;
                 }
             }
         }

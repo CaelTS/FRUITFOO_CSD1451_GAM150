@@ -74,9 +74,6 @@ void Farm_Load()
     tickIcon = AEGfxTextureLoad("Assets/tick.png");
     crossIcon = AEGfxTextureLoad("Assets/cross.png");
     lockedPlot = AEGfxTextureLoad("Assets/lockedplot.png");
-
-
-
 }
 
 void Farm_Initialize()

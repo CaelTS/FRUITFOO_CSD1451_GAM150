@@ -5,6 +5,7 @@
 #include "StartScreen.h"
 #include "Economy.h"
 #include "Inventory.h"
+#include "Crate.h"
 
 extern AEGfxVertexList* g_pMeshFullScreen;
 extern s8 fontId;
@@ -22,6 +23,7 @@ AEGfxTexture* pTexPanel = NULL;
 constexpr auto MAX_PROFILES = 3;
 constexpr auto PROFILE_NAME_MAX_LEN = 32;
 constexpr auto MAX_FARM_PLOTS = 4;
+constexpr auto MAX_CRATES = 3;
 
 typedef struct {
     bool exists;
@@ -44,18 +46,25 @@ typedef struct {
     bool plot_ready[MAX_FARM_PLOTS];
     float plot_timer[MAX_FARM_PLOTS];
     int plot_seed_type[MAX_FARM_PLOTS];
+    // Crate data (3 crates: 0=apple, 1=pear, 2=banana)
+    // Crate 0 always unlocked; crates 1 & 2 must be purchased.
+    bool crate_unlocked[MAX_CRATES];
+    int  crate_fruit_count[MAX_CRATES];
 } Profile;
 
 static Profile profiles[MAX_PROFILES] = {
     { false, "", 0.0f, 0, 0ULL, 255ULL, 1.0f, 0, 0, 0, {0,0,0},
       {true,false,false,false}, {false,false,false,false}, {false,false,false,false},
-      {0.0f,0.0f,0.0f,0.0f}, {-1,-1,-1,-1} },
+      {0.0f,0.0f,0.0f,0.0f}, {-1,-1,-1,-1},
+      {true,false,false}, {0,0,0} },
     { false, "", 0.0f, 0, 0ULL, 255ULL, 1.0f, 0, 0, 0, {0,0,0},
       {true,false,false,false}, {false,false,false,false}, {false,false,false,false},
-      {0.0f,0.0f,0.0f,0.0f}, {-1,-1,-1,-1} },
+      {0.0f,0.0f,0.0f,0.0f}, {-1,-1,-1,-1},
+      {true,false,false}, {0,0,0} },
     { false, "", 0.0f, 0, 0ULL, 255ULL, 1.0f, 0, 0, 0, {0,0,0},
       {true,false,false,false}, {false,false,false,false}, {false,false,false,false},
-      {0.0f,0.0f,0.0f,0.0f}, {-1,-1,-1,-1} }
+      {0.0f,0.0f,0.0f,0.0f}, {-1,-1,-1,-1},
+      {true,false,false}, {0,0,0} }
 };
 
 // Popup state
@@ -154,6 +163,18 @@ static void Profiles_Save() {
                 profiles[i].plot_seed_type[1],
                 profiles[i].plot_seed_type[2],
                 profiles[i].plot_seed_type[3]);
+            fprintf(f, "\n");
+            fprintf(f, "[crate]\n");
+            // Crate unlock states (crate 0 always unlocked; 1 & 2 purchasable)
+            fprintf(f, "crate_unlocked=%d,%d,%d\n",
+                profiles[i].crate_unlocked[0] ? 1 : 0,
+                profiles[i].crate_unlocked[1] ? 1 : 0,
+                profiles[i].crate_unlocked[2] ? 1 : 0);
+            // Fruit stock per crate
+            fprintf(f, "crate_fruit_count=%d,%d,%d\n",
+                profiles[i].crate_fruit_count[0],
+                profiles[i].crate_fruit_count[1],
+                profiles[i].crate_fruit_count[2]);
         }
         fprintf(f, "\n");
     }
@@ -169,6 +190,7 @@ static void Profiles_Load() {
     bool inEconomy = false;
     bool inInventory = false;
     bool inFarm = false;
+    bool inCrate = false;
     char line[256] = "";
 
     while (fgets(line, sizeof(line), f)) {
@@ -185,10 +207,13 @@ static void Profiles_Load() {
                 inInventory = true; inEconomy = false; inFarm = false;
             }
             else if (strcmp(line, "[farm]") == 0) {
-                inFarm = true; inEconomy = false; inInventory = false;
+                inFarm = true; inEconomy = false; inInventory = false; inCrate = false;
+            }
+            else if (strcmp(line, "[crate]") == 0) {
+                inCrate = true; inFarm = false; inEconomy = false; inInventory = false;
             }
             else {
-                inEconomy = false; inInventory = false; inFarm = false;
+                inEconomy = false; inInventory = false; inFarm = false; inCrate = false;
                 sscanf_s(line, "[PROFILE_%d]", &slotIndex);
             }
             continue;
@@ -258,6 +283,23 @@ static void Profiles_Load() {
                     &profiles[slotIndex].plot_seed_type[1],
                     &profiles[slotIndex].plot_seed_type[2],
                     &profiles[slotIndex].plot_seed_type[3]);
+            }
+        }
+        else if (inCrate) {
+            int v0, v1, v2;
+            if (strcmp(key, "crate_unlocked") == 0) {
+                if (sscanf_s(value, "%d,%d,%d", &v0, &v1, &v2) == 3) {
+                    profiles[slotIndex].crate_unlocked[0] = (v0 != 0);
+                    profiles[slotIndex].crate_unlocked[1] = (v1 != 0);
+                    profiles[slotIndex].crate_unlocked[2] = (v2 != 0);
+                }
+            }
+            else if (strcmp(key, "crate_fruit_count") == 0) {
+                if (sscanf_s(value, "%d,%d,%d", &v0, &v1, &v2) == 3) {
+                    profiles[slotIndex].crate_fruit_count[0] = v0;
+                    profiles[slotIndex].crate_fruit_count[1] = v1;
+                    profiles[slotIndex].crate_fruit_count[2] = v2;
+                }
             }
         }
         else {
@@ -455,6 +497,48 @@ int Profile_GetPlotSeedType(int plotIndex) {
     return profiles[activeSlot].plot_seed_type[plotIndex];
 }
 
+// ---------------------------------------------------------------------------
+// Crate <-> Profile bridge
+// ---------------------------------------------------------------------------
+
+void Crate_SaveToProfile(int slot) {
+    if (slot < 0 || slot >= MAX_PROFILES || !profiles[slot].exists) return;
+    Profiles_Save();
+}
+
+void Crate_LoadFromProfile(int slot) {
+    if (slot < 0 || slot >= MAX_PROFILES || !profiles[slot].exists) return;
+    // Data is already in profiles[slot] after Profiles_Load().
+    // Crate.cpp reads it via the getters below.
+}
+
+// Setters (called by Crate.cpp — each call triggers a save)
+void Profile_SetCrateUnlocked(int crateIndex, bool unlocked) {
+    if (activeSlot < 0 || activeSlot >= MAX_PROFILES) return;
+    if (crateIndex < 0 || crateIndex >= MAX_CRATES) return;
+    profiles[activeSlot].crate_unlocked[crateIndex] = unlocked;
+    Profiles_Save();
+}
+
+void Profile_SetCrateFruitCount(int crateIndex, int count) {
+    if (activeSlot < 0 || activeSlot >= MAX_PROFILES) return;
+    if (crateIndex < 0 || crateIndex >= MAX_CRATES) return;
+    if (count < 0) count = 0;
+    profiles[activeSlot].crate_fruit_count[crateIndex] = count;
+    Profiles_Save();
+}
+
+// Getters (read from active slot)
+bool Profile_GetCrateUnlocked(int crateIndex) {
+    if (activeSlot < 0 || crateIndex < 0 || crateIndex >= MAX_CRATES) return false;
+    return profiles[activeSlot].crate_unlocked[crateIndex];
+}
+
+int Profile_GetCrateFruitCount(int crateIndex) {
+    if (activeSlot < 0 || crateIndex < 0 || crateIndex >= MAX_CRATES) return 0;
+    return profiles[activeSlot].crate_fruit_count[crateIndex];
+}
+
 // Call this after a profile is loaded to restore economy state from the slot.
 void Economy_LoadFromProfile(int slot) {
     if (slot < 0 || slot >= MAX_PROFILES || !profiles[slot].exists) return;
@@ -491,6 +575,12 @@ void Profile_CreateSlot(int slot, const char* name) {
         profiles[slot].plot_timer[i] = 0.0f;
         profiles[slot].plot_seed_type[i] = -1;
     }
+    // Default crate state: crate 0 unlocked (apple crate), 1 & 2 locked
+    profiles[slot].crate_unlocked[0] = true;
+    profiles[slot].crate_unlocked[1] = false;
+    profiles[slot].crate_unlocked[2] = false;
+    for (int i = 0; i < MAX_CRATES; i++)
+        profiles[slot].crate_fruit_count[i] = 0;
     strncpy_s(profiles[slot].name, PROFILE_NAME_MAX_LEN, name, _TRUNCATE);
     Profiles_Save();
 }
@@ -501,11 +591,13 @@ void Profile_SetActiveSlot(int slot) {
     if (slot < 0 || slot >= MAX_PROFILES || !profiles[slot].exists) return;
     activeSlot = slot;
     Economy_LoadFromProfile(slot);
-    Inventory_LoadFromProfile(slot);  // Load inventory state from profile
-    Farm_LoadFromProfile(slot);  // Load farm state from profile
+    Inventory_LoadFromProfile(slot);
+    Farm_LoadFromProfile(slot);
+    Crate_LoadFromProfile(slot);
     Economy_SaveToProfile(slot);
-    Inventory_SaveToProfile(slot);  // Save inventory state to profile
-    Farm_SaveToProfile(slot);  // Save farm state to profile
+    Inventory_SaveToProfile(slot);
+    Farm_SaveToProfile(slot);
+    Crate_SaveToProfile(slot);
 }
 
 
