@@ -9,7 +9,8 @@ u8 Inventory_GetFruitStock();
 // Inventory modification functions (with auto-save)
 void Inventory_AddFruit(u8 amount, u8 fruitType);    // fruitType: 0=apple, 1=pear, 2=banana
 void Inventory_AddSeed(u8 amount, u8 seedType);      // seedType: 0=apple, 1=pear, 2=banana
-void Inventory_RemoveSeed(u8 amount, u8 seedType);   // seedType: 0=apple, 1=pear, 2=banana
+bool Inventory_RemoveSeed(u8 amount, u8 seedType);   // seedType: 0=apple, 1=pear, 2=banana
+bool Inventory_RemoveFruitTyped(u8 amount, u8 fruitType);
 
 // Inventory panel getters
 int GetInventoryCount();

@@ -18,6 +18,7 @@ AEGfxTexture* pTexButtonSquare = NULL;
 AEGfxTexture* pTexInputRect = NULL;
 AEGfxTexture* pTexCrossIcon = NULL;
 AEGfxTexture* pTexPanel = NULL;
+AEGfxTexture* pTexEditIcon = NULL;
 
 // Profile data structure
 constexpr auto MAX_PROFILES = 3;
@@ -83,6 +84,7 @@ static bool  selectMode = false; // true = Continue path (click loads), false = 
 // Hover state (-1 = none)
 static int   hoveredProfileSlot = -1;
 static int   hoveredDeleteSlot = -1;
+static int   hoveredEditSlot = -1;
 
 static bool wentBack = false;
 bool Profile_WentBack() { return wentBack; }
@@ -617,6 +619,7 @@ static const float SCREEN_HEIGHT = 900.0f;
 static const float BUTTON_WIDTH_PX = 400.0f;
 static const float BUTTON_HEIGHT_PX = 80.0f;
 static const float DELETE_BUTTON_SIZE_PX = 40.0f;
+static const float EDIT_BUTTON_SIZE_PX = 40.0f;
 static const float PROFILE_SPACING_PX = 120.0f;
 static const float START_Y_PX = 150.0f;
 
@@ -679,6 +682,7 @@ void ProfileScreen_Load() {
     pTexInputRect = AEGfxTextureLoad("Assets/input_outline_rectangle.png");
     pTexCrossIcon = AEGfxTextureLoad("Assets/iconCross_blue.png");
     pTexPanel = AEGfxTextureLoad("Assets/panel_brown.png");
+    pTexEditIcon = AEGfxTextureLoad("Assets/edit_white.png");
 
     if (!pTexButtonLong) OutputDebugStringA("ERROR: Failed to load 'Assets/buttonLong_brown.png'.\n");
     if (!pTexButtonLongPressed) OutputDebugStringA("ERROR: Failed to load 'buttonLong_brown_pressed.png'.\n");
@@ -686,6 +690,7 @@ void ProfileScreen_Load() {
     if (!pTexInputRect) OutputDebugStringA("ERROR: Failed to load 'input_outline_rectangle.png'.\n");
     if (!pTexCrossIcon) OutputDebugStringA("ERROR: Failed to load 'iconCross_blue.png'.\n");
     if (!pTexPanel)     OutputDebugStringA("ERROR: Failed to load 'panel_brown.png'.\n");
+    if (!pTexEditIcon)  OutputDebugStringA("ERROR: Failed to load 'edit_white.png'.\n");
 
     // Load saved profile data (overwrites the hardcoded defaults if a save exists)
     Profiles_Load();
@@ -818,13 +823,16 @@ void ProfileScreen_Update() {
     float buttonW = PixelsToNDC_X(BUTTON_WIDTH_PX);
     float buttonH = PixelsToNDC_Y(BUTTON_HEIGHT_PX);
     float deleteSize = PixelsToNDC_X(DELETE_BUTTON_SIZE_PX);
+    float editSize = PixelsToNDC_X(EDIT_BUTTON_SIZE_PX);
     float deleteH = deleteSize * (SCREEN_WIDTH / SCREEN_HEIGHT);
+    float editH = editSize * (SCREEN_WIDTH / SCREEN_HEIGHT);
     float spacing = PixelsToNDC_Y(PROFILE_SPACING_PX);
     float startY = PixelsToNDC_Y(START_Y_PX);
 
     // Reset hover state each frame
     hoveredProfileSlot = -1;
     hoveredDeleteSlot = -1;
+    hoveredEditSlot = -1;
 
     for (int i = 0; i < MAX_PROFILES; i++) {
         float yPos = startY - (i * spacing);
@@ -834,11 +842,21 @@ void ProfileScreen_Update() {
         if (profiles[i].exists) {
             // Check delete button hover
             float deleteX = buttonW * 0.5f + deleteSize * 1.0f;
+            float editX = deleteX + deleteSize + editSize * 0.5f;
             float dHalfW = deleteSize * 0.5f;
             float dHalfH = deleteH * 0.5f;
+            float eHalfW = editSize * 0.5f;
+            float eHalfH = editH * 0.5f;
+
+            //check delete button hover
             if (mNDC_X >= deleteX - dHalfW && mNDC_X <= deleteX + dHalfW &&
                 mNDC_Y >= yPos - dHalfH && mNDC_Y <= yPos + dHalfH) {
                 hoveredDeleteSlot = i;
+            }
+            //Check edit button hover
+            else if (mNDC_X >= editX - eHalfW && mNDC_X <= editX + eHalfW &&
+                mNDC_Y >= yPos - eHalfH && mNDC_Y <= yPos + eHalfH) {
+                hoveredEditSlot = i;
             }
             // Check profile button hover (excluding delete area)
             else if (mNDC_X >= -halfW && mNDC_X <= halfW &&
@@ -862,10 +880,16 @@ void ProfileScreen_Update() {
             float halfH = buttonH * 0.5f;
 
             if (profiles[i].exists) {
-                // Delete button click
+                // Calculate button positions (MUST recalculate here!)
                 float deleteX = buttonW * 0.5f + deleteSize * 1.0f;
+                float editX = deleteX + deleteSize + editSize * 0.5f;
+
                 float dHalfW = deleteSize * 0.5f;
                 float dHalfH = deleteH * 0.5f;
+                float eHalfW = editSize * 0.5f;
+                float eHalfH = editH * 0.5f;
+
+                // Delete button click
                 if (mNDC_X >= deleteX - dHalfW && mNDC_X <= deleteX + dHalfW &&
                     mNDC_Y >= yPos - dHalfH && mNDC_Y <= yPos + dHalfH) {
                     profiles[i].exists = false;
@@ -880,27 +904,26 @@ void ProfileScreen_Update() {
                     Profiles_Save();
                     break;
                 }
-                // Profile button click:
-                //   selectMode = true  -> load this profile and go to main screen
-                //   selectMode = false -> open rename popup (original behaviour)
+                // Edit button click - RENAME
+                else if (mNDC_X >= editX - eHalfW && mNDC_X <= editX + eHalfW &&
+                    mNDC_Y >= yPos - eHalfH && mNDC_Y <= yPos + eHalfH) {
+                    popupActive = true;
+                    popupEditMode = true;
+                    popupSlotIndex = i;
+                    strncpy_s(popupInputBuf, PROFILE_NAME_MAX_LEN, profiles[i].name, _TRUNCATE);
+                    popupInputLen = (int)strnlen_s(popupInputBuf, PROFILE_NAME_MAX_LEN);
+                    break;
+                }
+                // Profile button click - ALWAYS LOAD
                 else if (mNDC_X >= -halfW && mNDC_X <= halfW &&
                     mNDC_Y >= yPos - halfH && mNDC_Y <= yPos + halfH) {
-                    if (selectMode) {
-                        // Load this profile
-                        activeSlot = i;
-                        selectMode = false; // reset for next visit
-                        wentBack = false;
-                        Economy_LoadFromProfile(i); // restore economy globals from slot
-                        Economy_SaveToProfile(i);   // rewrite file to confirm active slot
-                        nextState = GS_MAIN_SCREEN;
-                    }
-                    else {
-                        popupActive = true;
-                        popupEditMode = true;
-                        popupSlotIndex = i;
-                        strncpy_s(popupInputBuf, PROFILE_NAME_MAX_LEN, profiles[i].name, _TRUNCATE);
-                        popupInputLen = (int)strnlen_s(popupInputBuf, PROFILE_NAME_MAX_LEN);
-                    }
+                    // Always load this profile
+                    activeSlot = i;
+                    selectMode = false;
+                    wentBack = false;
+                    Economy_LoadFromProfile(i);
+                    Economy_SaveToProfile(i);
+                    nextState = GS_MAIN_SCREEN;
                     break;
                 }
             }
@@ -992,7 +1015,30 @@ void ProfileScreen_Render() {
             DrawTexturedQuad(pTexCrossIcon, pMeshButtonSquare,
                 deleteX, yPos, deleteSize * 0.55f, deleteH * 0.55f,
                 1.0f, 1.0f, 1.0f, 1.0f);
+
+            float editSize = PixelsToNDC_X(EDIT_BUTTON_SIZE_PX);
+            float editH = editSize * (SCREEN_WIDTH / SCREEN_HEIGHT);
+            float editX = deleteX + deleteSize + editSize * 0.5f; // Position beside delete button
+
+            // Hover tint for edit button
+            float editTint = (hoveredEditSlot == i) ? 0.85f : 1.0f;
+
+            // Edit button shadow
+            DrawColoredQuad(editX + 0.003f, yPos - 0.003f,
+                editSize + 0.006f, editH + 0.006f,
+                0.0f, 0.0f, 0.0f, 0.5f);
+
+            // Edit button background
+            DrawTexturedQuad(pTexButtonSquare, pMeshButtonSquare,
+                editX, yPos, editSize, editH,
+                editTint, editTint, editTint, 1.0f);
+
+            // Edit icon
+            DrawTexturedQuad(pTexEditIcon, pMeshButtonSquare,
+                editX, yPos, editSize * 0.55f, editH * 0.55f,
+                1.0f, 1.0f, 1.0f, 1.0f);
         }
+
         else {
             // Empty Slot - brown button darkened to indicate create action
             DrawColoredQuad(0.0f, yPos - 0.005f, buttonW + 0.01f, buttonH + 0.01f,

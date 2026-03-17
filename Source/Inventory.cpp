@@ -44,6 +44,28 @@ void Inventory_RemoveFruit(u8 amount) {
 	Inventory_SaveToProfile(Profile_GetActiveSlot());
 }
 
+bool Inventory_RemoveFruitTyped(u8 amount, u8 fruitType) {
+
+	// Remove the specific fruit type
+	switch (fruitType) {
+	case 0: apples -= amount; break;
+	case 1: pears -= amount; break;
+	case 2: bananas -= amount; break;
+	default: return false;
+	}
+
+	// Update totals
+	total_fruits = apples + pears + bananas;
+
+	printf("Removed %d fruits of type %d from inventory.\n", amount, fruitType);
+	printf("Fruits in inventory: %d (A:%d P:%d B:%d)\n", total_fruits, apples, pears, bananas);
+
+	// Save to active profile
+	Inventory_SaveToProfile(Profile_GetActiveSlot());
+	return true;
+}
+
+
 // inventory panel getters
 
 int GetInventoryCount()
@@ -155,38 +177,33 @@ void Inventory_AddSeed(u8 amount, u8 seedType) {
 	Inventory_SaveToProfile(Profile_GetActiveSlot());
 }
 
-void Inventory_RemoveSeed(u8 amount, u8 seedType) {
+bool Inventory_RemoveSeed(u8 amount, u8 seedType) {
+	// Check first
+	bool hasEnough = false;
 	switch (seedType) {
-	case 0: // Apple seed
-		if (seed_apple >= amount) {
-			seed_apple -= amount;
-		}
-		break;
-	case 1: // Pear seed
-		if (seed_pear >= amount) {
-			seed_pear -= amount;
-		}
-		break;
-	case 2: // Banana seed
-		if (seed_banana >= amount) {
-			seed_banana -= amount;
-		}
-		break;
-	default:
-		if (seed_apple >= amount) {
-			seed_apple -= amount;
-		}
-		break;
+	case 0: hasEnough = (seed_apple >= amount); break;
+	case 1: hasEnough = (seed_pear >= amount); break;
+	case 2: hasEnough = (seed_banana >= amount); break;
 	}
 
-	// Update totals
-	total_seeds = seed_apple + seed_pear + seed_banana;
+	if (!hasEnough) {
+		printf("Not enough seeds of type %d to remove %d\n", seedType, amount);
+		return false;
+	}
 
+	// Remove
+	switch (seedType) {
+	case 0: seed_apple -= amount; break;
+	case 1: seed_pear -= amount; break;
+	case 2: seed_banana -= amount; break;
+	default: return false;
+	}
+
+	total_seeds = seed_apple + seed_pear + seed_banana;
 	printf("Removed %d seeds from inventory.\n", amount);
 	printf("Seeds in inventory: %d (A:%d P:%d B:%d)\n", total_seeds, seed_apple, seed_pear, seed_banana);
-
-	// Save to active profile
 	Inventory_SaveToProfile(Profile_GetActiveSlot());
+	return true;
 }
 
 // ---------------------------------------------------------------------------
