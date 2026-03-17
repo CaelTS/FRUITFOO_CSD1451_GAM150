@@ -20,6 +20,9 @@ static f32 next_sale_time = 0.0f; //seconds
 static u8 total_fruits = 10;
 bool timer_reset = true;
 
+//inventory
+static u8 total_seeds = 10;
+
 //placeholder inventory stock function
 u8 static Inventory_GetFruitStock() {
 	return total_fruits; //assume always have fruit for now
@@ -177,4 +180,27 @@ int Economy_GetMaxMoney() {
 }
 float Economy_GetMultiplier() {
 	return money_multiplier;
+}
+
+// inventory panel getters
+
+int Economy_GetInventoryCount()
+{
+	return static_cast<int>(total_fruits);
+}
+
+int Economy_GetInventoryLimit()
+{
+	return 10; // or inventory_capacity if you add it
+}
+
+
+int Economy_GetFruitCount()
+{
+	return static_cast<int>(total_fruits);
+}
+
+int Economy_GetSeedCount()
+{
+	return static_cast<int>(total_seeds);
 }
