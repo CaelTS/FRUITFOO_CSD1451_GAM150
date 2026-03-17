@@ -1,4 +1,4 @@
-// ---------------------------------------------------------------------------
+﻿// ---------------------------------------------------------------------------
 // includes
 
 #include <crtdbg.h> // To check for memory leaks
@@ -18,6 +18,7 @@
 #include <iostream>
 #include "Profile.h"
 #include "StartScreen.h"
+#include "Utilities.h"
 
 // ---------------------------------------------------------------------------
 // Game State Variables
@@ -90,6 +91,25 @@ AEGfxVertexList* pMeshFruit = NULL;
 AEGfxVertexList* g_pMeshFullScreen = NULL;
 AEGfxTexture* pTexPlus = nullptr;
 
+// ---------------------------------------------------------------------------
+// Pause Popup
+// ---------------------------------------------------------------------------
+static AEGfxTexture* pTexPausePanel = nullptr;  // panel_brown.png
+static AEGfxTexture* pTexPauseBtn = nullptr;  // input_outline_rectangle.png (reused as button bg)
+static AEGfxVertexList* pMeshPauseQuad = nullptr;
+
+static bool g_pauseOpen = false;
+static int  g_pauseHovered = -1;   // 0 = Main Menu, 1 = Exit
+
+// Layout constants (pixel-space, origin = screen centre)
+static const float PAUSE_PANEL_W = 400.0f;
+static const float PAUSE_PANEL_H = 260.0f;
+static const float PAUSE_BTN_W = 300.0f;
+static const float PAUSE_BTN_H = 55.0f;
+static const float PAUSE_BTN_Y0 = 20.0f;
+static const float PAUSE_BTN_Y1 = -60.0f;
+
+
 //// Random number generator
 //std::random_device rd;
 //std::mt19937 gen(rd());
@@ -156,6 +176,14 @@ void MainScreen_Load()
 	pTexPlus = AEGfxTextureLoad("Assets/Plus.png");
 	Farm_Load();
 
+	// Pause popup assets (same textures used by StartScreen popup)
+	pTexPausePanel = AEGfxTextureLoad("Assets/panel_brown.png");
+	pTexPauseBtn = AEGfxTextureLoad("Assets/input_outline_rectangle.png");
+	AEGfxMeshStart();
+	AEGfxTriAdd(-0.5f, -0.5f, 0xFFFFFFFF, 0.0f, 1.0f, 0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f, -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
+	AEGfxTriAdd(0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f, 0.5f, 0.5f, 0xFFFFFFFF, 1.0f, 0.0f, -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
+	pMeshPauseQuad = AEGfxMeshEnd();
+
 
 	if (!pBackground) OutputDebugStringA("ERROR: Failed to load 'Assets/MainMenu_Background.png'.\n");
 	if (!pBaseStall) OutputDebugStringA("ERROR: Failed to load 'Assets/base level 1 with apple.png'.\n");
@@ -197,6 +225,10 @@ void MainScreen_Initialize()
 		gStartScreenActive = true;
 		StartScreen_Init();
 	}
+
+	// Reset pause popup state
+	g_pauseOpen = false;
+	g_pauseHovered = -1;
 
 	//Economy Init
 	Economy_Init();
@@ -273,6 +305,41 @@ void MainScreen_Update()
 	//Get Mouse Position
 	s32 mouseX, mouseY;
 	AEInputGetCursorPosition(&mouseX, &mouseY);
+
+	// ---------------------------------------------------------------
+	// Pause popup  (only while in-game, not on start screen)
+	// ---------------------------------------------------------------
+	if (!gStartScreenActive)
+	{
+		// Toggle popup with ESC (suppress when inventory menu is open)
+		if (AEInputCheckTriggered(AEVK_ESCAPE) && !UI_IsMenuOpen())
+			g_pauseOpen = !g_pauseOpen;
+
+		if (g_pauseOpen)
+		{
+			// Update hover using IsMouseOverRect(centreX, centreY, width, height)
+			g_pauseHovered = -1;
+			if (IsMouseOverRect(0.0f, PAUSE_BTN_Y0, PAUSE_BTN_W, PAUSE_BTN_H)) g_pauseHovered = 0;
+			else if (IsMouseOverRect(0.0f, PAUSE_BTN_Y1, PAUSE_BTN_W, PAUSE_BTN_H)) g_pauseHovered = 1;
+
+			// Handle clicks using ClickedOnRect(centreX, centreY, width, height)
+			if (ClickedOnRect(0.0f, PAUSE_BTN_Y0, PAUSE_BTN_W, PAUSE_BTN_H))
+			{
+				Profile_EndSession();
+				g_pauseOpen = false;
+				nextState = GS_START_SCREEN;
+			}
+			else if (ClickedOnRect(0.0f, PAUSE_BTN_Y1, PAUSE_BTN_W, PAUSE_BTN_H))
+			{
+				Profile_EndSession();
+				g_pauseOpen = false;
+				nextState = GS_EXIT;
+			}
+
+			// Swallow all other input while paused
+			return;
+		}
+	}
 
 	UI_Input();
 	Farm_Update();
@@ -680,9 +747,92 @@ void MainScreen_Render()
 		StartScreen_Draw();
 	}
 
+	// ---------------------------------------------------------------
+	// Pause popup rendering (drawn last so it sits on top)
+	// ---------------------------------------------------------------
+	if (g_pauseOpen)
+	{
+		AEMtx33 pScale, pTrans, pTransform;
 
+		// 1. Dim overlay
+		AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+		AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+		AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 0.6f);
+		AEMtx33Scale(&pScale, 1600.0f, 900.0f);
+		AEMtx33Trans(&pTrans, 0.0f, 0.0f);
+		AEMtx33Concat(&pTransform, &pTrans, &pScale);
+		AEGfxSetTransform(pTransform.m);
+		AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+		// 2. Panel background (panel_brown.png)
+		if (pTexPausePanel && pMeshPauseQuad)
+		{
+			AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+			AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+			AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
+			AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
+			AEGfxSetTransparency(1.0f);
+			AEGfxTextureSet(pTexPausePanel, 0, 0);
+			AEMtx33Scale(&pScale, PAUSE_PANEL_W * gScaleX, PAUSE_PANEL_H * gScaleY);
+			AEMtx33Trans(&pTrans, 0.0f, 0.0f);
+			AEMtx33Concat(&pTransform, &pTrans, &pScale);
+			AEGfxSetTransform(pTransform.m);
+			AEGfxMeshDraw(pMeshPauseQuad, AE_GFX_MDM_TRIANGLES);
+		}
+
+		// 3. "Main Menu" button (input_outline_rectangle.png, tinted on hover)
+		if (pTexPauseBtn && pMeshPauseQuad)
+		{
+			float tint0 = (g_pauseHovered == 0) ? 1.3f : 1.0f;
+			AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+			AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+			AEGfxSetColorToMultiply(tint0, tint0, tint0, 1.0f);
+			AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
+			AEGfxSetTransparency(1.0f);
+			AEGfxTextureSet(pTexPauseBtn, 0, 0);
+			AEMtx33Scale(&pScale, PAUSE_BTN_W * gScaleX, PAUSE_BTN_H * gScaleY);
+			AEMtx33Trans(&pTrans, 0.0f, PAUSE_BTN_Y0 * gScaleY);
+			AEMtx33Concat(&pTransform, &pTrans, &pScale);
+			AEGfxSetTransform(pTransform.m);
+			AEGfxMeshDraw(pMeshPauseQuad, AE_GFX_MDM_TRIANGLES);
+		}
+
+		// 4. "Exit" button
+		if (pTexPauseBtn && pMeshPauseQuad)
+		{
+			float tint1 = (g_pauseHovered == 1) ? 1.3f : 1.0f;
+			AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+			AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+			AEGfxSetColorToMultiply(tint1, tint1, tint1, 1.0f);
+			AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
+			AEGfxSetTransparency(1.0f);
+			AEGfxTextureSet(pTexPauseBtn, 0, 0);
+			AEMtx33Scale(&pScale, PAUSE_BTN_W * gScaleX, PAUSE_BTN_H * gScaleY);
+			AEMtx33Trans(&pTrans, 0.0f, PAUSE_BTN_Y1 * gScaleY);
+			AEMtx33Concat(&pTransform, &pTrans, &pScale);
+			AEGfxSetTransform(pTransform.m);
+			AEGfxMeshDraw(pMeshPauseQuad, AE_GFX_MDM_TRIANGLES);
+		}
+
+		// 5. Text labels
+		if (fontId >= 0)
+		{
+			AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+			AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+			AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
+			// "PAUSED" title - centered at top of panel
+			AEGfxPrint(fontId, "PAUSED", -0.056f, 0.13f, 0.9f, 1.0f, 0.95f, 0.75f, 1.0f);
+
+			// "Main Menu" - centered on button (scale 0.8, 9 chars * 0.0075 ≈ 0.0675 width, half = ~0.034)
+			AEGfxPrint(fontId, "Main Menu", -0.067f, 0.015f, 0.8f, 0.2f, 0.12f, 0.05f, 1.0f);
+
+			// "Exit" - centered on button (scale 0.8, 4 chars * 0.0075 ≈ 0.03 width, half = ~0.015)
+			AEGfxPrint(fontId, "Exit", -0.032f, -0.13f, 0.8f, 0.2f, 0.12f, 0.05f, 1.0f);
+		}
+	}
 
 }
+
 
 void MainScreen_Free()
 {
@@ -708,6 +858,11 @@ void MainScreen_Free()
 	//// Clear STL containers
 	//fruits.clear();
 	//fruits.shrink_to_fit();
+
+	// Free pause popup assets
+	if (pTexPausePanel) { AEGfxTextureUnload(pTexPausePanel); pTexPausePanel = nullptr; }
+	if (pTexPauseBtn) { AEGfxTextureUnload(pTexPauseBtn);   pTexPauseBtn = nullptr; }
+	if (pMeshPauseQuad) { AEGfxMeshFree(pMeshPauseQuad);     pMeshPauseQuad = nullptr; }
 
 	// Reset pointers
 	pMeshBackground = pMeshStall = pMeshFruit = nullptr;
@@ -777,7 +932,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		// Check for ESCAPE key to exit
 		// Do NOT exit if the profile name popup is currently open
 		if ((AEInputCheckTriggered(AEVK_ESCAPE) && !ProfileScreen_IsPopupActive()
-			&& currentState != GS_MAIN_SCREEN  // Don't allow ESC in main screen
+			&& currentState != GS_MAIN_SCREEN  // ESC in main screen handled by pause popup
 			&& currentState != GS_NEXT_SCREEN) || 0 == AESysDoesWindowExist()) {
 			nextState = GS_EXIT;
 		}

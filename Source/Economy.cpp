@@ -74,58 +74,30 @@ void Economy_Init() {
 
 }
 void Economy_Update(float dt) {
-
 	timer += dt;
-	static int last_second = -1;
-	int current_second = (int)timer;
 
-	if (current_second != last_second) {
-		printf("Economy Timer: %d seconds.\n", current_second);
-		last_second = current_second;
-	}
-
-	if (timer_reset) {
-		printf("Next sale in %.2f seconds.\n", next_sale_time);
-		printf("Money: %llu | Stock: %d\n", total_money, Inventory_GetFruitStock());
-		timer_reset = false;
-	}
-
-	if (timer >= next_sale_time && total_money <= max_money) { //time to sell fruit	
-
+	if (timer >= next_sale_time && total_money <= max_money) {
 		bool in_stock = Inventory_GetFruitStock() > 0;
-		//check for fruit in stock
+
 		if (in_stock) {
 			sell_fruit();
-
+			printf("Sale! Money: %llu | Stock: %d\n", total_money, Inventory_GetFruitStock());
 		}
-		//reset timer
+		else {
+			printf("No stock to sell!\n");
+		}
+
 		timer = 0.0f;
-
-		//randomize next sale time
-		std::pair<float, float> range_pair = random_range_pair(10.0f, 20.0f, 5.0f, 40.0f); //random time (fast, slow)between sales
-		f32 first_sale_time = range_pair.first;
-		f32 second_sale_time = range_pair.second;
-
-		next_sale_time = random_time(first_sale_time, second_sale_time);
-
-		printf("Money: %llu | Stock: %d\n", total_money, Inventory_GetFruitStock());
+		std::pair<float, float> range_pair = random_range_pair(10.0f, 20.0f, 5.0f, 40.0f);
+		next_sale_time = random_time(range_pair.first, range_pair.second);
+		printf("Next sale in %.2f seconds.\n", next_sale_time);
 	}
 
 	if (total_money >= max_money) {
-		total_money = max_money; //cap money at max
-		timer = 0.0f; //reset timer to try again later
-		timer_reset = true;
+		total_money = max_money;
 	}
-
-	if (Inventory_GetFruitStock() == 0) {
-		//no stock, reset timer to try again later
-		timer = 0.0f;
-		timer_reset = true;
-	}
-
-
-
 }
+
 //void Economy_Exit();
 //
 //// commands (change state)
