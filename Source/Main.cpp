@@ -63,6 +63,7 @@ static AEGfxTexture* pTexPauseBtn = nullptr;
 static AEGfxVertexList* pMeshPauseQuad = nullptr;
 
 static bool g_pauseOpen = false;
+static bool g_returnedFromPause = false;
 static int  g_pauseHovered = -1;
 
 static const float PAUSE_PANEL_W = 400.0f;
@@ -101,26 +102,38 @@ void MainScreen_Load()
 void MainScreen_Initialize()
 {
 	// Start Screen Init
-	if (previousState == GS_NEXT_SCREEN && !Profile_WentBack())
+	if (g_returnedFromPause)
 	{
+		// Pause->Main Menu: overlay already active, nothing to change
+	}
+	else if (previousState == GS_NEXT_SCREEN && !Profile_WentBack())
+	{
+		// Profile selected -- go straight into game
 		gStartScreenActive = false;
 		startScreenActive = false;
 	}
 	else if (previousState == GS_RHYTHM_SCREEN)
 	{
-		// Returning from rhythm game — skip start screen entirely
+		// Returning from rhythm -- skip start screen
+		gStartScreenActive = false;
+		startScreenActive = false;
+	}
+	else if (previousState == GS_START_SCREEN)
+	{
+		// From standalone start screen state -- go straight to game
 		gStartScreenActive = false;
 		startScreenActive = false;
 	}
 	else
 	{
+		// First launch -- show start screen overlay
 		gStartScreenActive = true;
 		StartScreen_Init();
 	}
-
 	// Reset pause popup state
 	g_pauseOpen = false;
 	g_pauseHovered = -1;
+	g_returnedFromPause = false;
 
 	Economy_Init();
 	SpawnFruit_Init();
@@ -209,7 +222,9 @@ void MainScreen_Update()
 			{
 				Profile_EndSession();
 				g_pauseOpen = false;
-				nextState = GS_START_SCREEN;
+				g_returnedFromPause = true;
+				StartScreen_Init();         // reset animation + buttons in place
+				gStartScreenActive = true; // show overlay without leaving GS_MAIN_SCREEN
 			}
 			else if (ClickedOnRect(0.0f, PAUSE_BTN_Y1, PAUSE_BTN_W, PAUSE_BTN_H))
 			{
