@@ -187,6 +187,7 @@ void MainScreen_Update()
 		StartScreen_Update(dt);
 		if (!StartScreen_IsActive())
 			gStartScreenActive = false;
+		return; // block all game input while start screen is active
 	}
 
 	s32 mouseX, mouseY;
