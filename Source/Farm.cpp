@@ -4,7 +4,9 @@
 #include "Profile.h"
 #include <iostream>
 #include <vector>
+#include <cmath>
 #include "Inventory.h"
+#include "Crate.h"
 
 extern AEGfxVertexList* g_pMeshFullScreen;
 
@@ -46,7 +48,62 @@ static AEGfxTexture* rhythmPrompt = nullptr;
 static AEGfxTexture* tickIcon = nullptr;
 static AEGfxTexture* crossIcon = nullptr;
 static AEGfxTexture* lockedPlot = nullptr;
+static AEGfxTexture* fruitAppleTexture = nullptr;
 
+// ---------------------------------------------------------------------------
+// Flying fruit animation (harvest -> crate)
+// ---------------------------------------------------------------------------
+struct FlyingFruit
+{
+    float startX, startY;   // origin: plot position
+    float endX, endY;     // destination: crate slot position
+    float t;                // 0..1 progress
+    float duration;         // seconds for full flight
+    bool  active;
+    int   fruitType;        // 0=apple, 1=pear, 2=banana
+};
+
+static constexpr int MAX_FLYING = 8;
+static FlyingFruit g_flyingFruits[MAX_FLYING];
+
+static void FlyingFruit_Init()
+{
+    for (int i = 0; i < MAX_FLYING; i++)
+        g_flyingFruits[i].active = false;
+}
+
+static void FlyingFruit_Spawn(float sx, float sy, float ex, float ey, int fruitType)
+{
+    for (int i = 0; i < MAX_FLYING; i++)
+    {
+        if (!g_flyingFruits[i].active)
+        {
+            g_flyingFruits[i] = { sx, sy, ex, ey, 0.0f, 0.7f, true, fruitType };
+            return;
+        }
+    }
+}
+
+static void FlyingFruit_Update(float dt)
+{
+    for (int i = 0; i < MAX_FLYING; i++)
+    {
+        if (!g_flyingFruits[i].active) continue;
+        g_flyingFruits[i].t += dt / g_flyingFruits[i].duration;
+        if (g_flyingFruits[i].t >= 1.0f)
+            g_flyingFruits[i].active = false;
+    }
+}
+
+// Quadratic bezier helper: arc midpoint is raised in Y for a nice arc
+static float BezierX(float t, float x0, float x1, float x2)
+{
+    return (1 - t) * (1 - t) * x0 + 2 * (1 - t) * t * x1 + t * t * x2;
+}
+static float BezierY(float t, float y0, float y1, float y2)
+{
+    return (1 - t) * (1 - t) * y0 + 2 * (1 - t) * t * y1 + t * t * y2;
+}
 
 const float GROW_TIME = 8.0f;
 
@@ -76,6 +133,9 @@ void Farm_Load()
     tickIcon = AEGfxTextureLoad("Assets/tick.png");
     crossIcon = AEGfxTextureLoad("Assets/cross.png");
     lockedPlot = AEGfxTextureLoad("Assets/lockedplot.png");
+    fruitAppleTexture = AEGfxTextureLoad("Assets/Fruit_Apple.png");
+
+    FlyingFruit_Init();
 }
 
 void Farm_Initialize()
@@ -133,6 +193,8 @@ void Farm_Update()
 
     float dt = (float)AEFrameRateControllerGetFrameTime();
 
+    FlyingFruit_Update(dt);
+
     s32 mouseX, mouseY;
     AEInputGetCursorPosition(&mouseX, &mouseY);
 
@@ -147,6 +209,8 @@ void Farm_Update()
             auto& plot = farmPlots[i];
             if (plot.isReady)
             {
+                int harvestedType = plot.seedType; // 0=apple, 1=pear, 2=banana
+
                 plot.isPlanted = false;
                 plot.isReady = false;
                 plot.seedType = -1;
@@ -157,6 +221,22 @@ void Farm_Update()
 
                 Profile_SetPlotData(i, false, false, 0.0f, -1);
                 std::cout << "Harvested plot " << i << "\n";
+
+                // -- Add to inventory and crate --
+                if (harvestedType >= 0)
+                {
+                    Inventory_AddFruit(1, static_cast<u8>(harvestedType));
+                    Crate_AddFruitTyped(harvestedType, 1);
+                    std::cout << "Added fruit type " << harvestedType
+                        << " to inventory and crate\n";
+
+                    // Spawn flying fruit animation from plot to its matching crate slot
+                    float plotX = UI_GetPlotSlotX(i);
+                    float plotY = UI_GetPlotSlotY(i);
+                    float crateX = UI_GetCrateSlotX(harvestedType);
+                    float crateY = UI_GetCrateSlotY(harvestedType);
+                    FlyingFruit_Spawn(plotX, plotY, crateX, crateY, harvestedType);
+                }
             }
         }
     }
@@ -511,11 +591,46 @@ void Farm_Render()
             AEGfxSetTransform(transform.m);
             AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
         }
-    }
-}
+    } // end for loop over farmPlots
 
-// ------------------------------------------------------------
-// FREE / UNLOAD
+    // --------------------------
+    // Draw flying harvest fruits (arc animation toward crate)
+    // --------------------------
+    if (fruitAppleTexture)
+    {
+        for (int j = 0; j < MAX_FLYING; j++)
+        {
+            const FlyingFruit& ff = g_flyingFruits[j];
+            if (!ff.active) continue;
+
+            // Ease in-out: smooth t
+            float t = ff.t;
+            float easedT = t * t * (3.0f - 2.0f * t);
+
+            // Arc control point: midpoint raised by 150px
+            float midX = (ff.startX + ff.endX) * 0.5f;
+            float midY = (ff.startY + ff.endY) * 0.5f + 150.0f;
+
+            float fx = BezierX(easedT, ff.startX, midX, ff.endX);
+            float fy = BezierY(easedT, ff.startY, midY, ff.endY);
+
+            // Scale: shrink as it reaches the crate
+            float fruitSize = 40.0f * (1.0f - easedT * 0.6f);
+            float alpha = 1.0f - easedT * 0.3f; // slight fade
+
+            AEGfxSetColorToMultiply(1, 1, 1, 1);
+            AEGfxSetTransparency(alpha);
+            AEGfxTextureSet(fruitAppleTexture, 0, 0);
+            AEMtx33Scale(&scale, fruitSize, fruitSize);
+            AEMtx33Trans(&trans, fx, fy);
+            AEMtx33Concat(&transform, &trans, &scale);
+            AEGfxSetTransform(transform.m);
+            AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+        }
+        AEGfxSetTransparency(1.0f);
+    }
+} // end Farm_Render
+
 // ------------------------------------------------------------
 
 void Farm_Free()
@@ -525,8 +640,9 @@ void Farm_Free()
 
 void Farm_Unload()
 {
-    if (plantedTexture) { AEGfxTextureUnload(plantedTexture); plantedTexture = nullptr; }
-    if (deleteIcon) { AEGfxTextureUnload(deleteIcon);     deleteIcon = nullptr; }
+    if (plantedTexture) { AEGfxTextureUnload(plantedTexture);     plantedTexture = nullptr; }
+    if (deleteIcon) { AEGfxTextureUnload(deleteIcon);         deleteIcon = nullptr; }
+    if (fruitAppleTexture) { AEGfxTextureUnload(fruitAppleTexture);  fruitAppleTexture = nullptr; }
     std::cout << "Farm_Unload\n";
 }
 

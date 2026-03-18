@@ -19,6 +19,7 @@
 #include "Profile.h"
 #include "StartScreen.h"
 #include "Utilities.h"
+#include "Crate.h"   // <-- ADDED: needed for Crate_GetFruitCount / Crate_IsUnlocked
 
 // ---------------------------------------------------------------------------
 // Game State Variables
@@ -47,6 +48,7 @@ AEGfxTexture* pBaseStall = NULL;
 AEGfxTexture* pTexApple = NULL;
 AEGfxTexture* pTexPear = NULL;
 AEGfxTexture* pTexBanana = NULL;
+AEGfxTexture* pTexFruitApple = NULL;   // Fruit_Apple.png — used for crate display
 
 AEGfxVertexList* pMeshBackground = NULL;
 AEGfxVertexList* pMeshGrass = NULL;
@@ -81,8 +83,10 @@ void MainScreen_Load()
 	pTexApple = AEGfxTextureLoad("Assets/Apple.png");
 	pTexPear = AEGfxTextureLoad("Assets/Pear.png");
 	pTexBanana = AEGfxTextureLoad("Assets/Banana.png");
+	pTexFruitApple = AEGfxTextureLoad("Assets/Fruit_Apple.png");  // for crate display
 	pTexPlus = AEGfxTextureLoad("Assets/Plus.png");
 	Farm_Load();
+	Crate_Load();
 
 	// Pause popup assets
 	pTexPausePanel = AEGfxTextureLoad("Assets/panel_brown.png");
@@ -142,6 +146,7 @@ void MainScreen_Initialize()
 	if (previousState != GS_RHYTHM_SCREEN)
 	{
 		Farm_Initialize();
+		Crate_Initialize();
 	}
 
 	// Build crate rectangles to match the stall's current transform
@@ -262,6 +267,72 @@ void MainScreen_Update()
 	}
 }
 
+// ---------------------------------------------------------------------------
+// Draw fruit icons + count inside each crate bin based on live Crate data
+// ---------------------------------------------------------------------------
+static void MainScreen_DrawCrateFruits()
+{
+	const auto& baskets = GetFruitBaskets();
+	AEMtx33 scale, trans, transform;
+
+	AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+	AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+	AEGfxSetColorToMultiply(1, 1, 1, 1);
+	AEGfxSetTransparency(1.0f);
+
+	for (int i = 0; i < (int)baskets.size(); i++)
+	{
+		if (!Crate_IsUnlocked(i)) continue;
+
+		int count = Crate_GetFruitCount(i);
+		if (count <= 0) continue;
+
+		// Pick texture by fruit type (matches crate index: 0=apple, 1=pear, 2=banana)
+		AEGfxTexture* tex = nullptr;
+		switch (i)
+		{
+		case 0: tex = pTexFruitApple ? pTexFruitApple : pTexApple; break;
+		case 1: tex = pTexPear;   break;
+		case 2: tex = pTexBanana; break;
+		}
+		if (!tex) continue;
+
+		const auto& b = baskets[i];
+
+		// Icon size fits inside the bin
+		float iconSize = b.height * 0.65f;
+
+		// Show up to 5 icons spread horizontally across the bin
+		int displayCount = (count > 5) ? 5 : count;
+		float spread = b.width * 0.55f;
+		float spacing = (displayCount > 1) ? spread / (displayCount - 1) : 0.0f;
+		float startX = b.x - spread * 0.5f;
+
+		AEGfxTextureSet(tex, 0, 0);
+
+		for (int n = 0; n < displayCount; n++)
+		{
+			float fx = startX + n * spacing;
+			float fy = b.y;
+
+			AEMtx33Scale(&scale, iconSize, iconSize);
+			AEMtx33Trans(&trans, fx, fy);
+			AEMtx33Concat(&transform, &trans, &scale);
+			AEGfxSetTransform(transform.m);
+			AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+		}
+
+		// Count label (e.g. "x3") above the bin
+		char buf[8];
+		sprintf_s(buf, "x%d", count);
+		float textX = (b.x - b.width * 0.05f) / 800.0f;
+		float textY = (b.y + b.height * 0.65f) / 450.0f;
+		AEGfxSetColorToMultiply(0, 0, 0, 1);
+		AEGfxPrint(fontId, buf, textX, textY, 0.7f, 0, 0, 0, 1);
+		AEGfxSetColorToMultiply(1, 1, 1, 1);
+	}
+}
+
 void MainScreen_Render()
 {
 	AEGfxSetBackgroundColor(0.2f, 0.2f, 0.2f);
@@ -322,6 +393,10 @@ void MainScreen_Render()
 	}
 
 	UI_DrawCrateHoverTint_Yellow();
+
+	// Draw fruit icons inside crate bins based on live stock counts  <-- ADDED
+	MainScreen_DrawCrateFruits();
+
 	RenderSpawnFruits();
 
 	if (TR_IsActive())
@@ -435,6 +510,7 @@ void MainScreen_Free()
 	if (pTexApple)   AEGfxTextureUnload(pTexApple);
 	if (pTexPear)    AEGfxTextureUnload(pTexPear);
 	if (pTexBanana)  AEGfxTextureUnload(pTexBanana);
+	if (pTexFruitApple) AEGfxTextureUnload(pTexFruitApple);
 
 	if (fontId >= 0)
 	{
@@ -445,7 +521,7 @@ void MainScreen_Free()
 	// Free pause popup assets
 	if (pTexPausePanel) { AEGfxTextureUnload(pTexPausePanel); pTexPausePanel = nullptr; }
 	if (pTexPauseBtn) { AEGfxTextureUnload(pTexPauseBtn);   pTexPauseBtn = nullptr; }
-	if (pMeshPauseQuad) { AEGfxMeshFree(pMeshPauseQuad);     pMeshPauseQuad = nullptr; }
+	if (pMeshPauseQuad) { AEGfxMeshFree(pMeshPauseQuad);      pMeshPauseQuad = nullptr; }
 
 	pMeshBackground = pMeshStall = pMeshFruit = nullptr;
 	pBackground = pTexApple = pTexPear = pTexBanana = nullptr;
@@ -506,6 +582,17 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 				Farm_ClearRhythmRequest();
 				nextState = GS_MAIN_SCREEN;
 			}
+
+#ifdef _DEBUG
+			// DEBUG: press TAB to skip rhythm (counts as success)
+			if (AEInputCheckTriggered(AEVK_TAB))
+			{
+				Farm_OnRhythmResult(true);
+				Farm_ClearRhythmRequest();
+				nextState = GS_MAIN_SCREEN;
+				OutputDebugStringA("[DEBUG] Rhythm skipped via TAB\n");
+			}
+#endif
 
 			// Player ESCs out — pause growth and return to farm
 			if (AEInputCheckTriggered(AEVK_ESCAPE))

@@ -4,6 +4,7 @@
 #include "Farm.h"
 #include "Economy.h"
 #include "Inventory.h"
+#include "Crate.h"
 #include "AEEngine.h"
 #include <vector>
 #include <iostream>
@@ -1146,19 +1147,40 @@ void UI_DrawFruitBasketTooltips()
 
         DrawTooltipClampedAt(tipX, tipY, "", C.tipWidth, C.tipHeight);
 
+        // ---------------------------------------------------------------
+        // Live data from Crate and Inventory systems
+        // ---------------------------------------------------------------
         const char* fruitName = "Unknown";
-        const char* stockText = "Stock: ?";
-        const char* inventoryText = "Inventory: ?";
+        static char stockBuf[32];
+        static char inventoryBuf[32];
 
+        int crateIndex = (int)b.fruitType;  // 0=apple, 1=pear, 2=banana
+        int crateCount = Crate_GetFruitCount(crateIndex);
+        if (crateCount < 0) crateCount = 0; // locked crate returns -1
+
+        int invCount = 0;
         switch (b.fruitType)
         {
         case FRUIT_APPLE:
-            fruitName = "Apple"; stockText = "Stock: 3"; inventoryText = "Inventory: 10"; break;
+            fruitName = "Apple";
+            invCount = GetAppleCount();
+            break;
         case FRUIT_PEAR:
-            fruitName = "Pear"; stockText = "Stock: 2"; inventoryText = "Inventory: 5"; break;
+            fruitName = "Pear";
+            invCount = GetPearCount();
+            break;
         case FRUIT_BANANA:
-            fruitName = "Banana"; stockText = "Stock: 4"; inventoryText = "Inventory: 8"; break;
+            fruitName = "Banana";
+            invCount = GetBananaCount();
+            break;
         }
+
+        sprintf_s(stockBuf, "Crate:     %d", crateCount);
+        sprintf_s(inventoryBuf, "Inventory: %d", invCount);
+
+        const char* stockText = stockBuf;
+        const char* inventoryText = inventoryBuf;
+        // ---------------------------------------------------------------
 
         const float textStartY = tipY + C.tipHeight * 0.25f;
         const float lineSpacing = 25.0f;
@@ -1213,6 +1235,20 @@ float UI_GetPlotSlotY(int index)
 {
     if (index < 0 || index >= (int)plotSlots.size()) return 0.0f;
     return plotSlots[index].y;
+}
+
+float UI_GetCrateSlotX(int index)
+{
+    const auto& baskets = GetFruitBaskets();
+    if (index < 0 || index >= (int)baskets.size()) return 0.0f;
+    return baskets[index].x;
+}
+
+float UI_GetCrateSlotY(int index)
+{
+    const auto& baskets = GetFruitBaskets();
+    if (index < 0 || index >= (int)baskets.size()) return 0.0f;
+    return baskets[index].y;
 }
 
 void UI_Exit()
