@@ -28,7 +28,7 @@ static const float VERTICAL_OFFSET = 200.0f;
 // Adjust these values freely to tune the feel of each tier.
 static const RhythmDifficultyConfig DIFFICULTY_CONFIGS[3] = {
     // EASY   noteSpeed  minSpawn  maxSpawn  doubleChance  premiumChance
-    {  400.0f,  0.6f,    1.2f,     0.05f,    0.15f },
+    {  400.0f,  0.8f,    1.4f,     0.05f,    0.15f },
     // MEDIUM
     {  500.0f,  0.4f,    1.0f,     0.15f,    0.25f },
     // HARD
@@ -774,4 +774,25 @@ float Rhythm_GetCurrentTime() {
 
 const RhythmScore& Rhythm_GetScore() {
     return g_score;
+}
+
+RhythmRewardTier Rhythm_GetRewardTier()
+{
+    int score = g_score.totalScore;
+    switch (g_difficulty)
+    {
+    case DIFFICULTY_EASY:
+        if (score >= 20000) return REWARD_GOOD;
+        if (score >= 8000)  return REWARD_AVERAGE;
+        return REWARD_POOR;
+    case DIFFICULTY_MEDIUM:
+        if (score >= 45000) return REWARD_GOOD;
+        if (score >= 15000) return REWARD_AVERAGE;
+        return REWARD_POOR;
+    case DIFFICULTY_HARD:
+        if (score >= 80000) return REWARD_GOOD;
+        if (score >= 25000) return REWARD_AVERAGE;
+        return REWARD_POOR;
+    }
+    return REWARD_POOR;
 }

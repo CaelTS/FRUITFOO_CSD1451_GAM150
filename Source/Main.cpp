@@ -20,6 +20,7 @@
 #include "StartScreen.h"
 #include "Utilities.h"
 #include "Crate.h"   // <-- ADDED: needed for Crate_GetFruitCount / Crate_IsUnlocked
+#include "Inventory.h"
 
 // ---------------------------------------------------------------------------
 // Game State Variables
@@ -74,6 +75,73 @@ static const float PAUSE_BTN_W = 300.0f;
 static const float PAUSE_BTN_H = 55.0f;
 static const float PAUSE_BTN_Y0 = 20.0f;
 static const float PAUSE_BTN_Y1 = -60.0f;
+
+// ---------------------------------------------------------------------------
+// Rhythm Reward Popup
+// ---------------------------------------------------------------------------
+static bool g_rewardPopupOpen = false;
+static char g_rewardPopupText[256] = "";
+
+static void GrantRhythmReward()
+{
+	if (!Rhythm_IsSongFinished()) return;
+
+	int seedType = Farm_GetRhythmSeedType();
+	RhythmRewardTier tier = Rhythm_GetRewardTier();
+	RhythmDifficulty diff = Rhythm_GetDifficulty();
+
+	g_rewardPopupOpen = true;
+
+	switch (diff)
+	{
+	case DIFFICULTY_EASY:
+		if (tier == REWARD_POOR) {
+			sprintf_s(g_rewardPopupText, "Rhythm Complete!\nNo rewards this time.\nKeep practicing!");
+		}
+		else if (tier == REWARD_AVERAGE) {
+			Inventory_AddFruit(1, static_cast<u8>(seedType));
+			sprintf_s(g_rewardPopupText, "Rhythm Complete!\nReward: 1 Fruit\nadded to inventory!");
+		}
+		else {
+			Inventory_AddFruit(2, static_cast<u8>(seedType));
+			sprintf_s(g_rewardPopupText, "Rhythm Complete!\nReward: 2 Fruits\nadded to inventory!");
+		}
+		break;
+
+	case DIFFICULTY_MEDIUM:
+		if (tier == REWARD_POOR) {
+			Inventory_AddFruit(1, static_cast<u8>(seedType));
+			sprintf_s(g_rewardPopupText, "Rhythm Complete!\nReward: 1 Fruit\nadded to inventory!");
+		}
+		else if (tier == REWARD_AVERAGE) {
+			Inventory_AddFruit(2, static_cast<u8>(seedType));
+			sprintf_s(g_rewardPopupText, "Rhythm Complete!\nReward: 2 Fruits\nadded to inventory!");
+		}
+		else {
+			Inventory_AddFruit(2, static_cast<u8>(seedType));
+			Economy_AddMoney(50);
+			sprintf_s(g_rewardPopupText, "Rhythm Complete!\nReward: 2 Fruits\n+ 50 Gold added!");
+		}
+		break;
+
+	case DIFFICULTY_HARD:
+		if (tier == REWARD_POOR) {
+			Inventory_AddFruit(2, static_cast<u8>(seedType));
+			sprintf_s(g_rewardPopupText, "Rhythm Complete!\nReward: 2 Fruits\nadded to inventory!");
+		}
+		else if (tier == REWARD_AVERAGE) {
+			Inventory_AddFruit(1, static_cast<u8>(seedType));
+			Inventory_AddSeed(1, static_cast<u8>(seedType));
+			sprintf_s(g_rewardPopupText, "Rhythm Complete!\nReward: 1 Fruit\n+ 1 Seed added!");
+		}
+		else {
+			Inventory_AddSeed(1, static_cast<u8>(seedType));
+			Economy_AddMoney(100);
+			sprintf_s(g_rewardPopupText, "Rhythm Complete!\nReward: 1 Seed\n+ 100 Gold added!");
+		}
+		break;
+	}
+}
 
 void MainScreen_Load()
 {
@@ -187,6 +255,18 @@ void MainScreen_Update()
 {
 	float dt = (float)AEFrameRateControllerGetFrameTime();
 
+	// Dismiss reward popup — blocks all other input until clicked away
+	if (g_rewardPopupOpen)
+	{
+		if (AEInputCheckTriggered(AEVK_LBUTTON) ||
+			AEInputCheckTriggered(AEVK_RETURN) ||
+			AEInputCheckTriggered(AEVK_SPACE))
+		{
+			g_rewardPopupOpen = false;
+		}
+		return;
+	}
+
 	if (gStartScreenActive)
 	{
 		StartScreen_Update(dt);
@@ -247,11 +327,7 @@ void MainScreen_Update()
 	// Farm gets first pick of all clicks so its prompts aren't stolen by UI
 	Farm_Update();
 
-	// UI only runs when no farm prompt is visible
-	if (!Farm_IsRhythmPaused() && !Farm_IsWaitingForRhythm())
-	{
-		UI_Input();
-	}
+	UI_Input();  // Farm_Update() already handles its own clicks before this runs
 
 	Economy_Update(dt);
 	UpdateSpawnFruits(dt);
@@ -497,6 +573,61 @@ void MainScreen_Render()
 			AEGfxPrint(fontId, "Exit", -0.032f, -0.13f, 0.8f, 0.2f, 0.12f, 0.05f, 1.0f);
 		}
 	}
+
+	// ---------------------------------------------------------------
+	// Rhythm Reward Popup (drawn on top of everything)
+	// ---------------------------------------------------------------
+	if (g_rewardPopupOpen && fontId >= 0)
+	{
+		AEMtx33 rScale, rTrans, rTransform;
+
+		// 1. Dim overlay
+		AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+		AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+		AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 0.55f);
+		AEMtx33Scale(&rScale, 1600.0f, 900.0f);
+		AEMtx33Trans(&rTrans, 0.0f, 0.0f);
+		AEMtx33Concat(&rTransform, &rTrans, &rScale);
+		AEGfxSetTransform(rTransform.m);
+		AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+		// 2. Panel background (reuse pause panel texture)
+		if (pTexPausePanel && pMeshPauseQuad)
+		{
+			AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+			AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+			AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
+			AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
+			AEGfxSetTransparency(1.0f);
+			AEGfxTextureSet(pTexPausePanel, 0, 0);
+			AEMtx33Scale(&rScale, 420.0f * gScaleX, 230.0f * gScaleY);
+			AEMtx33Trans(&rTrans, 0.0f, 0.0f);
+			AEMtx33Concat(&rTransform, &rTrans, &rScale);
+			AEGfxSetTransform(rTransform.m);
+			AEGfxMeshDraw(pMeshPauseQuad, AE_GFX_MDM_TRIANGLES);
+		}
+
+		// 3. Text — split on \n since AEGfxPrint is single-line
+		AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+		AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+		AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
+
+		char buf[256];
+		strncpy_s(buf, g_rewardPopupText, sizeof(buf));
+		char* ctx = nullptr;
+		char* line = strtok_s(buf, "\n", &ctx);
+		float lineY = 0.13f;
+		while (line)
+		{
+			AEGfxPrint(fontId, line, -0.19f, lineY, 0.85f, 0.15f, 0.08f, 0.02f, 1.0f);
+			lineY -= 0.10f;
+			line = strtok_s(nullptr, "\n", &ctx);
+		}
+
+		// 4. Dismiss hint
+		AEGfxPrint(fontId, "Click to continue", -0.16f, lineY - 0.02f,
+			0.7f, 0.5f, 0.5f, 0.5f, 1.0f);
+	}
 }
 
 void MainScreen_Free()
@@ -578,6 +709,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			// Player completes rhythm normally
 			if (AEInputCheckTriggered(AEVK_E))
 			{
+				GrantRhythmReward();          // grant rewards + build popup text
 				Farm_OnRhythmResult(true);
 				Farm_ClearRhythmRequest();
 				nextState = GS_MAIN_SCREEN;

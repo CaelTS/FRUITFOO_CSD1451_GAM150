@@ -4,7 +4,6 @@
 
 
 void Inventory_RemoveFruit(u8 amount);  // Removes fruit from the inventory
-void Inventory_RemoveSeed(u8 amount);
 u8 Inventory_GetFruitStock();
 
 // Inventory modification functions (with auto-save)

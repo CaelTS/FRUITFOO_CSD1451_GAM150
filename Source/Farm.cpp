@@ -809,3 +809,10 @@ bool Farm_IsWaitingForRhythm()
         if (plot.waitingForRhythm) return true;
     return false;
 }
+
+int Farm_GetRhythmSeedType()
+{
+    int idx = g_rhythmPlotIndex;
+    if (idx < 0 || idx >= (int)farmPlots.size()) return 0;
+    return farmPlots[idx].seedType;
+}

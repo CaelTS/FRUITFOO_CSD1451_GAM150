@@ -90,4 +90,15 @@ const RhythmScore& Rhythm_GetScore();
 float Rhythm_GetSongDuration();    // Total duration of the song
 float Rhythm_GetCurrentTime();     // Current playback time
 
+// ================= REWARDS =================
+
+enum RhythmRewardTier {
+    REWARD_POOR = 0,   // No reward (Easy only)
+    REWARD_AVERAGE,    // 1 seed / 1-2 fruits depending on difficulty
+    REWARD_GOOD        // 2 fruits / fruits+gold depending on difficulty
+};
+
+// Call after Rhythm_IsSongFinished() returns true to get the reward tier.
+RhythmRewardTier Rhythm_GetRewardTier();
+
 #endif // RHYTHM_H

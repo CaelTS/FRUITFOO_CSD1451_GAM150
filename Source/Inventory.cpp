@@ -228,6 +228,9 @@ void Inventory_SaveToProfile(int slot) {
 
 // Load inventory state from profile slot
 void Inventory_LoadFromProfile(int slot) {
+
+	(void)slot; // suppress C4100 — active slot used implicitly
+
 	// Load from profile getters
 	apples = static_cast<u8>(Profile_GetApples());
 	pears = static_cast<u8>(Profile_GetPears());

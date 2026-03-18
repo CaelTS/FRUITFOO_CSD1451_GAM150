@@ -266,7 +266,7 @@ static float exitAnimFadeOut = 1.0f;   // 0.0 -> 1.0 fade out progress
 static float exitAnimSpeed = 1.3f;      // Speed of slide animation
 
 //Local helper function button click detection
-bool IsButtonClicked(Button& btn, float width, float height) {
+static bool IsButtonClicked(Button& btn, float width, float height) {
     float x = hasSave ? btn.x_save : btn.x;
     float y = hasSave ? btn.y_save : btn.y;
 
@@ -275,7 +275,7 @@ bool IsButtonClicked(Button& btn, float width, float height) {
     else return false;
 }
 
-bool IsButtonHovered(Button& btn, float width, float height) {
+static bool IsButtonHovered(Button& btn, float width, float height) {
     float x = btn.x;
     float y = btn.y;
 
@@ -364,17 +364,17 @@ AEGfxVertexList* pMeshGradientBlur = nullptr;
 // Helper
 // ------------------------------------------------------------
 
-static bool CheckSaveExists()
-{
-    std::ifstream file("save.dat");
+//static bool CheckSaveExists()
+//{
+//    std::ifstream file("save.dat");
+//
+//    if (file.good())
+//        return true;
+//
+//    return false;
+//}
 
-    if (file.good())
-        return true;
-
-    return false;
-}
-
-void DrawButton(Button& btn, AEGfxVertexList* mesh, f32 width, f32 height, float offset)
+static void DrawButton(Button& btn, AEGfxVertexList* mesh, f32 width, f32 height, float offset)
 {
     AEMtx33 scale, trans, transform;
 
@@ -409,7 +409,7 @@ void DrawButton(Button& btn, AEGfxVertexList* mesh, f32 width, f32 height, float
     AEGfxMeshDraw(mesh, AE_GFX_MDM_TRIANGLES);
 }
 
-AEGfxVertexList* createMesh()
+static AEGfxVertexList* createMesh()
 {
     AEGfxMeshStart();
     // bottom-left, bottom-right, top-right
