@@ -58,14 +58,6 @@ static AEGfxTexture* settingsIcon = nullptr;
 static AEGfxTexture* appleSeedIcon = nullptr;
 static AEGfxTexture* appleSeedInfo = nullptr;
 
-// Per-type inventory icons
-static AEGfxTexture* invAppleIcon = nullptr;
-static AEGfxTexture* invPearIcon = nullptr;
-static AEGfxTexture* invBananaIcon = nullptr;
-static AEGfxTexture* invAppleSeed = nullptr;
-static AEGfxTexture* invPearSeed = nullptr;
-static AEGfxTexture* invBananaSeed = nullptr;
-
 enum ButtonType
 {
     BUTTON_INVENTORY,
@@ -192,14 +184,6 @@ void UI_Init()
     appleSeedIcon = AEGfxTextureLoad("Assets/AppleSeed.png");
     appleSeedInfo = AEGfxTextureLoad("Assets/AppleSeedInfo.png");
     plotSlotTexture = AEGfxTextureLoad("Assets/Plot1.png");
-
-    // Per-type inventory icons
-    invAppleIcon = AEGfxTextureLoad("Assets/Fruit_Apple.png");
-    invPearIcon = AEGfxTextureLoad("Assets/Pear.png");
-    invBananaIcon = AEGfxTextureLoad("Assets/Banana.png");
-    invAppleSeed = AEGfxTextureLoad("Assets/AppleSeed.png");
-    invPearSeed = AEGfxTextureLoad("Assets/PearSeed.png");
-    invBananaSeed = AEGfxTextureLoad("Assets/BananaSeed.png");
 
     // --- Menu Buttons ---
     menuButtons.clear();
@@ -714,93 +698,6 @@ void UI_Draw()
             AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
             AEGfxSetColorToMultiply(0, 0, 0, 1);
             AEGfxPrint(fontId, capText, textX, textY, 0.9f, 0, 0, 0, 1);
-
-            // -------------------------------------------------------
-            // Per-type rows: icon + name + count
-            // -------------------------------------------------------
-            {
-                // Layout: 3 rows, starting below the tab icons
-                const float rowStartX = panelX - panelW * 0.35f;
-                const float rowStartY = panelY - panelH * 0.08f; // centered in middle area
-                const float rowSpacing = 90.0f;
-                const float iconSize = 52.0f;
-                const float textOffX = iconSize * 0.5f + 12.0f;
-
-                // Build arrays based on active tab - only apple for now
-                struct ItemRow { AEGfxTexture* icon; const char* name; int count; };
-
-                if (gActiveInvTab == TAB_FRUITS)
-                {
-                    ItemRow rows[1] = {
-                        { invAppleIcon, "Apple", GetAppleCount() }
-                    };
-
-                    for (int r = 0; r < 1; r++)
-                    {
-                        float rowY = rowStartY - r * rowSpacing;
-
-                        if (rows[r].icon)
-                        {
-                            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
-                            AEGfxSetBlendMode(AE_GFX_BM_BLEND);
-                            AEGfxSetColorToMultiply(1, 1, 1, 1);
-                            AEGfxTextureSet(rows[r].icon, 0, 0);
-                            AEMtx33Scale(&scale, iconSize, iconSize);
-                            AEMtx33Trans(&trans, rowStartX, rowY);
-                            AEMtx33Concat(&transform, &trans, &scale);
-                            AEGfxSetTransform(transform.m);
-                            AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
-                        }
-
-                        float labelX = (rowStartX + textOffX) / 800.0f;
-                        float labelY = (rowY + 8.0f) / 450.0f;
-                        AEGfxSetColorToMultiply(0, 0, 0, 1);
-                        AEGfxPrint(fontId, rows[r].name, labelX, labelY, 0.75f, 0, 0, 0, 1);
-
-                        char countBuf[8];
-                        sprintf_s(countBuf, "x%d", rows[r].count);
-                        float countX = (rowStartX + textOffX) / 800.0f;
-                        float countY = (rowY - 16.0f) / 450.0f;
-                        AEGfxPrint(fontId, countBuf, countX, countY, 0.75f, 0, 0, 0, 1);
-                    }
-                }
-                else // TAB_SEEDS
-                {
-                    ItemRow rows[1] = {
-                        { invAppleSeed, "Apple Seed", GetAppleSeedCount() }
-                    };
-
-                    for (int r = 0; r < 1; r++)
-                    {
-                        float rowY = rowStartY - r * rowSpacing;
-
-                        if (rows[r].icon)
-                        {
-                            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
-                            AEGfxSetBlendMode(AE_GFX_BM_BLEND);
-                            AEGfxSetColorToMultiply(1, 1, 1, 1);
-                            AEGfxTextureSet(rows[r].icon, 0, 0);
-                            AEMtx33Scale(&scale, iconSize, iconSize);
-                            AEMtx33Trans(&trans, rowStartX, rowY);
-                            AEMtx33Concat(&transform, &trans, &scale);
-                            AEGfxSetTransform(transform.m);
-                            AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
-                        }
-
-                        float labelX = (rowStartX + textOffX) / 800.0f;
-                        float labelY = (rowY + 8.0f) / 450.0f;
-                        AEGfxSetColorToMultiply(0, 0, 0, 1);
-                        AEGfxPrint(fontId, rows[r].name, labelX, labelY, 0.75f, 0, 0, 0, 1);
-
-                        char countBuf[8];
-                        sprintf_s(countBuf, "x%d", rows[r].count);
-                        float countX = (rowStartX + textOffX) / 800.0f;
-                        float countY = (rowY - 16.0f) / 450.0f;
-                        AEGfxPrint(fontId, countBuf, countX, countY, 0.75f, 0, 0, 0, 1);
-                    }
-                }
-            }
-            // -------------------------------------------------------
 
             const float panelCenterX = 0.0f, panelCenterY = 0.0f;
             const float leftEdge = panelCenterX - INV_PANEL_W * 0.5f;
@@ -1372,10 +1269,4 @@ void UI_Exit()
     AEGfxTextureUnload(appleSeedIcon);
     AEGfxTextureUnload(appleSeedInfo);
     AEGfxTextureUnload(plotSlotTexture);
-    if (invAppleIcon)  AEGfxTextureUnload(invAppleIcon);
-    if (invPearIcon)   AEGfxTextureUnload(invPearIcon);
-    if (invBananaIcon) AEGfxTextureUnload(invBananaIcon);
-    if (invAppleSeed)  AEGfxTextureUnload(invAppleSeed);
-    if (invPearSeed)   AEGfxTextureUnload(invPearSeed);
-    if (invBananaSeed) AEGfxTextureUnload(invBananaSeed);
 }
