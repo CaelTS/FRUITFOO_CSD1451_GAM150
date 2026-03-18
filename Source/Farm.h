@@ -28,3 +28,4 @@ void Farm_OnRhythmResult(bool success);
 void Farm_SetRhythmPaused(bool paused);
 bool Farm_IsRhythmPaused();
 bool Farm_IsWaitingForRhythm();
+int  Farm_GetRhythmSeedType(); // seed type of the plot that triggered rhythm
