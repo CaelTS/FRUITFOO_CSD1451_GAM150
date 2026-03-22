@@ -350,18 +350,22 @@ void Farm_Update()
                     return;
                 }
 
-                // Cross => pause growth, enter paused state
+                // Cross => continues growing but lesser rewards
                 if (worldX >= crossX - iconSize / 2 && worldX <= crossX + iconSize / 2 &&
                     worldY >= crossY - iconSize / 2 && worldY <= crossY + iconSize / 2)
                 {
-                    plot.waitingForRhythm = false;
-                    plot.rhythmTriggered = true;
-                    g_rhythmPaused = true;
-                    g_rhythmPausedPlotIndex = i;
+                    //  CLEAR PAUSE STATE (THIS IS THE MISSING PART)
+                    g_rhythmPaused = false;
+                    g_rhythmPausedPlotIndex = -1;
                     g_rhythmPlotIndex = -1;
 
+                    // RESUME GROWTH
+                    plot.growthFrozen = false;
+                    plot.waitingForRhythm = false;
+                    plot.rhythmTriggered = true;
 
-                    std::cout << "Cross clicked: entering paused state\n";
+
+                    std::cout << "Cross clicked, growth as per usual just with less rewards\n";
                     return;
                 }
             }
