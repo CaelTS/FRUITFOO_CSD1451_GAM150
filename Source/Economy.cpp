@@ -59,8 +59,18 @@ void Economy_Init() {
 	//initialize random seed
 	srand((unsigned int)time(NULL));
 
-	total_money = 0; //to read from config file 
-	money_multiplier = 1.0f; //to read from config file
+	// Load saved economy state from the active profile instead of resetting.
+	// Previously total_money was hardcoded to 0 and money_multiplier to 1.0f,
+	// which wiped gold and any purchased multiplier upgrades on every state
+	// transition (including returning from the rhythm screen).
+	int activeSlot = Profile_GetActiveSlot();
+	if (activeSlot >= 0)
+		Economy_LoadFromProfile(activeSlot); // restores total_money, max_money, money_multiplier
+	else
+	{
+		total_money = 0;
+		money_multiplier = 1.0f;
+	}
 
 	timer = 0.0f; //initialize timer
 
@@ -139,4 +149,3 @@ int Economy_GetMaxMoney() {
 float Economy_GetMultiplier() {
 	return money_multiplier;
 }
-
