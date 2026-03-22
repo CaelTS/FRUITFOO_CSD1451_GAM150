@@ -1,4 +1,4 @@
-#include "Farm.h"
+﻿#include "Farm.h"
 #include "AEEngine.h"
 #include "UI.h"
 #include "Profile.h"
@@ -33,6 +33,15 @@ static bool g_requestRhythm = false;
 static int  g_rhythmPlotIndex = -1;
 static bool g_rhythmPaused = false;
 static int  g_rhythmPausedPlotIndex = -1;
+
+// ---------------------------------------------------------------------------
+// Harvest destination popup
+// When SPACE is pressed on a ready plot, we pause and ask the player:
+//   [Inventory]   [Crate]
+// The plot index waiting for a choice is stored here (-1 = none pending).
+// ---------------------------------------------------------------------------
+static int  g_harvestPopupPlotIndex = -1;  // which plot is waiting for destination choice
+static bool g_harvestPopupOpen = false;
 
 
 static std::vector<FarmPlot> farmPlots;
@@ -173,6 +182,10 @@ void Farm_Initialize()
     g_rhythmPlotIndex = -1;
     g_requestRhythm = false;
 
+    // Reset harvest popup state
+    g_harvestPopupOpen = false;
+    g_harvestPopupPlotIndex = -1;
+
     std::cout << "Farm initialized from profile\n";
 }
 
@@ -201,7 +214,82 @@ void Farm_Update()
     float worldX = (float)mouseX - 800.0f;
     float worldY = 450.0f - (float)mouseY;
 
-    // Harvest
+    // ---------------------------------------------------------------
+    // Harvest destination popup: handle button clicks first so the
+    // SPACE check below cannot open a second popup the same frame.
+    // ---------------------------------------------------------------
+    if (g_harvestPopupOpen && g_harvestPopupPlotIndex >= 0)
+    {
+        if (AEInputCheckTriggered(AEVK_LBUTTON))
+        {
+            // Button layout (world-space, centered on screen like other prompts):
+            //   [Inventory]  left  button  centered at (-80, -40)  130 x 45
+            //   [Crate]      right button  centered at ( 80, -40)  130 x 45
+            const float btnW = 130.0f, btnH = 45.0f;
+            const float invBtnX = -80.0f, btnY = -40.0f;
+            const float crateBtnX = 80.0f;
+
+            bool clickedInventory =
+                worldX >= invBtnX - btnW * 0.5f && worldX <= invBtnX + btnW * 0.5f &&
+                worldY >= btnY - btnH * 0.5f && worldY <= btnY + btnH * 0.5f;
+
+            bool clickedCrate =
+                worldX >= crateBtnX - btnW * 0.5f && worldX <= crateBtnX + btnW * 0.5f &&
+                worldY >= btnY - btnH * 0.5f && worldY <= btnY + btnH * 0.5f;
+
+            if (clickedInventory || clickedCrate)
+            {
+                int idx = g_harvestPopupPlotIndex;
+                FarmPlot& plot = farmPlots[idx];
+                int harvestedType = plot.seedType; // 0=apple 1=pear 2=banana
+
+                // Clear plot state
+                plot.isPlanted = false;
+                plot.isReady = false;
+                plot.seedType = -1;
+                plot.growTimer = 0.0f;
+                plot.rhythmTriggered = false;
+                plot.waitingForRhythm = false;
+                plot.growthFrozen = false;
+                Profile_SetPlotData(idx, false, false, 0.0f, -1);
+
+                if (harvestedType >= 0)
+                {
+                    float plotX = UI_GetPlotSlotX(idx);
+                    float plotY = UI_GetPlotSlotY(idx);
+
+                    if (clickedInventory)
+                    {
+                        Inventory_AddFruit(1, static_cast<u8>(harvestedType));
+                        std::cout << "Harvested plot " << idx
+                            << " -> Inventory (type " << harvestedType << ")\n";
+                        // Fly toward the left UI panel (inventory side)
+                        FlyingFruit_Spawn(plotX, plotY, -600.0f, 100.0f, harvestedType);
+                    }
+                    else // clickedCrate
+                    {
+                        Crate_AddFruitTyped(harvestedType, 1);
+                        std::cout << "Harvested plot " << idx
+                            << " -> Crate (type " << harvestedType << ")\n";
+                        // Fly toward the matching crate slot on the stall
+                        float crateX = UI_GetCrateSlotX(harvestedType);
+                        float crateY = UI_GetCrateSlotY(harvestedType);
+                        FlyingFruit_Spawn(plotX, plotY, crateX, crateY, harvestedType);
+                    }
+                }
+
+                g_harvestPopupOpen = false;
+                g_harvestPopupPlotIndex = -1;
+                g_rhythmPlotIndex = -1;          // prevent rhythm prompt re-appearing after harvest
+                return;
+            }
+        }
+
+        // Popup is open � swallow SPACE so it cannot re-trigger
+        return;
+    }
+
+    // Harvest � SPACE opens the destination popup for the first ready plot
     if (AEInputCheckTriggered(AEVK_SPACE))
     {
         for (int i = 0; i < (int)farmPlots.size(); i++)
@@ -209,34 +297,10 @@ void Farm_Update()
             auto& plot = farmPlots[i];
             if (plot.isReady)
             {
-                int harvestedType = plot.seedType; // 0=apple, 1=pear, 2=banana
-
-                plot.isPlanted = false;
-                plot.isReady = false;
-                plot.seedType = -1;
-                plot.growTimer = 0.0f;
-                plot.rhythmTriggered = false;
-                plot.waitingForRhythm = false;
-                plot.growthFrozen = false;  // Reset freeze on harvest
-
-                Profile_SetPlotData(i, false, false, 0.0f, -1);
-                std::cout << "Harvested plot " << i << "\n";
-
-                // -- Add to inventory and crate --
-                if (harvestedType >= 0)
-                {
-                    Inventory_AddFruit(1, static_cast<u8>(harvestedType));
-                    Crate_AddFruitTyped(harvestedType, 1);
-                    std::cout << "Added fruit type " << harvestedType
-                        << " to inventory and crate\n";
-
-                    // Spawn flying fruit animation from plot to its matching crate slot
-                    float plotX = UI_GetPlotSlotX(i);
-                    float plotY = UI_GetPlotSlotY(i);
-                    float crateX = UI_GetCrateSlotX(harvestedType);
-                    float crateY = UI_GetCrateSlotY(harvestedType);
-                    FlyingFruit_Spawn(plotX, plotY, crateX, crateY, harvestedType);
-                }
+                g_harvestPopupPlotIndex = i;
+                g_harvestPopupOpen = true;
+                std::cout << "Harvest popup opened for plot " << i << "\n";
+                break; // one popup at a time
             }
         }
     }
@@ -394,6 +458,14 @@ void Farm_Update()
         if (ratio >= 1.0f && !plot.isReady)
         {
             plot.isReady = true;
+
+            // Clear all rhythm prompt state — the plant is fully grown,
+            // the rhythm prompt is no longer relevant and must not show.
+            plot.waitingForRhythm = false;
+            plot.growthFrozen = false;
+            if (g_rhythmPlotIndex == i)        g_rhythmPlotIndex = -1;
+            if (g_rhythmPausedPlotIndex == i) { g_rhythmPaused = false; g_rhythmPausedPlotIndex = -1; }
+
             Profile_SetPlotData(i, plot.isPlanted, plot.isReady, plot.growTimer, plot.seedType);
             std::cout << "Plot " << i << " is ready for harvest!\n";
         }
@@ -538,9 +610,10 @@ void Farm_Render()
         // --------------------------
         // Draw Rhythm Prompt (for: waiting, paused, OR frozen states)
         // --------------------------
-        bool showPrompt = (farmPlots[i].waitingForRhythm && g_rhythmPlotIndex == i)
-            || (g_rhythmPaused && g_rhythmPausedPlotIndex == i)
-            || farmPlots[i].growthFrozen;  // NEW: also show when frozen
+        bool showPrompt = !g_harvestPopupOpen &&
+            ((farmPlots[i].waitingForRhythm && g_rhythmPlotIndex == i)
+                || (g_rhythmPaused && g_rhythmPausedPlotIndex == i)
+                || farmPlots[i].growthFrozen);  // NEW: also show when frozen
 
         if (showPrompt)
         {
@@ -632,6 +705,124 @@ void Farm_Render()
             AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
         }
         AEGfxSetTransparency(1.0f);
+    }
+
+    // --------------------------
+    // Draw harvest destination popup (drawn on top of everything else)
+    // Shows when player presses SPACE on a ready plot.
+    // Panel uses the same rhythmPrompt background texture for visual consistency.
+    // --------------------------
+    if (g_harvestPopupOpen && g_harvestPopupPlotIndex >= 0)
+    {
+        extern s8 fontId;
+
+        AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+        AEGfxSetTransparency(1.0f);
+
+        // Panel background - solid color so the rhythmPrompt texture's
+        // baked-in "ARE YOU READY TO PLAY" text doesn't bleed through.
+        // Warm parchment: RGB (0.96, 0.89, 0.72)
+        AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+        AEGfxSetColorToMultiply(0.96f, 0.89f, 0.72f, 1.0f);
+        AEMtx33Scale(&scale, 350.0f, 160.0f);
+        AEMtx33Trans(&trans, 0.0f, 0.0f);
+        AEMtx33Concat(&transform, &trans, &scale);
+        AEGfxSetTransform(transform.m);
+        AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+        // Border outline (darker brown)
+        AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+        AEGfxSetColorToMultiply(0.55f, 0.35f, 0.15f, 1.0f);
+        AEMtx33Scale(&scale, 358.0f, 168.0f);  // slightly larger = border
+        AEMtx33Trans(&trans, 0.0f, 0.0f);
+        AEMtx33Concat(&transform, &trans, &scale);
+        AEGfxSetTransform(transform.m);
+        // Draw border behind panel by re-drawing panel on top (painter's algorithm)
+        AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+        AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+        AEGfxSetColorToMultiply(0.96f, 0.89f, 0.72f, 1.0f);
+        AEMtx33Scale(&scale, 350.0f, 160.0f);
+        AEMtx33Trans(&trans, 0.0f, 0.0f);
+        AEMtx33Concat(&transform, &trans, &scale);
+        AEGfxSetTransform(transform.m);
+        AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+        // "Where to?" title text
+        if (fontId >= 0)
+        {
+            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+            AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+            AEGfxSetColorToMultiply(1, 1, 1, 1);
+            AEGfxPrint(fontId, "Send fruit to:", -0.21f, 0.06f, 1.5f, 0.15f, 0.08f, 0.02f, 1.0f);
+        }
+
+        // [Inventory] button  � left,  world-space center (-80, -40)
+        {
+            const float btnW = 130.0f, btnH = 45.0f;
+            const float btnX = -80.0f, btnY = -40.0f;
+
+            // Check hover for highlight tint
+            s32 mx, my;
+            AEInputGetCursorPosition(&mx, &my);
+            float wx = (float)mx - 800.0f;
+            float wy = 450.0f - (float)my;
+            bool hovered = wx >= btnX - btnW * 0.5f && wx <= btnX + btnW * 0.5f &&
+                wy >= btnY - btnH * 0.5f && wy <= btnY + btnH * 0.5f;
+
+            AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+            AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+            // Warm beige normally, slightly brighter on hover
+            float r = hovered ? 0.95f : 0.82f;
+            float g2 = hovered ? 0.85f : 0.72f;
+            float b = hovered ? 0.65f : 0.55f;
+            AEGfxSetColorToMultiply(r, g2, b, 1.0f);
+            AEMtx33Scale(&scale, btnW, btnH);
+            AEMtx33Trans(&trans, btnX, btnY);
+            AEMtx33Concat(&transform, &trans, &scale);
+            AEGfxSetTransform(transform.m);
+            AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+            if (fontId >= 0)
+            {
+                AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+                AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+                AEGfxSetColorToMultiply(1, 1, 1, 1);
+                AEGfxPrint(fontId, "Inventory", -0.17f, -0.11f, 1.0f, 0.15f, 0.08f, 0.02f, 1.0f);
+            }
+        }
+
+        // [Crate] button  � right, world-space center (80, -40)
+        {
+            const float btnW = 130.0f, btnH = 45.0f;
+            const float btnX = 80.0f, btnY = -40.0f;
+
+            s32 mx, my;
+            AEInputGetCursorPosition(&mx, &my);
+            float wx = (float)mx - 800.0f;
+            float wy = 450.0f - (float)my;
+            bool hovered = wx >= btnX - btnW * 0.5f && wx <= btnX + btnW * 0.5f &&
+                wy >= btnY - btnH * 0.5f && wy <= btnY + btnH * 0.5f;
+
+            AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+            AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+            float r = hovered ? 0.95f : 0.82f;
+            float g2 = hovered ? 0.85f : 0.72f;
+            float b = hovered ? 0.65f : 0.55f;
+            AEGfxSetColorToMultiply(r, g2, b, 1.0f);
+            AEMtx33Scale(&scale, btnW, btnH);
+            AEMtx33Trans(&trans, btnX, btnY);
+            AEMtx33Concat(&transform, &trans, &scale);
+            AEGfxSetTransform(transform.m);
+            AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+            if (fontId >= 0)
+            {
+                AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+                AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+                AEGfxSetColorToMultiply(1, 1, 1, 1);
+                AEGfxPrint(fontId, "Crate", 0.05f, -0.11f, 1.0f, 0.15f, 0.08f, 0.02f, 1.0f);
+            }
+        }
     }
 } // end Farm_Render
 
