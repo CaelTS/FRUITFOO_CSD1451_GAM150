@@ -10,6 +10,7 @@
 #include <cstdio>
 #include <cmath>
 #include "Inventory.h"
+#include "Crate.h"
 
 
 extern AEGfxVertexList* g_pMeshFullScreen;
@@ -1546,25 +1547,28 @@ void UI_DrawFruitBasketTooltips()
 
         char stockBuf[32];
         char invBuf[32];
+        
+        // GET LIVE STOCK DATA FROM CRATE SYSTEM
+        int liveStock = Crate_GetFruitCount(b.fruitType);
 
 
         switch (b.fruitType)
         {
         case FRUIT_APPLE:
             fruitName = "Apple";
-            snprintf(stockBuf, sizeof(stockBuf), "Stock: %d", b.stock);
+            snprintf(stockBuf, sizeof(stockBuf), "Stock: %d", liveStock);
             snprintf(invBuf, sizeof(invBuf), "Inventory: %d", GetAppleCount());
             break;
 
         case FRUIT_PEAR:
             fruitName = "Pear";
-            snprintf(stockBuf, sizeof(stockBuf), "Stock: %d", b.stock);
+            snprintf(stockBuf, sizeof(stockBuf), "Stock: %d", liveStock);
             snprintf(invBuf, sizeof(invBuf), "Inventory: %d", GetPearCount());
             break;
 
         case FRUIT_BANANA:
             fruitName = "Banana";
-            snprintf(stockBuf, sizeof(stockBuf), "Stock: %d", b.stock);
+            snprintf(stockBuf, sizeof(stockBuf), "Stock: %d", liveStock);
             snprintf(invBuf, sizeof(invBuf), "Inventory: %d", GetBananaCount());
             break;
         }
