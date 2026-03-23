@@ -19,6 +19,7 @@ enum fruitType
 struct FruitBasket
 {
     int fruitType;        // 0 Apple, 1 Pear, 2 Banana
+    int stock;
     float x, y;           // world position (center)
     float width, height;  // hover area size
 };

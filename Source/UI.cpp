@@ -1429,6 +1429,7 @@ void UI_RebuildCrateHitboxesFromStall(float stallX, float stallY, float stallW, 
          FruitBasket b = uvToWorldRect(r.uCenter, r.vCenter, r.uWidth, r.vHeight);
 
          b.fruitType = (fruitType)i;   // 0 Apple, 1 Pear, 2 Banana
+         b.stock = 0;
 
         gFruitBaskets.push_back(b);
     }
@@ -1542,24 +1543,35 @@ void UI_DrawFruitBasketTooltips()
         const char* stockText = "Stock: ?";
         const char* inventoryText = "Inventory: ?";
 
+
+        char stockBuf[32];
+        char invBuf[32];
+
+
         switch (b.fruitType)
         {
         case FRUIT_APPLE:
             fruitName = "Apple";
-            stockText = "Stock: 3";        // demo
-            inventoryText = "Inventory: 10"; // demo
+            snprintf(stockBuf, sizeof(stockBuf), "Stock: %d", b.stock);
+            snprintf(invBuf, sizeof(invBuf), "Inventory: %d", GetAppleCount());
             break;
+
         case FRUIT_PEAR:
             fruitName = "Pear";
-            stockText = "Stock: 2";
-            inventoryText = "Inventory: 5";
+            snprintf(stockBuf, sizeof(stockBuf), "Stock: %d", b.stock);
+            snprintf(invBuf, sizeof(invBuf), "Inventory: %d", GetPearCount());
             break;
+
         case FRUIT_BANANA:
             fruitName = "Banana";
-            stockText = "Stock: 4";
-            inventoryText = "Inventory: 8";
+            snprintf(stockBuf, sizeof(stockBuf), "Stock: %d", b.stock);
+            snprintf(invBuf, sizeof(invBuf), "Inventory: %d", GetBananaCount());
             break;
         }
+
+        stockText = stockBuf;
+        inventoryText = invBuf;
+
 
         // --- Draw the text inside the panel ---
         const float textStartY = tipY + C.tipHeight * 0.25f; // start a bit below top
