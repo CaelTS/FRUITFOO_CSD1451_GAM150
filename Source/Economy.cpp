@@ -9,6 +9,7 @@
 #include <time.h>
 #include "Profile.h"
 #include "Inventory.h"
+#include "Crate.h"
 
 // Global variables - remove 'static' since they're extern in the header
 u64 total_money = 0;
@@ -21,7 +22,7 @@ static f32 next_sale_time = 0.0f; //seconds
 bool timer_reset = true;
 
 //placeholder for base price
-u8 base_fruit_price = 5;
+extern u8 base_price_apple = 0;
 
 //Helper functions
 f32 random_time(f32 min, f32 max) {
@@ -46,7 +47,7 @@ void static sell_fruit() {
 	u8 sale_amount = min(stock, random_range(1, 3)); //sell between 1 and 3 fruits (use int literals)
 
 	//determine sale price
-	u64 total_price = static_cast<u64>(sale_amount) * static_cast<u64>(base_fruit_price) * static_cast<u64>(money_multiplier);
+	u64 total_price = static_cast<u64>(sale_amount) * static_cast<u64>(base_price_apple) * static_cast<u64>(money_multiplier);
 	//add money to total
 	Economy_AddMoney(static_cast<int>(total_price));
 	//remove fruit from inventory
@@ -59,18 +60,8 @@ void Economy_Init() {
 	//initialize random seed
 	srand((unsigned int)time(NULL));
 
-	// Load saved economy state from the active profile instead of resetting.
-	// Previously total_money was hardcoded to 0 and money_multiplier to 1.0f,
-	// which wiped gold and any purchased multiplier upgrades on every state
-	// transition (including returning from the rhythm screen).
-	int activeSlot = Profile_GetActiveSlot();
-	if (activeSlot >= 0)
-		Economy_LoadFromProfile(activeSlot); // restores total_money, max_money, money_multiplier
-	else
-	{
-		total_money = 0;
-		money_multiplier = 1.0f;
-	}
+	total_money = 0; //to read from config file 
+	money_multiplier = 1.0f; //to read from config file
 
 	timer = 0.0f; //initialize timer
 
@@ -87,7 +78,7 @@ void Economy_Update(float dt) {
 	timer += dt;
 
 	if (timer >= next_sale_time && total_money <= max_money) {
-		bool in_stock = Inventory_GetFruitStock() > 0;
+		bool in_stock = Crate_GetFruitCount(0) > 0;
 
 		if (in_stock) {
 			sell_fruit();
@@ -103,9 +94,9 @@ void Economy_Update(float dt) {
 		printf("Next sale in %.2f seconds.\n", next_sale_time);
 	}
 
-	if (total_money >= max_money) {
+	/*if (total_money >= max_money) {
 		total_money = max_money;
-	}
+	}*/
 }
 
 //void Economy_Exit();
@@ -137,6 +128,11 @@ void Economy_SetMultiplier(float mult) {
 	Economy_SaveToProfile(Profile_GetActiveSlot());
 }
 
+void Economy_SetBasePriceApple(u8 price) {
+	base_price_apple = price;
+	Economy_SaveToProfile(Profile_GetActiveSlot());
+}
+
 
 // getters (read-only)
 int Economy_GetTotalMoney() {
@@ -149,3 +145,4 @@ int Economy_GetMaxMoney() {
 float Economy_GetMultiplier() {
 	return money_multiplier;
 }
+

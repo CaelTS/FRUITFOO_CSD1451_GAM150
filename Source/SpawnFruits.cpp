@@ -5,14 +5,9 @@
 #include <stdio.h>
 #include <cstdlib>  // For random number generation
 #include <time.h>    // For time-based randomness
+#include "Inventory.h" // For inventory interaction when collecting fruits
 
-//helper function to generate random float between min and max
-static float random_float(float min, float max) {
-    if (max <= min) return min;
-    return min + (max - min) * (static_cast<float>(rand()) / static_cast<float>(RAND_MAX));
-}
 
-static AEGfxTexture* gAppleTexture = nullptr;
 
 // Ground Y in world coordinates (center = 0). Adjust if your ground is higher/lower.
 float GROUND_Y = -350.0f;
@@ -41,11 +36,35 @@ struct CollectAnim {
 static std::vector<CollectAnim> collectAnims; // parallel to 'fruits'
 //------------------------------------------------------------------------//
 
+// Helper Function
+//------------------------------------------------------------------------//
+
+// helper function to generate random float between min and max
+static float random_float(float min, float max) {
+    if (max <= min) return min;
+    return min + (max - min) * (static_cast<float>(rand()) / static_cast<float>(RAND_MAX));
+}
+
+// percentage should be between 0 and 100 (e.g. 25 for 25% chance)
+static bool rand_chance(float percentage) {
+	float rand_num = random_float(0.0f, 100.0f);
+    return (rand_num < percentage);
+}
+
+
+//------------------------------------------------------------------------//
+
+// Spawn Timer
+//------------------------------------------------------------------------//
+
 float spawnTimer = 0.0f;  // Timer for spawning apples
-f32 spawnInterval = 5.0f;  // Initial interval between apple spawns (in seconds)
+f32 spawnInterval = 10.0f;  // Initial interval between apple spawns (in seconds)
+
+//------------------------------------------------------------------------//
 
 // Global variable 
 AEGfxVertexList* pMeshApple = NULL;
+static AEGfxTexture* gAppleTexture = nullptr;
 
 void SpawnFruit_Init() {
     srand((unsigned int)time(NULL));
@@ -56,6 +75,9 @@ void SpawnFruit_Init() {
     pMeshApple = AEGfxMeshEnd();
 
     gAppleTexture = AEGfxTextureLoad("Assets/Fruit_Apple.png");
+
+	spawnInterval = random_float(10.0f, 30.0f); // Randomize initial spawn interval between 10 and 30 seconds
+	printf("Initial spawn interval: %.2f seconds\n", spawnInterval);
 }
 
 void SpawnFruit() {
@@ -77,10 +99,10 @@ void SpawnFruit() {
     newApple.rollDirection = (rand() % 2 == 0) ? 1.0f : -1.0f;  // Randomly decide left (-1) or right (+1) roll
 
     fruits.push_back(newApple);  // Add the new apple to the apple list
-    collectAnims.push_back(CollectAnim()); // keep anim vector in syn
+    collectAnims.push_back(CollectAnim()); // keep anim vector in sync
 }
 
-void SpawnFruit(float x) {
+static void SpawnFruit(float x) {
     Fruit newApple;
     newApple.texture = AEGfxTextureLoad("Assets/Fruit_Apple.png");  // Load the apple texture
 
@@ -108,12 +130,20 @@ void SpawnMultipleFruits(int count) {
     }
 }
 
+// multiple spawns for testing, can be triggered by rhythm game reward later
+//--------------------------------------------------------------------------//
+
 f32 currentTimer = 0.0f;  // This variable is not used in the current implementation, but can be used for timing-based logic if needed
 f32 currentDelay = 1.5f;  // 5 seconds delay for testing purposes, can be adjusted or randomized as needed
+
 bool spawnMultiple = false;  // Flag to control whether to spawn multiple fruits at once
 const float targetY = -240.0f; // how high the apple should move up during collect animation
+
+//--------------------------------------------------------------------------//
+
 // Update function: Updates the position of all apples
 void UpdateSpawnFruits(float dt) {
+
     if (AEInputCheckReleased(AEVK_SPACE)) { // Simulate reward after rhythm game by pressing spacebar, can be removed later
         spawnMultiple = true;
     }
@@ -300,16 +330,18 @@ void RenderSpawnFruits() {
 
 
 // Timer-based spawning logic (update once per frame)
+//--------------------------------------------------------------------------//
 void UpdateFruitSpawner(float dt) {
     spawnTimer += dt;
-
+    
     if (spawnTimer >= spawnInterval) {
         SpawnFruit();  // Spawn fruit when timer exceeds the interval
         spawnTimer = 0.0f;  // Reset the spawn timer
-        spawnInterval = random_time(1, 5);  // Random spawn interval (between 3 and 5 seconds)
+        spawnInterval = random_time(1, 400);  // Random spawn interval (between 1 and 400 seconds / 6.67 mins)
         printf("Next fruit in %.2f seconds.\n", spawnInterval);
     }
 }
+//--------------------------------------------------------------------------//
 
 //void CheckForFruitClicks(s32 mouseX, s32 mouseY) {
 //	    
@@ -366,7 +398,7 @@ void CheckForFruitClicks(s32 mouseX, s32 mouseY) {
     if (!AEInputCheckCurr(AEVK_LBUTTON)) {  // If not clicked, exit the function
         return;
     }
-
+	bool clickOnce = false; // Flag to track if we've handled a click on an apple
     // Convert screen coordinates to world coordinates
     float worldX = (float)mouseX - 800.0f;
     float worldY = 450.0f - (float)mouseY;
@@ -393,7 +425,32 @@ void CheckForFruitClicks(s32 mouseX, s32 mouseY) {
                 anim.duration = 0.5f;
                 anim.velocityY = 300.0f;
                 printf("Apple clicked! starting collection animation at (%.2f, %.2f)\n", apple.x, apple.y);
+				clickOnce = true; // Set flag to indicate we've handled a click
             }
+        }
+
+        else if (clickOnce)
+        {
+            if (GetInventoryCount() < GetInventoryLimit()) {
+                // Add to inventory when clicked (can be moved to animation finish if you want it to add after animation instead of at start)
+                Inventory_AddFruit(1, 0);
+                printf("Added 1 apple to inventory. Total fruits: %d\n", Inventory_GetFruitStock());
+
+                //20% chance to also give an apple seed when collecting an apple, can be adjusted as needed
+                if (rand_chance(20)) {
+                    Inventory_AddSeed(1, 0);
+                }
+            }
+
+            else {
+				printf("Inventory full! Cannot add more fruits.\n");
+                int add_money = random_range(1, 5);
+                Economy_AddMoney(add_money);
+				printf("Get money $%d instead!\n", add_money);
+            }
+
+			clickOnce = false; // Reset flag after handling the click
+
         }
     }
 }
