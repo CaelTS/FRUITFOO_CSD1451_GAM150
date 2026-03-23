@@ -342,7 +342,7 @@ static void ConfirmNewGame()
     Profile_CreateSlot(slot, popupBuf);
 
     // Ensure Profile.cpp's internal array is loaded from disk
-    ProfileScreen_Load();
+    Profiles_Reload();  
 
     // Set as active slot to initialize Economy and Inventory globals
     Profile_SetActiveSlot(slot);
@@ -446,14 +446,14 @@ void StartScreen_Init()
     SS_Profiles_Load();
     hasSave = (CountProfiles() > 0);
 
-    pMeshPopup = createMesh();
+    // Only create if not already allocated
+    if (!pMeshPopup) pMeshPopup = createMesh();
 
-    ssFont = AEGfxCreateFont("Assets/liberation-mono.ttf", 24);
-    if (ssFont < 0)
-    {
-        ssFont = AEGfxCreateFont("Assets/Crayon pastel.otf", 24);
+    // Only load font if not already loaded
+    if (ssFont < 0) {
+        ssFont = AEGfxCreateFont("Assets/liberation-mono.ttf", 24);
         if (ssFont < 0)
-            OutputDebugStringA("StartScreen: WARNING - failed to load popup font.\\n");
+            ssFont = AEGfxCreateFont("Assets/Crayon pastel.otf", 24);
     }
 
     // Only load textures/meshes if not already loaded (should be in Load function)
@@ -623,7 +623,7 @@ void StartScreen_Update(float dt)
                 {
                     // Ensure Profile.cpp's internal array is loaded from disk before
                     // calling Profile_SetActiveSlot (which reads from that array).
-                    ProfileScreen_Load();
+                    Profiles_Reload();
                     Profile_SetActiveSlot(recentSlot); // sets activeSlot + syncs economy
                     isExiting = true;
                     nextState = GS_MAIN_SCREEN;
@@ -676,7 +676,7 @@ void StartScreen_Update(float dt)
     else
     {
         // Animate exit
-        exitAnimProgress += (dt * exitAnimSpeed) * 0.1f;
+        exitAnimProgress += dt * exitAnimSpeed * 0.8;
         exitAnimFadeOut -= (dt * exitAnimSpeed);
         if (exitAnimProgress >= 1.0f)
         {
@@ -915,6 +915,8 @@ void StartScreen_Unload()
     popupFullTimer = 0.0f;
     hasSave = false;
 
-    // Note: font unloading isn't included because engine API varies;
-    // add font cleanup here if your AE engine exposes a font-unload function.
+    if (ssFont >= 0) {
+        AEGfxDestroyFont(ssFont);
+        ssFont = -1;
+    }
 }

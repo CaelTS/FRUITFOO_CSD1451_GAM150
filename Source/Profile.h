@@ -93,9 +93,14 @@ int  Profile_GetCrateFruitCount(int crateIndex);
 // Creates a brand-new slot with all fields zeroed/defaulted and saves to disk.
 void Profile_CreateSlot(int slot, const char* name);
 
-// Sets the active slot, restores economy globals, and rewrites the save file.
+// Sets the active slot, restores economy globals, and writes ONE save.
 // Use this when loading a profile from any screen (e.g. Continue button).
 void Profile_SetActiveSlot(int slot);
+
+// Reload profile data from disk without loading any UI textures.
+// Use this in place of ProfileScreen_Load() when you only need fresh data
+// (e.g. the Continue button in StartScreen).
+void Profiles_Reload();
 
 
 // ---------------------------------------------------------------------------

@@ -349,6 +349,12 @@ static void Profiles_Load() {
     Profiles_Save(); // re-save to upgrade old files missing new sections
 }
 
+// Public data-only reload — call this instead of ProfileScreen_Load() when
+// you only need fresh profile data and NOT the ProfileScreen UI textures.
+void Profiles_Reload() {
+    Profiles_Load();
+}
+
 // ---------------------------------------------------------------------------
 // Play-time / session tracking
 // ---------------------------------------------------------------------------
@@ -603,16 +609,20 @@ void Profile_CreateSlot(int slot, const char* name) {
 void Profile_SetActiveSlot(int slot) {
     if (slot < 0 || slot >= MAX_PROFILES || !profiles[slot].exists) return;
     activeSlot = slot;
+
+    // Load all subsystems from the in-memory profile data (no disk I/O)
     Economy_LoadFromProfile(slot);
     Inventory_LoadFromProfile(slot);
     Farm_LoadFromProfile(slot);
     Crate_LoadFromProfile(slot);
-    Economy_SaveToProfile(slot);
-    Inventory_SaveToProfile(slot);
-    Farm_SaveToProfile(slot);
-    Crate_SaveToProfile(slot);
-}
 
+    // Flush live state back into the struct, then save ONCE
+    profiles[slot].total_money = (unsigned long long)Economy_GetTotalMoney();
+    profiles[slot].max_money = (unsigned long long)Economy_GetMaxMoney();
+    profiles[slot].money_multiplier = Economy_GetMultiplier();
+
+    Profiles_Save(); // single write
+}
 
 static const float SCREEN_WIDTH = 1600.0f;
 static const float SCREEN_HEIGHT = 900.0f;
@@ -676,21 +686,13 @@ static void DrawColoredQuad(float x, float y, float width, float height,
 
 void ProfileScreen_Load() {
     // Load Textures
-    pTexButtonLong = AEGfxTextureLoad("Assets/buttonLong_brown.png");
-    pTexButtonLongPressed = AEGfxTextureLoad("Assets/buttonLong_brown_pressed.png");
-    pTexButtonSquare = AEGfxTextureLoad("Assets/buttonSquare_brown.png");
-    pTexInputRect = AEGfxTextureLoad("Assets/input_outline_rectangle.png");
-    pTexCrossIcon = AEGfxTextureLoad("Assets/iconCross_blue.png");
-    pTexPanel = AEGfxTextureLoad("Assets/panel_brown.png");
-    pTexEditIcon = AEGfxTextureLoad("Assets/edit_white.png");
-
-    if (!pTexButtonLong) OutputDebugStringA("ERROR: Failed to load 'Assets/buttonLong_brown.png'.\n");
-    if (!pTexButtonLongPressed) OutputDebugStringA("ERROR: Failed to load 'buttonLong_brown_pressed.png'.\n");
-    if (!pTexButtonSquare) OutputDebugStringA("ERROR: Failed to load 'buttonSquare_brown.png'.\n");
-    if (!pTexInputRect) OutputDebugStringA("ERROR: Failed to load 'input_outline_rectangle.png'.\n");
-    if (!pTexCrossIcon) OutputDebugStringA("ERROR: Failed to load 'iconCross_blue.png'.\n");
-    if (!pTexPanel)     OutputDebugStringA("ERROR: Failed to load 'panel_brown.png'.\n");
-    if (!pTexEditIcon)  OutputDebugStringA("ERROR: Failed to load 'edit_white.png'.\n");
+    if (!pTexButtonLong)        pTexButtonLong = AEGfxTextureLoad("Assets/buttonLong_brown.png");
+    if (!pTexButtonLongPressed) pTexButtonLongPressed = AEGfxTextureLoad("Assets/buttonLong_brown_pressed.png");
+    if (!pTexButtonSquare)      pTexButtonSquare = AEGfxTextureLoad("Assets/buttonSquare_brown.png");
+    if (!pTexInputRect)         pTexInputRect = AEGfxTextureLoad("Assets/input_outline_rectangle.png");
+    if (!pTexCrossIcon)         pTexCrossIcon = AEGfxTextureLoad("Assets/iconCross_blue.png");
+    if (!pTexPanel)             pTexPanel = AEGfxTextureLoad("Assets/panel_brown.png");
+    if (!pTexEditIcon)          pTexEditIcon = AEGfxTextureLoad("Assets/edit_white.png");
 
     // Load saved profile data (overwrites the hardcoded defaults if a save exists)
     Profiles_Load();
