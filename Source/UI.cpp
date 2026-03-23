@@ -421,20 +421,23 @@ void UI_UpdateButtons()
         {
             hoveredPlotIndex = static_cast<int>(i);
 
+            // ❗ NEW: BLOCK LOCKED PLOTS
+            if (Farm_IsPlotLocked(static_cast<int>(i)))
+                break;
+
             if (AEInputCheckTriggered(AEVK_LBUTTON))
             {
-                // Toggle panel if clicking same plot again
                 if (seedsPopupOpen && activePlotIndex == i)
                 {
                     seedsPopupOpen = false;
-                    selectedSeed = -1;      // hide info
+                    selectedSeed = -1;
                     activePlotIndex = -1;
                 }
                 else
                 {
                     seedsPopupOpen = true;
                     activePlotIndex = static_cast<int>(i);
-                    selectedSeed = SEED_APPLE;   // SHOW INFO IMMEDIATELY
+                    selectedSeed = SEED_APPLE;
                 }
             }
 
