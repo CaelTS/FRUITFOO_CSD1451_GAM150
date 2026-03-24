@@ -520,6 +520,10 @@ void StartScreen_Init()
     newGameButton.x_selected = newGameButton.x; // slide left on hover
     newGameButton.y_selected = newGameButton.y;
 
+    // Ensure Tutorial resources are ready even if StartScreen_Load was
+    // skipped (Tutorial_Load is idempotent -- safe to call more than once).
+    Tutorial_Load();
+
     // Reset animation state
     isExiting = false;
     exitAnimProgress = 0.0f;
@@ -607,7 +611,7 @@ void StartScreen_Update(float dt)
     float slideOffset = exitAnimProgress * 3000.0f;
 
     // Tutorial -- must run before other buttons; suppresses input while open
-    Tutorial_Update(slideOffset);
+    Tutorial_Update(slideOffset, hasSave);
     if (Tutorial_IsOpen()) return;
 
     // --- Input handling ---
@@ -877,7 +881,7 @@ void StartScreen_Draw()
     // Draw Exit button
 
     // Tutorial button + panel (drawn on top of everything)
-    Tutorial_Draw(slideOffset, fadeOut);
+    Tutorial_Draw(slideOffset, fadeOut, hasSave);
 }
 
 void StartScreen_Unload()

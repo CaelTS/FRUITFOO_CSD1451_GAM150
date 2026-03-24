@@ -12,6 +12,6 @@
 
 void Tutorial_Load();
 void Tutorial_Unload();
-void Tutorial_Update(float slideOffset);
-void Tutorial_Draw(float slideOffset, float fadeOut);
+void Tutorial_Update(float slideOffset, bool hasSave);
+void Tutorial_Draw(float slideOffset, float fadeOut, bool hasSave);
 bool Tutorial_IsOpen();
