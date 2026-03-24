@@ -14,19 +14,19 @@ extern AEGfxVertexList* g_pMeshFullScreen;
 // FARM DATA STRUCTURE
 // ------------------------------------------------------------
 
-struct FarmPlot
-{
-    bool isUnlocked = false;
+//struct FarmPlot
+//{
+  //  bool isUnlocked = false;
 
-    bool isPlanted = false;
-    bool isReady = false;
-    float growTimer = 0.0f;
-    int seedType = -1;
+  //  bool isPlanted = false;
+   // bool isReady = false;
+   // float growTimer = 0.0f;
+   // int seedType = -1;
 
-    bool rhythmTriggered = false;
-    bool waitingForRhythm = false;
-    bool growthFrozen = false;  // NEW: permanently freeze growth when X is clicked
-};
+ //   bool rhythmTriggered = false;
+  //  bool waitingForRhythm = false;
+  //  bool growthFrozen = false;  // NEW: permanently freeze growth when X is clicked
+//};
 
 static bool g_rhythmUsed = false;
 static bool g_requestRhythm = false;
@@ -44,7 +44,7 @@ static int  g_harvestPopupPlotIndex = -1;  // which plot is waiting for destinat
 static bool g_harvestPopupOpen = false;
 
 
-static std::vector<FarmPlot> farmPlots;
+std::vector<FarmPlot> farmPlots;
 static AEGfxTexture* plantedTexture = nullptr;
 static AEGfxTexture* deleteIcon = nullptr;
 static AEGfxTexture* fruitStage25 = nullptr;
@@ -201,30 +201,28 @@ bool Farm_IsPlotLocked(int index)
 
 void Farm_Update()
 {
-    if (!UI_IsMenuOpen())
-        return;
-
     float dt = (float)AEFrameRateControllerGetFrameTime();
 
+    // Always update flying fruits
     FlyingFruit_Update(dt);
 
+    // Mouse
     s32 mouseX, mouseY;
     AEInputGetCursorPosition(&mouseX, &mouseY);
 
     float worldX = (float)mouseX - 800.0f;
     float worldY = 450.0f - (float)mouseY;
 
+    // Only restrict INPUT, not logic
+    bool allowInput = UI_IsMenuOpen();
+
     // ---------------------------------------------------------------
-    // Harvest destination popup: handle button clicks first so the
-    // SPACE check below cannot open a second popup the same frame.
+    // HARVEST POPUP (FULL ORIGINAL LOGIC RESTORED)
     // ---------------------------------------------------------------
     if (g_harvestPopupOpen && g_harvestPopupPlotIndex >= 0)
     {
-        if (AEInputCheckTriggered(AEVK_LBUTTON))
+        if (allowInput && AEInputCheckTriggered(AEVK_LBUTTON))
         {
-            // Button layout (world-space, centered on screen like other prompts):
-            //   [Inventory]  left  button  centered at (-80, -40)  130 x 45
-            //   [Crate]      right button  centered at ( 80, -40)  130 x 45
             const float btnW = 130.0f, btnH = 45.0f;
             const float invBtnX = -80.0f, btnY = -40.0f;
             const float crateBtnX = 80.0f;
@@ -241,9 +239,8 @@ void Farm_Update()
             {
                 int idx = g_harvestPopupPlotIndex;
                 FarmPlot& plot = farmPlots[idx];
-                int harvestedType = plot.seedType; // 0=apple 1=pear 2=banana
+                int harvestedType = plot.seedType;
 
-                // Clear plot state
                 plot.isPlanted = false;
                 plot.isReady = false;
                 plot.seedType = -1;
@@ -251,6 +248,7 @@ void Farm_Update()
                 plot.rhythmTriggered = false;
                 plot.waitingForRhythm = false;
                 plot.growthFrozen = false;
+
                 Profile_SetPlotData(idx, false, false, 0.0f, -1);
 
                 if (harvestedType >= 0)
@@ -260,18 +258,12 @@ void Farm_Update()
 
                     if (clickedInventory)
                     {
-                        Inventory_AddFruit(1, static_cast<u8>(harvestedType));
-                        std::cout << "Harvested plot " << idx
-                            << " -> Inventory (type " << harvestedType << ")\n";
-                        // Fly toward the left UI panel (inventory side)
+                        Inventory_AddFruit(1, (u8)harvestedType);
                         FlyingFruit_Spawn(plotX, plotY, -600.0f, 100.0f, harvestedType);
                     }
-                    else // clickedCrate
+                    else
                     {
                         Crate_AddFruitTyped(harvestedType, 1);
-                        std::cout << "Harvested plot " << idx
-                            << " -> Crate (type " << harvestedType << ")\n";
-                        // Fly toward the matching crate slot on the stall
                         float crateX = UI_GetCrateSlotX(harvestedType);
                         float crateY = UI_GetCrateSlotY(harvestedType);
                         FlyingFruit_Spawn(plotX, plotY, crateX, crateY, harvestedType);
@@ -280,31 +272,33 @@ void Farm_Update()
 
                 g_harvestPopupOpen = false;
                 g_harvestPopupPlotIndex = -1;
-                g_rhythmPlotIndex = -1;          // prevent rhythm prompt re-appearing after harvest
+                g_rhythmPlotIndex = -1;
                 return;
             }
         }
 
-        // Popup is open � swallow SPACE so it cannot re-trigger
         return;
     }
 
-    // Harvest � SPACE opens the destination popup for the first ready plot
-    if (AEInputCheckTriggered(AEVK_SPACE))
+    // ---------------------------------------------------------------
+    // HARVEST KEY
+    // ---------------------------------------------------------------
+    if (allowInput && AEInputCheckTriggered(AEVK_SPACE))
     {
         for (int i = 0; i < (int)farmPlots.size(); i++)
         {
-            auto& plot = farmPlots[i];
-            if (plot.isReady)
+            if (farmPlots[i].isReady)
             {
                 g_harvestPopupPlotIndex = i;
                 g_harvestPopupOpen = true;
-                std::cout << "Harvest popup opened for plot " << i << "\n";
-                break; // one popup at a time
+                break;
             }
         }
     }
 
+    // ---------------------------------------------------------------
+    // MAIN FARM LOOP (FIXED)
+    // ---------------------------------------------------------------
     for (int i = 0; i < (int)farmPlots.size(); i++)
     {
         FarmPlot& plot = farmPlots[i];
@@ -312,138 +306,94 @@ void Farm_Update()
         if (!plot.isPlanted)
             continue;
 
-        // ----------------------------------------------------------------
-        // FROZEN STATE: growth permanently stopped by clicking X on rhythm prompt
-        // But we still show the rhythm prompt and allow re-launching
-        // ----------------------------------------------------------------
+        // Frozen
         if (plot.growthFrozen)
         {
-            // Check for click on tick to re-launch rhythm game
-            if (AEInputCheckTriggered(AEVK_LBUTTON))
+            if (allowInput && AEInputCheckTriggered(AEVK_LBUTTON))
             {
                 float iconSize = 50.0f;
                 float tickX = -70.0f, tickY = -40.0f;
 
-                // Tick => re-launch rhythm game (unfreeze and play)
                 if (worldX >= tickX - iconSize / 2 && worldX <= tickX + iconSize / 2 &&
                     worldY >= tickY - iconSize / 2 && worldY <= tickY + iconSize / 2)
                 {
-                    plot.growthFrozen = false;  // Unfreeze
+                    plot.growthFrozen = false;
                     plot.rhythmTriggered = false;
                     plot.waitingForRhythm = true;
                     g_rhythmPlotIndex = i;
                     g_requestRhythm = true;
-
-                    std::cout << "Frozen plot " << i << ": re-launching rhythm\n";
                     return;
                 }
             }
-
-            // Growth is frozen but prompt stays visible - skip growth logic
             continue;
         }
 
-        // ----------------------------------------------------------------
-        // PAUSED STATE: player ESC'd from rhythm game OR clicked X.
-        // Growth is frozen until they click tick (re-launch) or cross (skip/freeze).
-        // ----------------------------------------------------------------
+        // Paused
         if (g_rhythmPaused && g_rhythmPausedPlotIndex == i)
         {
-            if (AEInputCheckTriggered(AEVK_LBUTTON))
+            if (allowInput && AEInputCheckTriggered(AEVK_LBUTTON))
             {
                 float iconSize = 50.0f;
                 float tickX = -70.0f, tickY = -40.0f;
                 float crossX = 70.0f, crossY = -40.0f;
 
-                // Tick => re-launch rhythm game
                 if (worldX >= tickX - iconSize / 2 && worldX <= tickX + iconSize / 2 &&
                     worldY >= tickY - iconSize / 2 && worldY <= tickY + iconSize / 2)
                 {
                     g_rhythmPaused = false;
                     g_rhythmPausedPlotIndex = -1;
-                    plot.rhythmTriggered = false;
                     plot.waitingForRhythm = true;
                     g_rhythmPlotIndex = i;
                     g_requestRhythm = true;
-
-                    std::cout << "Paused Tick: re-launching rhythm\n";
                     return;
                 }
 
-                // Cross => PERMANENTLY freeze growth at current level
                 if (worldX >= crossX - iconSize / 2 && worldX <= crossX + iconSize / 2 &&
                     worldY >= crossY - iconSize / 2 && worldY <= crossY + iconSize / 2)
                 {
                     g_rhythmPaused = false;
                     g_rhythmPausedPlotIndex = -1;
-
-                    // Mark as frozen - growth stops permanently
                     plot.growthFrozen = true;
                     plot.rhythmTriggered = true;
-                    plot.waitingForRhythm = false;
-
-                    std::cout << "Paused Cross: growth FROZEN permanently at "
-                        << (plot.growTimer / GROW_TIME * 100.0f) << "%\n";
                     return;
                 }
             }
-
-            continue;   // growth frozen while prompt is visible
+            continue;
         }
 
-        // ----------------------------------------------------------------
-        // FIRST-TIME RHYTHM PROMPT: reached 50%, asking player to play.
-        // ----------------------------------------------------------------
+        // Waiting
         if (plot.waitingForRhythm)
         {
-            if (AEInputCheckTriggered(AEVK_LBUTTON))
+            if (allowInput && AEInputCheckTriggered(AEVK_LBUTTON))
             {
                 float iconSize = 50.0f;
                 float tickX = -70.0f, tickY = -40.0f;
                 float crossX = 70.0f, crossY = -40.0f;
 
-                // Tick => launch rhythm game
                 if (worldX >= tickX - iconSize / 2 && worldX <= tickX + iconSize / 2 &&
                     worldY >= tickY - iconSize / 2 && worldY <= tickY + iconSize / 2)
                 {
                     plot.waitingForRhythm = false;
                     g_requestRhythm = true;
                     g_rhythmPlotIndex = i;
-
-                    std::cout << "Tick clicked\n";
                     return;
                 }
 
-                // Cross => continues growing but lesser rewards
                 if (worldX >= crossX - iconSize / 2 && worldX <= crossX + iconSize / 2 &&
                     worldY >= crossY - iconSize / 2 && worldY <= crossY + iconSize / 2)
                 {
-                    //  CLEAR PAUSE STATE (THIS IS THE MISSING PART)
-                    g_rhythmPaused = false;
-                    g_rhythmPausedPlotIndex = -1;
-                    g_rhythmPlotIndex = -1;
-
-                    // RESUME GROWTH
-                    plot.growthFrozen = false;
                     plot.waitingForRhythm = false;
                     plot.rhythmTriggered = true;
-
-
-                    std::cout << "Cross clicked, growth as per usual just with less rewards\n";
                     return;
                 }
             }
-
             continue;
         }
 
-        // Pause growth if rhythm transition is pending
         if (g_requestRhythm)
             continue;
 
-        // ----------------------------------------------------------------
-        // NORMAL GROWTH (only if not frozen)
-        // ----------------------------------------------------------------
+        //  GROWTH (FIXED)
         plot.growTimer += dt;
 
         float ratio = plot.growTimer / GROW_TIME;
@@ -458,23 +408,19 @@ void Farm_Update()
         if (ratio >= 1.0f && !plot.isReady)
         {
             plot.isReady = true;
-
-            // Clear all rhythm prompt state — the plant is fully grown,
-            // the rhythm prompt is no longer relevant and must not show.
             plot.waitingForRhythm = false;
             plot.growthFrozen = false;
-            if (g_rhythmPlotIndex == i)        g_rhythmPlotIndex = -1;
-            if (g_rhythmPausedPlotIndex == i) { g_rhythmPaused = false; g_rhythmPausedPlotIndex = -1; }
+
+            if (g_rhythmPlotIndex == i)
+                g_rhythmPlotIndex = -1;
+
+            if (g_rhythmPausedPlotIndex == i)
+            {
+                g_rhythmPaused = false;
+                g_rhythmPausedPlotIndex = -1;
+            }
 
             Profile_SetPlotData(i, plot.isPlanted, plot.isReady, plot.growTimer, plot.seedType);
-            std::cout << "Plot " << i << " is ready for harvest!\n";
-        }
-
-        // Periodically save growth timer (~every 1 second)
-        static float lastSaveTimer[4] = { -1.0f, -1.0f, -1.0f, -1.0f };
-        if (plot.growTimer - lastSaveTimer[i] >= 1.0f) {
-            Profile_SetPlotData(i, plot.isPlanted, plot.isReady, plot.growTimer, plot.seedType);
-            lastSaveTimer[i] = plot.growTimer;
         }
     }
 }

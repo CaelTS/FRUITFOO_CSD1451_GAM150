@@ -2,6 +2,7 @@
 #include "Profile.h"
 #include "AEEngine.h"
 #include "Utilities.h"
+#include "Tutorial.h"
 #include "GameStateManager.h"
 #include <fstream>
 #include <cstdio>
@@ -342,7 +343,7 @@ static void ConfirmNewGame()
     Profile_CreateSlot(slot, popupBuf);
 
     // Ensure Profile.cpp's internal array is loaded from disk
-    Profiles_Reload();  
+    Profiles_Reload();
 
     // Set as active slot to initialize Economy and Inventory globals
     Profile_SetActiveSlot(slot);
@@ -438,6 +439,7 @@ void StartScreen_Load()
     // Load profile data from disk to check if saves exist
     SS_Profiles_Load();
     hasSave = (CountProfiles() > 0);
+    Tutorial_Load();
 }
 
 void StartScreen_Init()
@@ -517,6 +519,10 @@ void StartScreen_Init()
     newGameButton.y = 100.0f;
     newGameButton.x_selected = newGameButton.x; // slide left on hover
     newGameButton.y_selected = newGameButton.y;
+
+    // Ensure Tutorial resources are ready even if StartScreen_Load was
+    // skipped (Tutorial_Load is idempotent -- safe to call more than once).
+    Tutorial_Load();
 
     // Reset animation state
     isExiting = false;
@@ -601,6 +607,12 @@ void StartScreen_Update(float dt)
     if (AEInputCheckTriggered(AEVK_RSHIFT)) {
         hasSave = !hasSave; // toggle save file existence for testing
     }
+
+    float slideOffset = exitAnimProgress * 3000.0f;
+
+    // Tutorial -- must run before other buttons; suppresses input while open
+    Tutorial_Update(slideOffset, hasSave);
+    if (Tutorial_IsOpen()) return;
 
     // --- Input handling ---
     if (!isExiting)
@@ -867,10 +879,14 @@ void StartScreen_Draw()
     // Draw New Game button
     // Draw Settings/Profile button
     // Draw Exit button
+
+    // Tutorial button + panel (drawn on top of everything)
+    Tutorial_Draw(slideOffset, fadeOut, hasSave);
 }
 
 void StartScreen_Unload()
 {
+    Tutorial_Unload();
     // Free popup resources
     if (pMeshPopup) { AEGfxMeshFree(pMeshPopup); pMeshPopup = nullptr; }
     if (pTexInputRect) { AEGfxTextureUnload(pTexInputRect); pTexInputRect = nullptr; }
