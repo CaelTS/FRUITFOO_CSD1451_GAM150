@@ -480,7 +480,7 @@ void StartScreen_Init()
     if (!exitButton.normal) exitButton.normal = AEGfxTextureLoad("Assets/StartScreen_Exit.png");
     if (!exitButton.hover) exitButton.hover = AEGfxTextureLoad("Assets/StartScreen_Exit_Selected.png");
     exitButton.x = logoPosX - 102.0f;
-    exitButton.y = 45.0f;
+    exitButton.y = -55.0f;
     exitButton.x_selected = exitButton.x; // slide left on hover
     exitButton.y_selected = exitButton.y;
     exitButton.x_save = exitButton.x; // no slide when save exists
@@ -492,7 +492,7 @@ void StartScreen_Init()
     if (!continueButton.normal) continueButton.normal = AEGfxTextureLoad("Assets/StartScreen_Continue.png");
     if (!continueButton.hover) continueButton.hover = AEGfxTextureLoad("Assets/StartScreen_Continue_Selected.png");
     continueButton.x = logoPosX - 50.0f;
-    continueButton.y = 100.0f;
+    continueButton.y = 0.0f;
     continueButton.x_selected = continueButton.x; // slide left on hover
     continueButton.y_selected = continueButton.y;
     continueButton.x_save = continueButton.x; // no slide when save exists
@@ -504,7 +504,7 @@ void StartScreen_Init()
     if (!profileButton.normal) profileButton.normal = AEGfxTextureLoad("Assets/StartScreen_Profile.png");
     if (!profileButton.hover) profileButton.hover = AEGfxTextureLoad("Assets/StartScreen_Profile_Selected.png");
     profileButton.x = logoPosX - 72.0f;
-    profileButton.y = 45.0f;
+    profileButton.y = -55.0f;
     profileButton.x_selected = profileButton.x; // slide left on hover
     profileButton.y_selected = profileButton.y;
     profileButton.x_save = profileButton.x; // no slide when save exists    
@@ -516,7 +516,7 @@ void StartScreen_Init()
     if (!newGameButton.normal) newGameButton.normal = AEGfxTextureLoad("Assets/StartScreen_NewGameButton.png");
     if (!newGameButton.hover) newGameButton.hover = AEGfxTextureLoad("Assets/StartScreen_NewGameButton_Selected.png");
     newGameButton.x = logoPosX - 32.0f;
-    newGameButton.y = 100.0f;
+    newGameButton.y = 0.0f;
     newGameButton.x_selected = newGameButton.x; // slide left on hover
     newGameButton.y_selected = newGameButton.y;
 
