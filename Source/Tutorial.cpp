@@ -269,9 +269,9 @@ void Tutorial_Load()
     // Has-save: align with continueButton (x = logoPosX - 50 = -570, y = 155)
     static const float logoPosX = -520.0f;
     g_btnX_nosave = logoPosX - 32.0f;   // = -552  (above New Game)
-    g_btnY_nosave = 55.0f;
-    g_btnX_save = logoPosX - 50.0f;   // = -570  (above Continue)
-    g_btnY_save = 55.0f;
+    g_btnY_nosave = 55.0f;   // above newGameButton.y (0) with 55-unit gap
+    g_btnX_save = logoPosX - 50.0f;     // = -570  (above Continue)
+    g_btnY_save = 55.0f;    // above continueButton.y (0) with 55-unit gap
 
     g_tutOpen = false;
     g_page = 0;
@@ -422,10 +422,14 @@ void Tutorial_Draw(float slideOffset, float fadeOut, bool hasSave)
         // Title (centred by approximate char-width formula)
         float titleScale = 1.15f;
         int   titleLen = static_cast<int>(strlen(pg.title));
-        float titleX = -(titleLen * 10.0f * titleScale) / (2.0f * 800.0f);
+        float titleX = -(titleLen * 12.5f * titleScale) / (2.0f * 800.0f);
         float titleY = 0.32f;
         AEGfxPrint(fnt, pg.title, titleX, titleY, titleScale,
             1.0f, 0.88f, 0.35f, 1.0f);
+
+        // Horizontal rule
+        AEGfxPrint(fnt, "- - - - - - - - - - - - - - -",
+            -0.22f, 0.22f, 0.7f, 1.0f, 0.88f, 0.35f, 0.6f);
 
         // Body lines
         float bodyScale = 0.78f;
