@@ -87,98 +87,98 @@ struct TutPage
 static const TutPage PAGES[] =
 {
     {
-        "Welcome!",
+        "~ Welcome to Fruit Stall! ~",
         {
-            "Welcome to Fruit Stall!",
-            "Run your own market stall,",
-            "grow fruit on your farm, and",
-            "sell to earn coins.",
-            "Use the arrows to navigate.",
+            "Grow fruit, run a market stall,",
+            "and earn coins to build your",
+            "farming empire!",
+            "",
+            "Use arrows or LEFT / RIGHT keys",
+            "to flip through this guide."
+        },
+        6
+    },
+    {
+        "Controls",
+        {
+            "[ M ]  Open / close the side menu",
+            "[ ESC ]  Pause & main menu",
+            "",
+            "[ SPACE ]  Harvest ready crops",
+            "[ LMB ]  Click to interact",
             ""
         },
         5
     },
     {
-        "Movement & Controls",
-        {
-            "Press  M  to open / close the",
-            "side menu at any time.",
-            "",
-            "Press  ESC  to pause the game",
-            "and access the main menu.",
-            ""
-        },
-        4
-    },
-    {
         "The Farm - Planting",
         {
-            "Open the menu and click a",
-            "plot slot to plant a seed.",
+            "Open the menu and select a",
+            "plot to plant your seed.",
             "",
-            "Plot 1 is unlocked by default.",
-            "Purchase upgrades to unlock",
-            "more plots."
+            "* Plot 1 is unlocked by default",
+            "* Buy upgrades to unlock more",
+            "* Different seeds, different yields"
         },
         6
     },
     {
         "The Farm - Growing",
         {
-            "Seeds grow over time.",
-            "Watch the growth indicator",
-            "on each plot.",
+            "Seeds grow automatically over",
+            "time - watch the plot indicator.",
             "",
-            "At 50% growth a Rhythm game",
-            "mini-event will trigger!"
+            "* At 50% growth a Rhythm event",
+            "  triggers - don't miss it!",
+            ""
         },
-        6
+        5
     },
     {
         "Rhythm Mini-Game",
         {
-            "Hit notes in time to boost",
-            "your crop's growth.",
+            "Hit notes in time with the beat",
+            "to boost your crop's growth!",
             "",
-            "Great performance = bonus",
-            "fruit at harvest time.",
-            "Poor = growth penalty."
+            "* Great score  =  bonus fruit",
+            "* Poor score   =  growth penalty",
+            "* Practice makes perfect!"
         },
         6
     },
     {
         "Harvesting & Selling",
         {
-            "When a plot glows it is ready.",
-            "Press  SPACE  to harvest all",
-            "ready crops into your inventory.",
+            "A glowing plot means it's ready!",
+            "Press SPACE to harvest all crops",
+            "into your inventory at once.",
             "",
-            "Drag fruit into your crates",
-            "to put them up for sale!"
+            "Drag fruit into crates to put",
+            "them up for sale at your stall."
         },
         6
     },
     {
         "Upgrades",
         {
-            "Open the menu and visit the",
-            "Upgrades section.",
+            "Visit the Upgrades section in",
+            "the side menu to improve your",
+            "stall and farm.",
             "",
-            "Buy Speed Boost, Crate Storage,",
-            "Faster Growth, and more to",
-            "improve your stall!"
+            "Try: Speed Boost, Crate Storage,",
+            "Faster Growth & more!"
         },
         6
     },
     {
-        "Tips",
+        "Top Tips",
         {
-            "Keep all plots planted for",
-            "maximum coin income.",
+            "* Keep ALL plots planted always",
+            "* Never let your crates go empty",
+            "* Nail the rhythm game every time",
+            "* Spend coins on upgrades early",
             "",
-            "Check your inventory regularly",
-            "and never let crates run empty.",
-            "Good luck!"
+            "Now go grow that stall!  :)"
         },
         6
     }
@@ -420,39 +420,35 @@ void Tutorial_Draw(float slideOffset, float fadeOut, bool hasSave)
         const TutPage& pg = PAGES[g_page];
 
         // Title (centred by approximate char-width formula)
-        float titleScale = 1.0f;
+        float titleScale = 1.15f;
         int   titleLen = static_cast<int>(strlen(pg.title));
-        float titleX = -(titleLen * 14.0f * titleScale) / (2.0f * 800.0f);
-        float titleY = 0.30f;
+        float titleX = -(titleLen * 10.0f * titleScale) / (2.0f * 800.0f);
+        float titleY = 0.32f;
         AEGfxPrint(fnt, pg.title, titleX, titleY, titleScale,
-            1.0f, 0.95f, 0.75f, 1.0f);
-
-        // Horizontal rule hint
-        AEGfxPrint(fnt, "------------------------",
-            -0.19f, 0.22f, 0.7f, 0.6f, 0.55f, 0.40f, 1.0f);
+            1.0f, 0.88f, 0.35f, 1.0f);
 
         // Body lines
-        float bodyScale = 0.75f;
-        float lineY = 0.15f;
-        float lineStep = 0.09f;
+        float bodyScale = 0.78f;
+        float lineY = 0.13f;
+        float lineStep = 0.083f;
         for (int i = 0; i < pg.lineCount; i++)
         {
             if (pg.lines[i][0] == '\0') { lineY -= lineStep * 0.5f; continue; }
             int   len = static_cast<int>(strlen(pg.lines[i]));
-            float lx = -(len * 11.0f * bodyScale) / (2.0f * 800.0f);
+            float lx = -(len * 10.0f * bodyScale) / (2.0f * 800.0f);
             AEGfxPrint(fnt, pg.lines[i], lx, lineY, bodyScale,
-                0.15f, 0.10f, 0.05f, 1.0f);
+                0.95f, 0.92f, 0.82f, 1.0f);
             lineY -= lineStep;
         }
 
         // Page number e.g. "3 / 8"
         char pageStr[16];
         sprintf_s(pageStr, sizeof(pageStr), "%d / %d", g_page + 1, PAGE_COUNT);
-        AEGfxPrint(fnt, pageStr, -0.03f, -0.38f, 0.65f, 0.5f, 0.45f, 0.35f, 1.0f);
+        AEGfxPrint(fnt, pageStr, -0.03f, -0.36f, 0.70f, 1.0f, 0.88f, 0.35f, 0.8f);
 
         // ESC hint
-        AEGfxPrint(fnt, "ESC or click outside to close",
-            -0.22f, -0.44f, 0.5f, 0.55f, 0.50f, 0.40f, 1.0f);
+        AEGfxPrint(fnt, "[ ESC ] or click outside to close",
+            -0.25f, -0.43f, 0.50f, 0.85f, 0.82f, 0.72f, 0.75f);
     }
 
     // 4. Left arrow
