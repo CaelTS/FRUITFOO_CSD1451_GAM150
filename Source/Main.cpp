@@ -22,6 +22,7 @@
 #include "Crate.h"   // <-- ADDED: needed for Crate_GetFruitCount / Crate_IsUnlocked
 #include "Inventory.h"
 #include "HelperCreatures.h"
+#include "Upgrades.h"
 
 // ---------------------------------------------------------------------------
 // Game State Variables
@@ -211,6 +212,8 @@ void MainScreen_Initialize()
 
 	Economy_Init();
 	SpawnFruit_Init();
+	Upgrades_Init();
+
 	UI_Init();
 	Helper_Init();
 

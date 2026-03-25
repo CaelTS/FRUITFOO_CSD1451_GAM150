@@ -10,6 +10,9 @@
 #include "Profile.h"
 #include "Inventory.h"
 #include "Crate.h"
+#include "Main.h"
+#include "UI.h"
+#include <algorithm> // for std::min
 
 
 
@@ -37,6 +40,9 @@ bool timer_reset = true;
 //placeholder for base price
 //extern u8 base_price_apple = 0;
 u8 base_price_apple = 10;
+
+extern u8 base_price_apple = 5;
+
 
 //Helper functions
 f32 random_time(f32 min, f32 max) {
@@ -80,6 +86,35 @@ void static sell_fruit()
 	printf("+%llu GOLD!\n", total_price);
 }
 
+// Sell from a specific crate index (crateIndex) for a given fruit type.
+// Removes stock from the crate and credits money.
+static void sell_fruit(int crateIndex, int fruitType) {
+	if (crateIndex < 0) return;
+
+	int stock = Crate_GetFruitCount(crateIndex);
+	if (stock <= 0) return;
+
+	// determine sale amount: 1..3 but no more than available stock
+	u8 sale_amount = min(stock, random_range(1, 3));
+
+	// try to remove from crate first
+	bool removed = Crate_RemoveFruitAmount(crateIndex, sale_amount);
+	if (!removed) {
+		// removal failed (race or insufficient), bail
+		return;
+	}
+
+	// determine sale price
+	// NOTE: currently using base_price_apple as generic price. Replace with a lookup per fruitType later.
+	u64 total_price = static_cast<u64>(sale_amount) * static_cast<u64>(base_price_apple);
+
+	// add money to total
+	Economy_AddMoney(static_cast<int>(total_price));
+	// If you also keep Inventory in sync with crates, update Inventory here if needed.
+	// Inventory_RemoveFruit(sale_amount); // no longer used for crate-based sales
+
+}
+
 // lifecycle
 void Economy_Init() {
 	//initialize random seed
@@ -96,33 +131,61 @@ void Economy_Init() {
 	f32 second_sale_time = range_pair.second;
 
 	next_sale_time = random_time(first_sale_time, second_sale_time);
+	
+	printf("base price apple: %d\n", base_price_apple);
 
 
 }
 void Economy_Update(float dt) {
 	timer += dt;
 
-	if (timer >= next_sale_time && total_money <= max_money) {
-		int crateStock = Crate_GetFruitCount(0);
-		bool in_stock = (crateStock > 0);
+	if (!(timer >= next_sale_time) || total_money >= max_money)
+		return;
 
-		if (in_stock) {
-			sell_fruit();
-			printf("Sale! Money: %llu | Stock: %d\n", total_money, Inventory_GetFruitStock());
-		}
-		else {
-			printf("No stock to sell!\n");
-		}
+	// Trigger sale window only when timer passes and we haven't hit max money
+	if (timer >= next_sale_time && total_money < max_money) {
+		const auto& baskets = GetFruitBaskets();
+		bool anySale = false;
 
-		timer = 0.0f;
-		std::pair<float, float> range_pair = random_range_pair(10.0f, 20.0f, 5.0f, 40.0f);
-		next_sale_time = random_time(range_pair.first, range_pair.second);
-		printf("Next sale in %.2f seconds.\n", next_sale_time);
+
+		for (const auto& b : baskets) {
+			// check stock (b.stock is assumed to be the crate/stock id)
+			bool in_stock = Crate_GetFruitCount(b.stock) > 0;        // <<--------------------------- Assuming b.stock corresponds to crate index; adjust if needed
+
+			if (in_stock) {
+				// sell from this crate/basket
+				sell_fruit(b.stock, b.fruitType);
+				anySale = true;
+
+				// Log using the stock id to report remaining stock
+				printf("Sale! Money: %llu | Stock remaining (id %d): %d\n",
+					total_money, b.stock, Crate_GetFruitCount(b.stock));
+
+				// If we've reached max, clamp and break out
+				if (total_money >= max_money) {
+					total_money = max_money;
+					break;
+				}
+			}
+			else {
+				// Optional: keep minimal logging
+				//printf("No stock to sell for stock id %d\n", b.stock);
+			}
+
+			// Schedule next sale once per window (not per-basket)
+			if (anySale) {
+				timer = 0.0f;
+				auto range_pair = random_range_pair(10.0f, 20.0f, 5.0f, 40.0f);
+				next_sale_time = random_time(range_pair.first, range_pair.second);
+				printf("Next sale in %.2f seconds.\n", next_sale_time);
+			}
+			else {
+				// If no stock anywhere, try again sooner (or pick whatever policy you want)
+				timer = 0.0f;
+				next_sale_time = 1.0f; // try again after 1 second
+			}
+		}
 	}
-
-	/*if (total_money >= max_money) {
-		total_money = max_money;
-	}*/
 }
 
 //void Economy_Exit();

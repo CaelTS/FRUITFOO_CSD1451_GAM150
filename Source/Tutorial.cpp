@@ -269,9 +269,9 @@ void Tutorial_Load()
     // Has-save: align with continueButton (x = logoPosX - 50 = -570, y = 155)
     static const float logoPosX = -520.0f;
     g_btnX_nosave = logoPosX - 32.0f;   // = -552  (above New Game)
-    g_btnY_nosave = 55.0f;
+    g_btnY_nosave = 155.0f;
     g_btnX_save = logoPosX - 50.0f;   // = -570  (above Continue)
-    g_btnY_save = 55.0f;
+    g_btnY_save = 155.0f;
 
     g_tutOpen = false;
     g_page = 0;

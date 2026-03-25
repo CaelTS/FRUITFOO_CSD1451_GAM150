@@ -11,6 +11,8 @@
 #include <cmath>
 #include "Inventory.h"
 #include "Crate.h"
+#include "Upgrades.h"
+#include "Main.h"
 
 
 extern AEGfxVertexList* g_pMeshFullScreen;
@@ -92,11 +94,19 @@ static bool gCrateCfgInitialized = false;
 // ------------------------
 // Upgrades
 // ------------------------
-struct Upgrade { std::string name; int cost; bool purchased; };
-static std::vector<Upgrade> upgrades;
+//struct Upgrade { std::string name; int cost; bool purchased; };
+//static std::vector<Upgrade> upgrades;
 static int upgradesStartIndex = 0;
-
 static const int MAX_VISIBLE_UPGRADES = 3;
+static const float UPGRADES_PANEL_W = 450.0f;
+static const float UPGRADES_PANEL_H = 280.0f;
+static const float UPGRADES_PANEL_X = -530.0f;
+static const float UPGRADES_PANEL_Y = -160.0f;
+
+float ScaleX = 1600.0f / 1920.0f;
+float ScaleY = 900.0f / 1080.0f;
+
+//static const int MAX_VISIBLE_UPGRADES = 3;
 static const float UP_BOX_X = -480.0f;   // center X of the Upgrades box
 static const float UP_BOX_Y = -180.0f;   // center Y of the Upgrades box 
 static const float UP_BOX_W = 450.0f;    // width  of the Upgrades box interior
@@ -286,8 +296,8 @@ void UI_Init()
     }
 
     // --- Upgrades ---
-    upgrades = { {"Speed Boost", 100, false}, {"Crate Storage", 150, false}, {"Faster Growth", 200, false}, {"Quality Fruits", 300, false}, {"Stall Revamp", 500, false} };
-
+    /*upgrades = { {"Speed Boost", 100, false}, {"Crate Storage", 150, false}, {"Faster Growth", 200, false}, {"Quality Fruits", 300, false}, {"Stall Revamp", 500, false} };*/
+    auto& upgrades = Upgrades_GetList();
 
 }
 
@@ -470,42 +480,88 @@ void UI_UpdateButtons()
 
     // --- Upgrades ---
 
-        const float panelX = UP_BOX_X;
-        const float panelY = UP_BOX_Y;
-        const float upgradesW = UP_BOX_W;
+        //const float panelX = UP_BOX_X;
+        //const float panelY = UP_BOX_Y;
+        //const float upgradesW = UP_BOX_W;
 
-        const float startYUp = panelY + UP_LIST_TOP_OFFSET;
-        const float spacingUp = UP_ROW_SPACING;
-        const float boxW = upgradesW - (2.0f * UP_ROW_W_MARGIN);
-        const float boxH = UP_ROW_H;
+        //const float startYUp = panelY + UP_LIST_TOP_OFFSET;
+        //const float spacingUp = UP_ROW_SPACING;
+        //const float boxW = upgradesW - (2.0f * UP_ROW_W_MARGIN);
+        //const float boxH = UP_ROW_H;
+
+        //int shownUp = 0;
+
+        //for (size_t i = upgradesStartIndex; i < upgrades.size() && shownUp < MAX_VISIBLE_UPGRADES; ++i)
+        //{
+        //    auto& u = upgrades[(int)i];
+        //    if (u.purchased) continue;
+
+        //    const float rowCenterY = startYUp - shownUp * spacingUp;
+
+        //    // Same rect as draw()
+        //    const float rowW = boxW;
+        //    const float rowH = boxH;
+        //    const float hoverW = rowW - (UP_HOVER_INSET_L + UP_HOVER_INSET_R);
+        //    const float hoverH = rowH - 2.0f * UP_HOVER_INSET_TB;
+        //    const float hoverX = panelX + 0.5f * (UP_HOVER_INSET_L - UP_HOVER_INSET_R) + UP_HOVER_X_OFFSET;
+
+        //    const float hoverY = rowCenterY + UP_HOVER_Y_NUDGE;
+
+        //    const bool over =
+        //        worldX >= hoverX - hoverW * 0.5f && worldX <= hoverX + hoverW * 0.5f &&
+        //        worldY >= hoverY - hoverH * 0.5f && worldY <= hoverY + hoverH * 0.5f;
+
+        //    if (over && AEInputCheckTriggered(AEVK_LBUTTON))
+        //    {
+        //        u.purchased = true;
+        //        break;
+        //    }
+        //    ++shownUp;
+        //}
+        float upgradesPanelW = UPGRADES_PANEL_W;
+
+        float panelX = UPGRADES_PANEL_X;
+        float panelY = UPGRADES_PANEL_Y;
+
+        float spacingUp = 70.0f;
+        float startYUp = panelY + 60.0f;
+
+        auto& upgrades = Upgrades_GetList();
 
         int shownUp = 0;
-
         for (size_t i = upgradesStartIndex; i < upgrades.size() && shownUp < MAX_VISIBLE_UPGRADES; ++i)
         {
-            auto& u = upgrades[(int)i];
-            if (u.purchased) continue;
+            /*auto& u = upgrades[static_cast<int>(i)];*/
+            auto& u = upgrades[i];
+            if (u.purchased) continue;  // skip purchased upgrades
 
-            const float rowCenterY = startYUp - shownUp * spacingUp;
+            float y = startYUp - shownUp * spacingUp;
 
-            // Same rect as draw()
-            const float rowW = boxW;
-            const float rowH = boxH;
-            const float hoverW = rowW - (UP_HOVER_INSET_L + UP_HOVER_INSET_R);
-            const float hoverH = rowH - 2.0f * UP_HOVER_INSET_TB;
-            const float hoverX = panelX + 0.5f * (UP_HOVER_INSET_L - UP_HOVER_INSET_R) + UP_HOVER_X_OFFSET;
+            float boxW = upgradesPanelW - 40.0f;
+            float boxH = 50.0f;
 
-            const float hoverY = rowCenterY + UP_HOVER_Y_NUDGE;
-
-            const bool over =
-                worldX >= hoverX - hoverW * 0.5f && worldX <= hoverX + hoverW * 0.5f &&
-                worldY >= hoverY - hoverH * 0.5f && worldY <= hoverY + hoverH * 0.5f;
+            bool over =
+                worldX >= panelX - boxW * 0.5f &&
+                worldX <= panelX + boxW * 0.5f &&
+                worldY >= y - boxH * 0.5f &&
+                worldY <= y + boxH * 0.5f;
 
             if (over && AEInputCheckTriggered(AEVK_LBUTTON))
             {
-                u.purchased = true;
+                // Check affordability using current money from Economy
+                if (Upgrades_CanPurchase(u, Economy_GetTotalMoney()))
+                {
+                    Upgrades_Purchase(u.id);
+                }
+                else
+                {
+                    // optional feedback: not enough funds (console for now)
+                    std::cout << "Cannot afford upgrade " << static_cast<int>(u.id)
+                              << " (cost=" << u.cost << ", money=" << Economy_GetTotalMoney() << ")\n";
+                }
                 break;
             }
+
             ++shownUp;
         }
 
@@ -1182,64 +1238,62 @@ void UI_Draw()
 
 
     // Draw upgrades text & hover highlight
+
+    float upgradesPanelW = UPGRADES_PANEL_W;
+    float upgradesPanelH = UPGRADES_PANEL_H;
+    float upgradesPanelX = UPGRADES_PANEL_X;
+    float upgradesPanelY = UPGRADES_PANEL_Y;
+    AEMtx33Scale(&scale, upgradesPanelW, upgradesPanelH);
+    AEMtx33Trans(&trans, upgradesPanelX, upgradesPanelY);
+    AEMtx33Concat(&transform, &trans, &scale);
+    /*AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+    AEGfxSetColorToMultiply(0.2f, 0.2f, 0.2f, 1.0f);
+    AEGfxSetTransform(transform.m);
+    AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);*/
+
+    // Draw Header
+    float headerX = (upgradesPanelX - upgradesPanelW * 0.45f) / 800.0f;
+    float headerY = (upgradesPanelY + upgradesPanelH * 0.5f - 40.0f) / 450.0f;
+
+    AEGfxPrint(fontId, "Upgrades", headerX, headerY, 1.0f, 1, 1, 1, 1);
+
+    // Draw upgrades text & hover highlight
     int mx, my;
     AEInputGetCursorPosition(&mx, &my);
 
     float worldX = static_cast<float>(mx) - 800.0f;
     float worldY = 450.0f - static_cast<float>(my);
+    float upgStartY = upgradesPanelY + 60.0f;
+    float upgSpacing = 70.0f;
 
-
-
-    // --- Upgrades Text & Hover Highlight ---
     int visibleSlot = 0;
+    auto& upgradesList = Upgrades_GetList();
 
-    for (size_t i = upgradesStartIndex; i < upgrades.size() && visibleSlot < MAX_VISIBLE_UPGRADES; ++i)
+    for (size_t i = upgradesStartIndex;
+        i < upgradesList.size() && visibleSlot < MAX_VISIBLE_UPGRADES;
+        ++i)
     {
-        if (upgrades[i].purchased) continue;
+        if (upgradesList[i].purchased)
+            continue;
 
-        const float rowCenterY = startYUp - visibleSlot * spacingUp;
-
-        // Final hover rect derived from your boxW/boxH + insets/offsets
-        const float rowW = boxW;
-        const float rowH = boxH;
-        const float hoverW = rowW - (UP_HOVER_INSET_L + UP_HOVER_INSET_R);
-        const float hoverH = rowH - 2.0f * UP_HOVER_INSET_TB;
-        const float hoverX = panelX + 0.5f * (UP_HOVER_INSET_L - UP_HOVER_INSET_R)+ UP_HOVER_X_OFFSET;
-        const float hoverY = rowCenterY + UP_HOVER_Y_NUDGE;
-
-        const bool isHover =
-            worldX >= hoverX - hoverW * 0.5f && worldX <= hoverX + hoverW * 0.5f &&
-            worldY >= hoverY - hoverH * 0.5f && worldY <= hoverY + hoverH * 0.5f;
-
-        // Draw highlight (only if hovered)
-        if (isHover)
-        {
-            AEGfxSetRenderMode(AE_GFX_RM_COLOR);
-            AEGfxSetBlendMode(AE_GFX_BM_BLEND);
-            AEGfxSetColorToMultiply(0.95f, 0.85f, 0.25f, 0.55f);
-
-            AEMtx33Scale(&scale, hoverW, hoverH);
-            AEMtx33Trans(&trans, hoverX, hoverY);
-            AEMtx33Concat(&transform, &trans, &scale);
-
-            AEGfxSetTransform(transform.m);
-            AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
-
-            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
-            AEGfxSetColorToMultiply(1, 1, 1, 1);
+        if (!upgradesList[i].texture) {
+            printf("Upgrade %d missing texture!\n", static_cast<int>(i));
         }
 
 
-        // Row text 
-        char buf[128];
-        sprintf_s(buf, "%s - %d Gold", upgrades[i].name.c_str(), upgrades[i].cost);
+        float y = upgStartY - visibleSlot * upgSpacing;
 
-        const float xText = (panelX - (upgradesW * 0.5f) + UP_ROW_W_MARGIN) / 800.0f;  
-        const float yText = (rowCenterY + boxH * 0.1f) / 450.0f;
+        AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+        AEGfxTextureSet(upgradesList[i].texture, 0, 0);
 
-        AEGfxPrint(fontId, buf, xText, yText, 0.8f, 0, 0, 0, 1);
+        AEMtx33Scale(&scale, 369 * ScaleX, 70 * ScaleY);
+        AEMtx33Trans(&trans, upgradesPanelX, y);
+        AEMtx33Concat(&transform, &trans, &scale);
 
-        ++visibleSlot;
+        AEGfxSetTransform(transform.m);
+        AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+        visibleSlot++;
     }
     
     // --- Seeds Panel ---
@@ -1364,7 +1418,6 @@ bool UI_IsMenuOpen()
 {
     return menuOpen;
 }
-
 
 // ============================
 // Crate hover + tints
@@ -1703,4 +1756,6 @@ void UI_Exit()
     AEGfxTextureUnload(appleSeedIcon);
     AEGfxTextureUnload(appleSeedInfo);
     AEGfxTextureUnload(plotSlotTexture);
+
+    Upgrades_Unload();
 }

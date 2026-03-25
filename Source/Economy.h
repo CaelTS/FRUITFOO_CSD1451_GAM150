@@ -13,6 +13,10 @@ bool Economy_SpendMoney(int amount);
 void Economy_SetMaxMoney(int amount);
 void Economy_SetMultiplier(float mult);
 
+//Setter for base price (currently only apple)
+void Economy_SetBasePriceApple(u8 price);
+
+
 // Getter functions (read-only)
 int Economy_GetTotalMoney();
 int Economy_GetMaxMoney();
