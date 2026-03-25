@@ -251,6 +251,7 @@ Button newGameButton;
 Button continueButton;
 Button profileButton;
 Button exitButton;
+Button tutorialButton;
 
 static bool hasSave = false; //placeholder until we implement profile system
 static f32 logoPosX = -520.0;
@@ -310,6 +311,8 @@ AEGfxVertexList* pMeshProfileButton = nullptr;
 AEGfxVertexList* pMeshProfileButton_Selected = nullptr;
 AEGfxVertexList* pMeshExitButton = nullptr;
 AEGfxVertexList* pMeshExitButton_Selected = nullptr;
+AEGfxVertexList* pMeshTutorialButton = nullptr;
+AEGfxVertexList* pMeshTutorialButton_Selected = nullptr;
 
 // ============================================================
 // Popup helpers
@@ -524,6 +527,20 @@ void StartScreen_Init()
     // skipped (Tutorial_Load is idempotent -- safe to call more than once).
     Tutorial_Load();
 
+    // Initialize "Tutorial" button
+    if (!tutorialButton.normal) tutorialButton.normal = AEGfxTextureLoad("Assets/Tutorial.png");
+    if (!tutorialButton.hover)  tutorialButton.hover = AEGfxTextureLoad("Assets/Tutorial_selected.png");
+    if (!pMeshTutorialButton)          pMeshTutorialButton = createMesh();
+    if (!pMeshTutorialButton_Selected) pMeshTutorialButton_Selected = createMesh();
+    tutorialButton.x = logoPosX - 50.0f;  // aligned with continueButton
+    tutorialButton.y = 55.0f;
+    tutorialButton.x_selected = logoPosX - 50.0f;
+    tutorialButton.y_selected = 55.0f;
+    tutorialButton.x_save = logoPosX - 50.0f;
+    tutorialButton.y_save = 55.0f;
+    tutorialButton.x_selected_save = logoPosX - 50.0f;
+    tutorialButton.y_selected_save = 55.0f;
+
     // Reset animation state
     isExiting = false;
     exitAnimProgress = 0.0f;
@@ -545,6 +562,7 @@ void StartScreen_Update(float dt)
     continueButton.hovered = false;
     profileButton.hovered = false;
     exitButton.hovered = false;
+    tutorialButton.hovered = false;
 
     // ----------------------------------------------------------
     // Popup open: intercept all keyboard input for name entry
@@ -611,7 +629,7 @@ void StartScreen_Update(float dt)
     float slideOffset = exitAnimProgress * 3000.0f;
 
     // Tutorial -- must run before other buttons; suppresses input while open
-    Tutorial_Update(slideOffset, hasSave);
+    Tutorial_Update();
     if (Tutorial_IsOpen()) return;
 
     // --- Input handling ---
@@ -677,6 +695,12 @@ void StartScreen_Update(float dt)
         {
             nextState = GS_EXIT;
         }
+
+        // Tutorial button (always visible, both layouts)
+        if (IsButtonClicked(tutorialButton, 190.0f, 41.0f))
+            Tutorial_Open();
+        if (IsButtonHovered(tutorialButton, 190.0f, 41.0f))
+            tutorialButton.hovered = true;
 
         // For now, just simulate button click with keyboard for testing
         if (AEInputCheckTriggered(AEVK_RETURN)) // press Enter to start
@@ -881,7 +905,13 @@ void StartScreen_Draw()
     // Draw Exit button
 
     // Tutorial button + panel (drawn on top of everything)
-    Tutorial_Draw(slideOffset, fadeOut, hasSave);
+    // Draw tutorial button (panel drawn by Tutorial_Draw when open)
+    if (!tutorialButton.hovered)
+        DrawButton(tutorialButton, pMeshTutorialButton, 190.0f, 41.0f, slideOffset);
+    else
+        DrawButton(tutorialButton, pMeshTutorialButton_Selected, 211.0f, 61.0f, slideOffset);
+
+    Tutorial_Draw();
 }
 
 void StartScreen_Unload()
@@ -909,6 +939,8 @@ void StartScreen_Unload()
     if (pMeshProfileButton_Selected) { AEGfxMeshFree(pMeshProfileButton_Selected); pMeshProfileButton_Selected = nullptr; }
     if (pMeshExitButton) { AEGfxMeshFree(pMeshExitButton); pMeshExitButton = nullptr; }
     if (pMeshExitButton_Selected) { AEGfxMeshFree(pMeshExitButton_Selected); pMeshExitButton_Selected = nullptr; }
+    if (pMeshTutorialButton) { AEGfxMeshFree(pMeshTutorialButton); pMeshTutorialButton = nullptr; }
+    if (pMeshTutorialButton_Selected) { AEGfxMeshFree(pMeshTutorialButton_Selected); pMeshTutorialButton_Selected = nullptr; }
 
     // Unload button textures (guard against null)
     if (newGameButton.normal) { AEGfxTextureUnload(newGameButton.normal); newGameButton.normal = nullptr; }
@@ -922,6 +954,9 @@ void StartScreen_Unload()
 
     if (exitButton.normal) { AEGfxTextureUnload(exitButton.normal); exitButton.normal = nullptr; }
     if (exitButton.hover && exitButton.hover != exitButton.normal) { AEGfxTextureUnload(exitButton.hover); exitButton.hover = nullptr; }
+
+    if (tutorialButton.normal) { AEGfxTextureUnload(tutorialButton.normal); tutorialButton.normal = nullptr; }
+    if (tutorialButton.hover && tutorialButton.hover != tutorialButton.normal) { AEGfxTextureUnload(tutorialButton.hover); tutorialButton.hover = nullptr; }
 
     // Clear any remaining state
     popupOpen = false;

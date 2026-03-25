@@ -8,10 +8,12 @@
 //   Tutorial_Unload()  once in StartScreen_Unload
 //   Tutorial_Update()  each frame inside StartScreen_Update
 //   Tutorial_Draw()    at the very end of StartScreen_Draw
+//
 // ---------------------------------------------------------------------------
 
 void Tutorial_Load();
 void Tutorial_Unload();
-void Tutorial_Update(float slideOffset, bool hasSave);
-void Tutorial_Draw(float slideOffset, float fadeOut, bool hasSave);
+void Tutorial_Update();
+void Tutorial_Draw();
 bool Tutorial_IsOpen();
+void Tutorial_Open();

@@ -16,8 +16,6 @@ extern AEGfxVertexList* g_pMeshFullScreen;
 // ---------------------------------------------------------------------------
 // Textures
 // ---------------------------------------------------------------------------
-static AEGfxTexture* pTexTutBtn = nullptr;  // Tutorial.png
-static AEGfxTexture* pTexTutBtnHover = nullptr;  // Tutorial_selected.png
 static AEGfxTexture* pTexPanel = nullptr;  // panel_blue.png
 static AEGfxTexture* pTexArrowLeft = nullptr;  // arrowBrown_left.png
 static AEGfxTexture* pTexArrowRight = nullptr;  // arrowBrown_right.png
@@ -28,27 +26,6 @@ static s8 tutFont = -1;
 // ---------------------------------------------------------------------------
 // Layout constants  (pixel-space, world origin = screen centre)
 // ---------------------------------------------------------------------------
-// ---- Tutorial button ----
-static const float BTN_W = 190.0f;
-static const float BTN_H = 41.0f;
-static const float BTN_HOVER_W = 211.0f;
-static const float BTN_HOVER_H = 61.0f;
-
-// FIX 2: separate positions for no-save and has-save layouts, mirroring the
-// x_save / y_save pattern used by every other button in StartScreen.cpp.
-// No-save: sits above newGameButton  (x = logoPosX-32 = -552, y = 100)
-// Has-save: sits above continueButton (x = logoPosX-50 = -570, y = 100)
-static float g_btnX_nosave = 0.0f;
-static float g_btnY_nosave = 0.0f;
-static float g_btnX_save = 0.0f;
-static float g_btnY_save = 0.0f;
-static bool  g_btnHovered = false;
-
-// Convenience: returns the active X/Y based on the hasSave state passed in
-// from StartScreen each frame (avoids extern-linking a static variable).
-static inline float ActiveBtnX(bool hs) { return hs ? g_btnX_save : g_btnX_nosave; }
-static inline float ActiveBtnY(bool hs) { return hs ? g_btnY_save : g_btnY_nosave; }
-
 // ---- Tutorial panel ----
 static const float PANEL_W = 900.0f;
 static const float PANEL_H = 580.0f;
@@ -246,8 +223,6 @@ void Tutorial_Load()
     // Guard every pointer so this function is safe to call from both
     // StartScreen_Load AND StartScreen_Init (matching the pattern used
     // for all other button resources in StartScreen.cpp).
-    if (!pTexTutBtn)      pTexTutBtn = AEGfxTextureLoad("Assets/Tutorial.png");
-    if (!pTexTutBtnHover) pTexTutBtnHover = AEGfxTextureLoad("Assets/Tutorial_selected.png");
     if (!pTexPanel)       pTexPanel = AEGfxTextureLoad("Assets/panel_blue.png");
     if (!pTexArrowLeft)   pTexArrowLeft = AEGfxTextureLoad("Assets/arrowBrown_left.png");
     if (!pTexArrowRight)  pTexArrowRight = AEGfxTextureLoad("Assets/arrowBrown_right.png");
@@ -263,24 +238,12 @@ void Tutorial_Load()
             tutFont = AEGfxCreateFont("Assets/liberation-mono.ttf", 20);
     }
 
-    // FIX 2: set both layout positions up front.
-    // logoPosX = -520 (mirrors StartScreen.cpp)
-    // No-save: align with newGameButton  (x = logoPosX - 32 = -552, y = 155)
-    // Has-save: align with continueButton (x = logoPosX - 50 = -570, y = 155)
-    static const float logoPosX = -520.0f;
-    g_btnX_nosave = logoPosX - 32.0f;   // = -552  (above New Game)
-    g_btnY_nosave = 55.0f;   // above newGameButton.y (0) with 55-unit gap
-    g_btnX_save = logoPosX - 50.0f;     // = -570  (above Continue)
-    g_btnY_save = 55.0f;    // above continueButton.y (0) with 55-unit gap
-
     g_tutOpen = false;
     g_page = 0;
 }
 
 void Tutorial_Unload()
 {
-    if (pTexTutBtn) { AEGfxTextureUnload(pTexTutBtn);      pTexTutBtn = nullptr; }
-    if (pTexTutBtnHover) { AEGfxTextureUnload(pTexTutBtnHover); pTexTutBtnHover = nullptr; }
     if (pTexPanel) { AEGfxTextureUnload(pTexPanel);       pTexPanel = nullptr; }
     if (pTexArrowLeft) { AEGfxTextureUnload(pTexArrowLeft);   pTexArrowLeft = nullptr; }
     if (pTexArrowRight) { AEGfxTextureUnload(pTexArrowRight);  pTexArrowRight = nullptr; }
@@ -294,33 +257,21 @@ bool Tutorial_IsOpen()
     return g_tutOpen;
 }
 
-void Tutorial_Update(float slideOffset, bool hasSave)
+void Tutorial_Open()
 {
+    g_tutOpen = true;
+    g_page = 0;
+}
+
+void Tutorial_Update()
+{
+    if (!g_tutOpen) return;
+
     // Convert mouse pixel position to world space
     int mx, my;
     AEInputGetCursorPosition(&mx, &my);
     float wx = static_cast<float>(mx) - 800.0f;
     float wy = 450.0f - static_cast<float>(my);
-
-    // ---- Tutorial button (only when panel is closed) ----
-    if (!g_tutOpen)
-    {
-        // FIX 2: use the active position for whichever layout is showing.
-        float bx = ActiveBtnX(hasSave) - slideOffset;
-        float by = ActiveBtnY(hasSave);
-        float hw = BTN_W * gScaleX * 0.5f;
-        float hh = BTN_H * gScaleY * 0.5f;
-
-        g_btnHovered = (wx >= bx - hw && wx <= bx + hw &&
-            wy >= by - hh && wy <= by + hh);
-
-        if (g_btnHovered && AEInputCheckTriggered(AEVK_LBUTTON))
-        {
-            g_tutOpen = true;
-            g_page = 0;
-        }
-        return;
-    }
 
     // ---- Panel is open: handle navigation ----
     if (AEInputCheckTriggered(AEVK_ESCAPE))
@@ -363,42 +314,9 @@ void Tutorial_Update(float slideOffset, bool hasSave)
     if (AEInputCheckTriggered(AEVK_RIGHT) && g_page < PAGE_COUNT - 1) g_page++;
 }
 
-void Tutorial_Draw(float slideOffset, float fadeOut, bool hasSave)
+void Tutorial_Draw()
 {
-    if (!pMeshQuad) return;
-
-    // ---- Tutorial button (always drawn when panel is closed) ----
-    if (!g_tutOpen)
-    {
-        // FIX 2: use the active position for whichever layout is showing.
-        float drawX = ActiveBtnX(hasSave) - slideOffset;
-        float drawY = ActiveBtnY(hasSave);
-        float drawW = g_btnHovered ? BTN_HOVER_W : BTN_W;
-        float drawH = g_btnHovered ? BTN_HOVER_H : BTN_H;
-        AEGfxTexture* btnTex = g_btnHovered ? pTexTutBtnHover : pTexTutBtn;
-
-        // FIX 3: pTexTutBtn will be non-null if assets loaded correctly
-        // (asserted in Tutorial_Load). Guard kept for safety.
-        if (btnTex)
-        {
-            AEMtx33 sc, tr, tf;
-            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
-            AEGfxSetBlendMode(AE_GFX_BM_BLEND);
-            AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
-            AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
-            AEGfxSetTransparency(fadeOut);
-            AEGfxTextureSet(btnTex, 0, 0);
-            AEMtx33Scale(&sc, drawW * gScaleX, drawH * gScaleY);
-            // Position must NOT be multiplied by gScale -- only the size
-            // (Scale matrix) gets scaled, exactly as DrawButton() does in
-            // StartScreen.cpp.
-            AEMtx33Trans(&tr, drawX, drawY);
-            AEMtx33Concat(&tf, &tr, &sc);
-            AEGfxSetTransform(tf.m);
-            AEGfxMeshDraw(pMeshQuad, AE_GFX_MDM_TRIANGLES);
-        }
-        return;
-    }
+    if (!g_tutOpen || !pMeshQuad) return;
 
     // ---- Tutorial panel ----
 
@@ -422,14 +340,10 @@ void Tutorial_Draw(float slideOffset, float fadeOut, bool hasSave)
         // Title (centred by approximate char-width formula)
         float titleScale = 1.15f;
         int   titleLen = static_cast<int>(strlen(pg.title));
-        float titleX = -(titleLen * 12.5f * titleScale) / (2.0f * 800.0f);
+        float titleX = -(titleLen * 11.0f * titleScale) / (2.0f * 800.0f);
         float titleY = 0.32f;
         AEGfxPrint(fnt, pg.title, titleX, titleY, titleScale,
             1.0f, 0.88f, 0.35f, 1.0f);
-
-        // Horizontal rule
-        AEGfxPrint(fnt, "- - - - - - - - - - - - - - -",
-            -0.22f, 0.22f, 0.7f, 1.0f, 0.88f, 0.35f, 0.6f);
 
         // Body lines
         float bodyScale = 0.78f;
@@ -439,7 +353,7 @@ void Tutorial_Draw(float slideOffset, float fadeOut, bool hasSave)
         {
             if (pg.lines[i][0] == '\0') { lineY -= lineStep * 0.5f; continue; }
             int   len = static_cast<int>(strlen(pg.lines[i]));
-            float lx = -(len * 10.0f * bodyScale) / (2.0f * 800.0f);
+            float lx = -(len * 11.0f * bodyScale) / (2.0f * 800.0f);
             AEGfxPrint(fnt, pg.lines[i], lx, lineY, bodyScale,
                 0.95f, 0.92f, 0.82f, 1.0f);
             lineY -= lineStep;
