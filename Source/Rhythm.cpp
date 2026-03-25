@@ -341,7 +341,7 @@ static void StartGameplay() {
 
     CreateRandomChart(g_songDuration);
 
-    g_currentSong = AEAudioLoadMusic("Assets/kk.wav");
+    g_currentSong = AEAudioLoadMusic("Assets/nakkentangkudasai.wav");
 }
 
 void Rhythm_Update() {
@@ -380,7 +380,7 @@ void Rhythm_Update() {
         if (g_preSongTimer >= g_audioOffset) {
             g_audioStarted = true;
             if (IsValidAudio(g_currentSong) && IsValidGroup(g_musicGroup)) {
-                AEAudioPlay(g_currentSong, g_musicGroup, 1.0f, 1.0f, 0);
+                AEAudioPlay(g_currentSong, g_musicGroup, 8.0f, 1.0f, 0);
                 printf("Audio started playing\n");
             }
         }
