@@ -39,7 +39,6 @@ bool timer_reset = true;
 
 //placeholder for base price
 //extern u8 base_price_apple = 0;
-u8 base_price_apple = 10;
 
 extern u8 base_price_apple = 5;
 
