@@ -2,7 +2,6 @@
 #include "Profile.h"
 #include <AETypes.h>
 #include <stdio.h>
-#include <algorithm>
 
 // Global inventory variables
 u8 total_fruits = 10;
@@ -17,9 +16,6 @@ u8 bananas = 0;
 u8 seed_apple = 10;
 u8 seed_pear = 0;
 u8 seed_banana = 0;
-
-// Runtime-configurable inventory capacity (default 10)
-static int g_inventoryCapacity = 10;
 
 //placeholder inventory stock function
 u8 Inventory_GetFruitStock() {
@@ -79,42 +75,7 @@ int GetInventoryCount()
 
 int GetInventoryLimit()
 {
-<<<<<<< Updated upstream
 	return 100; // or inventory_capacity if you add it
-=======
-	return g_inventoryCapacity;
-}
-
-void SetInventoryLimit(int limit)
-{
-	if (limit < 0) return; // ignore invalid values
-	g_inventoryCapacity = limit;
-
-	// If current stock exceeds new capacity, trim least-priority fruits (apples -> pears -> bananas)
-	int total = apples + pears + bananas;
-	if (total > g_inventoryCapacity)
-	{
-		int toRemove = total - g_inventoryCapacity;
-
-		int rem = std::min<int>(toRemove, static_cast<int>(apples));
-		bananas -= rem;
-		toRemove -= rem;
-
-		rem = std::min<int>(toRemove, static_cast<int>(pears));
-		pears -= rem;
-		toRemove -= rem;
-
-		rem = std::min<int>(toRemove, static_cast<int>(bananas));
-		apples -= rem;
-		toRemove -= rem;
-
-		// Update totals and persist changes
-		total_fruits = apples + pears + bananas;
-		Inventory_SaveToProfile(Profile_GetActiveSlot());
-	}
-
-	printf("Inventory capacity set to %d\n", g_inventoryCapacity);
->>>>>>> Stashed changes
 }
 
 
@@ -182,26 +143,6 @@ void Inventory_AddFruit(u8 amount, u8 fruitType) {
 
 	// Update totals
 	total_fruits = apples + pears + bananas;
-
-	// Clamp to capacity
-	if (total_fruits > g_inventoryCapacity)
-	{
-		int overflow = total_fruits - g_inventoryCapacity;
-		// remove overflow from the same fruitType we just added (best-effort)
-		switch (fruitType) {
-		case 2:
-			bananas = (bananas >= overflow) ? bananas - overflow : 0;
-			break;
-		case 1:
-			pears = (pears >= overflow) ? pears - overflow : 0;
-			break;
-		default:
-			apples = (apples >= overflow) ? apples - overflow : 0;
-			break;
-		}
-		// recalc totals
-		total_fruits = apples + pears + bananas;
-	}
 
 	printf("Added %d fruits to inventory.\n", amount);
 	printf("Fruits in inventory: %d (A:%d P:%d B:%d)\n", total_fruits, apples, pears, bananas);
@@ -302,15 +243,4 @@ void Inventory_LoadFromProfile(int slot) {
 	// Update total counts
 	total_fruits = apples + pears + bananas;
 	total_seeds = seed_apple + seed_pear + seed_banana;
-
-	// Ensure loaded totals respect current capacity
-	if (total_fruits > g_inventoryCapacity) {
-		// clamp down as in SetInventoryLimit (remove from bananas->pears->apples)
-		int toRemove = total_fruits - g_inventoryCapacity;
-		int rem = std::min<int>(toRemove, static_cast<int>(bananas)); bananas -= rem; toRemove -= rem;
-		rem = std::min<int>(toRemove, static_cast<int>(pears)); pears -= rem; toRemove -= rem;
-		rem = std::min<int>(toRemove, static_cast<int>(apples)); apples -= rem; toRemove -= rem;
-		total_fruits = apples + pears + bananas;
-		Inventory_SaveToProfile(Profile_GetActiveSlot());
-	}
 }

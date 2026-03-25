@@ -6,9 +6,7 @@
 // Constants (kept here to avoid redefinition with Profile.cpp's MAX_CRATES)
 // ---------------------------------------------------------------------------
 static constexpr int CRATE_COUNT = 3;   // must match MAX_CRATES in Profile.cpp
-
-// Make max stock configurable at runtime instead of compile-time constexpr.
-static int g_maxCrateStock = 9;  // default max fruit per crate
+static constexpr int MAX_CRATE_STOCK = 99;  // max fruit per crate
 
 // ---------------------------------------------------------------------------
 // Internal state
@@ -28,7 +26,7 @@ static CrateData g_crates[CRATE_COUNT];
 
 void Crate_Load()
 {
-    // Nothing to load from disk here — Profile handles persistence.
+    // Nothing to load from disk here � Profile handles persistence.
     std::cout << "Crate_Load\n";
 }
 
@@ -52,16 +50,6 @@ void Crate_Initialize()
         g_crates[0].isUnlocked = true;
         Profile_SetCrateUnlocked(0, true);
         std::cout << "Crate migration: crate 0 force-unlocked (no crate data in save)\n";
-    }
-
-    // Ensure existing stocks don't exceed current max (safe for profile upgrades)
-    for (int i = 0; i < CRATE_COUNT; ++i)
-    {
-        if (g_crates[i].fruitCount > g_maxCrateStock)
-        {
-            g_crates[i].fruitCount = g_maxCrateStock;
-            Profile_SetCrateFruitCount(i, g_crates[i].fruitCount);
-        }
     }
 
     std::cout << "Crate_Initialize: loaded from profile\n";
@@ -94,33 +82,6 @@ void Crate_SetUnlocked(int crateIndex, bool unlocked)
 }
 
 // ---------------------------------------------------------------------------
-// Max stock accessor / mutator
-// ---------------------------------------------------------------------------
-
-int Crate_GetMaxStock()
-{
-    return g_maxCrateStock;
-}
-
-void Crate_SetMaxStock(int maxStock)
-{
-    if (maxStock < 0) return; // ignore invalid
-    g_maxCrateStock = maxStock;
-
-    // Clamp existing crate stock to new max and persist any changes.
-    for (int i = 0; i < CRATE_COUNT; ++i)
-    {
-        if (g_crates[i].fruitCount > g_maxCrateStock)
-        {
-            g_crates[i].fruitCount = g_maxCrateStock;
-            Profile_SetCrateFruitCount(i, g_crates[i].fruitCount);
-        }
-    }
-
-    std::cout << "Crate max stock set to " << g_maxCrateStock << "\n";
-}
-
-// ---------------------------------------------------------------------------
 // Stock queries & mutation
 // ---------------------------------------------------------------------------
 
@@ -139,8 +100,8 @@ bool Crate_AddFruit(int crateIndex, int amount)
 
     int before = g_crates[crateIndex].fruitCount;
     g_crates[crateIndex].fruitCount += amount;
-    if (g_crates[crateIndex].fruitCount > g_maxCrateStock)
-        g_crates[crateIndex].fruitCount = g_maxCrateStock;
+    if (g_crates[crateIndex].fruitCount > MAX_CRATE_STOCK)
+        g_crates[crateIndex].fruitCount = MAX_CRATE_STOCK;
 
     bool added = (g_crates[crateIndex].fruitCount > before);
     if (added)

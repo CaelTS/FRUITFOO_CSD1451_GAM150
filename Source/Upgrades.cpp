@@ -7,7 +7,6 @@
 #include "Farm.h"
 #include "Economy.h"
 #include "Inventory.h"
-#include "Crate.h"
 
 //placeholder upgrade effects
 static void Inventory_UpgradeCapacity(int qty) {
@@ -154,76 +153,66 @@ void Upgrades_Purchase(UpgradeID id) {
                 // Apply upgrade effects
                 switch (id) {
                 case UPGRADE_INVENTORY_I:
-                    SetInventoryLimit(GetInventoryLimit() + 10);
-					printf("Inventory limit increased to %d!\n", GetInventoryLimit());
+                    Inventory_UpgradeCapacity(10);
                     break;
 
                 case UPGRADE_FRUIT_I:
-                    Economy_SetBasePriceApple(7);
-					printf("Base price of apples increased to %d!\n", 7);
+                    Economy_UpgradeFruitPrice(10);
                     break;
 
                 case UPGRADE_UNLOCK_PLOT2:
-                    Profile_SetPlotUnlocked(1, true);
-					printf("Plot 2 unlocked!\n");
+                    Farm_UnlockPlot(2);
                     break;
 
                 case UPGRADE_CRATE_I:
-                    Crate_SetMaxStock(Crate_GetMaxStock() + 10);
-					printf("Crate capacity increased to %d!\n", Crate_GetMaxStock());
+                    Crate_CapacityUpgrade(10);
                     break;
 
                 case UPGRADE_INVENTORY_II:
-                    SetInventoryLimit(GetInventoryLimit() + 20);
-					printf("Inventory limit increased to %d!\n", GetInventoryLimit());
+                    Inventory_UpgradeCapacity(20);
                     break;
 
                 case UPGRADE_UNLOCK_CRATE2:
-                    Crate_IsUnlocked(1);
-					printf("Crate 2 unlocked!\n");
+                    Crate_UnlockCrate(2);
                     break;
 
                 case UPGRADE_FRUIT_II:
-                    Economy_SetBasePriceApple(9.5);
-					printf("Base price of apples increased to %d!\n", 9);
+                    Economy_UpgradeFruitPrice(20);
                     break;
 
                 case UPGRADE_CRATE_II:
-                    Crate_SetMaxStock(Crate_GetMaxStock() + 20);
-					printf("Crate capacity increased to %d!\n", Crate_GetMaxStock());
+                    Crate_CapacityUpgrade(20);
                     break;
 
                 case UPGRADE_UNLOCK_PLOT3:
-                    Profile_SetPlotUnlocked(2, true);
-					printf("Plot 3 unlocked!\n");
+                    Farm_UnlockPlot(3);
                     break;
 
                 case UPGRADE_INVENTORY_III:
-                    SetInventoryLimit(GetInventoryLimit() + 30);
-					printf("Inventory limit increased to %d!\n", GetInventoryLimit());
+                    Inventory_UpgradeCapacity(30);
                     break;
 
                 case UPGRADE_FRUIT_III:
-                    Economy_SetBasePriceApple(11);
-					printf("Base price of apples increased to %d!\n", 11); 
+                    Economy_UpgradeFruitPrice(30);
                     break;
                 case UPGRADE_UNLOCK_CRATE3:
-                    Crate_IsUnlocked(2);
-					printf("Crate 3 unlocked!\n");
+                    Crate_UnlockCrate(3);
                     break;
 
                 case UPGRADE_CRATE_III:
-					Crate_SetMaxStock(Crate_GetMaxStock() + 30);
-					printf("Crate capacity increased to %d!\n", Crate_GetMaxStock());
+                    Crate_CapacityUpgrade(30);
                     break;
 
                 case UPGRADE_UNLOCK_PLOT4:
-                    Profile_SetPlotUnlocked(3, true);
-					printf("Plot 4 unlocked!\n");
+                    Farm_UnlockPlot(4);
                     break;
 
                 case UPGRADE_LEVEL_UP:
-					// Placeholder for a big upgrade, e.g. unlock all plots, max inventory, and max crate capacity
+                    Inventory_UpgradeCapacity(50);
+                    Economy_UpgradeFruitPrice(50);
+                    Crate_CapacityUpgrade(50);
+                    Farm_UnlockPlot(5);
+                    Crate_UnlockCrate(4);
                     break;
                 }
                 break; // Exit loop after finding the upgrade
@@ -232,11 +221,12 @@ void Upgrades_Purchase(UpgradeID id) {
     }
 }
 
-bool Upgrades_CanPurchase(const Upgrade& u, int currentMoney) {
-    // Can't buy something already purchased
-    if (u.purchased) return false;
-    // Need enough money
-    return (currentMoney >= u.cost);
+bool Upgrades_CanPurchase(Upgrade id, int currentMoney) {
+	if (currentMoney < id.cost) return false; // Not enough money
+    else if (currentMoney >= id.cost) { // Can afford
+		id.purchased = true;
+		return true;
+    }
 }
 
 void Upgrades_Unload()

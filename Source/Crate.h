@@ -50,10 +50,6 @@ bool Crate_AddFruitTyped(int fruitType, int amount);
 // Remove fruit from specific crate by fruit type (0=apple, 1=pear, 2=banana)
 bool Crate_RemoveFruitTyped(int fruitType, int amount);
 
-// Get / set the per-crate capacity (runtime configurable)
-int  Crate_GetMaxStock();
-void Crate_SetMaxStock(int maxStock);
-
 // ------------------------------------------------------------
 // Profile bridge  (called internally and by Profile.cpp)
 // ------------------------------------------------------------
