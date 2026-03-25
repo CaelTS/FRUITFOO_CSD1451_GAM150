@@ -688,7 +688,7 @@ void StartScreen_Update(float dt)
     else
     {
         // Animate exit
-        exitAnimProgress += dt * exitAnimSpeed * 0.8;
+        exitAnimProgress += dt * exitAnimSpeed * 0.8f;
         exitAnimFadeOut -= (dt * exitAnimSpeed);
         if (exitAnimProgress >= 1.0f)
         {

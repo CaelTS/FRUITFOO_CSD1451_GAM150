@@ -431,17 +431,17 @@ void Economy_SaveToProfile(int slot) {
 }
 
 // Write inventory counts into the active profile and save.
-void Profile_SaveInventory(int slot, int apples, int pears, int bananas,
+void Profile_SaveInventory(int slot, int p_apples, int p_pears, int p_bananas,
     int seedApple, int seedPear, int seedBanana) {
     if (slot < 0 || slot >= MAX_PROFILES || !profiles[slot].exists) return;
-    profiles[slot].apples = apples;
-    profiles[slot].pears = pears;
-    profiles[slot].bananas = bananas;
+    profiles[slot].apples = p_apples;
+    profiles[slot].pears = p_pears;
+    profiles[slot].bananas = p_bananas;
     profiles[slot].seeds[0] = seedApple;
     profiles[slot].seeds[1] = seedPear;
     profiles[slot].seeds[2] = seedBanana;
     // Keep cached totals in sync
-    profiles[slot].total_fruits = apples + pears + bananas;
+    profiles[slot].total_fruits = p_apples + p_pears + p_bananas;
     profiles[slot].total_seeds = seedApple + seedPear + seedBanana;
     Profiles_Save();
 }

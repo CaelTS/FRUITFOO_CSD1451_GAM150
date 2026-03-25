@@ -22,7 +22,7 @@
 Timer triggers
 System checks crate
 Random amount sold
-Money added 
+Money added
 Crate stock decreases *
 */
 
@@ -40,7 +40,7 @@ bool timer_reset = true;
 //placeholder for base price
 //extern u8 base_price_apple = 0;
 //u8 base_price_apple = 10;
- u8 base_price_apple = 5;
+u8 base_price_apple = 5;
 
 
 //Helper functions
@@ -60,41 +60,18 @@ std::pair<f32, f32> random_range_pair(f32 min1, f32 max1, f32 min2, f32 max2) {
 	}
 }
 
-void static sell_fruit()
-{
-	int crateStock = Crate_GetFruitCount(0); // apple crate
-
-	if (crateStock <= 0)
-		return;
-
-	// determine sale amount (1–3 but not exceeding stock)
-	u8 sale_amount = (u8)min(crateStock, random_range(1, 3));
-
-	// calculate price
-	u64 total_price = static_cast<u64>(sale_amount) *
-		static_cast<u64>(base_price_apple) *
-		static_cast<u64>(money_multiplier);
-
-	// add money
-	Economy_AddMoney((int)total_price);
-
-	// REMOVE FROM CRATE (IMPORTANT FIX)
-	Crate_RemoveFruitAmount(0, sale_amount);
-
-	printf("Sold %d apples from crate.\n", sale_amount);
-	printf("+%llu GOLD!\n", total_price);
-}
 
 // Sell from a specific crate index (crateIndex) for a given fruit type.
 // Removes stock from the crate and credits money.
 static void sell_fruit(int crateIndex, int fruitType) {
+	(void)fruitType; // reserved for per-fruit pricing; currently uses base_price_apple
 	if (crateIndex < 0) return;
 
 	int stock = Crate_GetFruitCount(crateIndex);
 	if (stock <= 0) return;
 
 	// determine sale amount: 1..3 but no more than available stock
-	u8 sale_amount = min(stock, random_range(1, 3));
+	u8 sale_amount = static_cast<u8>(min(stock, static_cast<int>(random_range(1, 3))));
 
 	// try to remove from crate first
 	bool removed = Crate_RemoveFruitAmount(crateIndex, sale_amount);
@@ -130,7 +107,7 @@ void Economy_Init() {
 	f32 second_sale_time = range_pair.second;
 
 	next_sale_time = random_time(first_sale_time, second_sale_time);
-	
+
 	printf("base price apple: %d\n", base_price_apple);
 
 
@@ -193,12 +170,11 @@ void Economy_Update(float dt) {
 
 void Economy_AddMoney(int amount) {
 	total_money += static_cast<u64>(amount);
-	Economy_SaveToProfile(Profile_GetActiveSlot());
-
-	total_money += static_cast<u64>(amount);
 
 	if (total_money > max_money)
 		total_money = max_money;
+
+	Economy_SaveToProfile(Profile_GetActiveSlot());
 }
 
 bool Economy_SpendMoney(int amount) {
@@ -238,4 +214,3 @@ int Economy_GetMaxMoney() {
 float Economy_GetMultiplier() {
 	return money_multiplier;
 }
-

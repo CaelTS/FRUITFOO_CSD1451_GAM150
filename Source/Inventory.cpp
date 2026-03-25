@@ -1,4 +1,4 @@
-#include "Inventory.h"
+ï»¿#include "Inventory.h"
 #include "Profile.h"
 #include <AETypes.h>
 #include <stdio.h>
@@ -79,9 +79,6 @@ int GetInventoryCount()
 
 int GetInventoryLimit()
 {
-
-	return 100; // or inventory_capacity if you add it
-
 	return g_inventoryCapacity;
 }
 
@@ -97,15 +94,15 @@ void SetInventoryLimit(int limit)
 		int toRemove = total - g_inventoryCapacity;
 
 		int rem = std::min<int>(toRemove, static_cast<int>(apples));
-		bananas -= rem;
+		bananas = static_cast<u8>(bananas - rem);
 		toRemove -= rem;
 
 		rem = std::min<int>(toRemove, static_cast<int>(pears));
-		pears -= rem;
+		pears = static_cast<u8>(pears - rem);
 		toRemove -= rem;
 
 		rem = std::min<int>(toRemove, static_cast<int>(bananas));
-		apples -= rem;
+		apples = static_cast<u8>(apples - rem);
 		toRemove -= rem;
 
 		// Update totals and persist changes
@@ -190,13 +187,13 @@ void Inventory_AddFruit(u8 amount, u8 fruitType) {
 		// remove overflow from the same fruitType we just added (best-effort)
 		switch (fruitType) {
 		case 2:
-			bananas = (bananas >= overflow) ? bananas - overflow : 0;
+			bananas = static_cast<u8>((bananas >= overflow) ? bananas - overflow : 0);
 			break;
 		case 1:
-			pears = (pears >= overflow) ? pears - overflow : 0;
+			pears = static_cast<u8>((pears >= overflow) ? pears - overflow : 0);
 			break;
 		default:
-			apples = (apples >= overflow) ? apples - overflow : 0;
+			apples = static_cast<u8>((apples >= overflow) ? apples - overflow : 0);
 			break;
 		}
 		// recalc totals
@@ -288,7 +285,7 @@ void Inventory_SaveToProfile(int slot) {
 // Load inventory state from profile slot
 void Inventory_LoadFromProfile(int slot) {
 
-	(void)slot; // suppress C4100 — active slot used implicitly
+	(void)slot; // suppress C4100 ï¿½ active slot used implicitly
 
 	// Load from profile getters
 	apples = static_cast<u8>(Profile_GetApples());
@@ -307,9 +304,9 @@ void Inventory_LoadFromProfile(int slot) {
 	if (total_fruits > g_inventoryCapacity) {
 		// clamp down as in SetInventoryLimit (remove from bananas->pears->apples)
 		int toRemove = total_fruits - g_inventoryCapacity;
-		int rem = std::min<int>(toRemove, static_cast<int>(bananas)); bananas -= rem; toRemove -= rem;
-		rem = std::min<int>(toRemove, static_cast<int>(pears)); pears -= rem; toRemove -= rem;
-		rem = std::min<int>(toRemove, static_cast<int>(apples)); apples -= rem; toRemove -= rem;
+		int rem = std::min<int>(toRemove, static_cast<int>(bananas)); bananas = static_cast<u8>(bananas - rem); toRemove -= rem;
+		rem = std::min<int>(toRemove, static_cast<int>(pears)); pears = static_cast<u8>(pears - rem); toRemove -= rem;
+		rem = std::min<int>(toRemove, static_cast<int>(apples)); apples = static_cast<u8>(apples - rem); toRemove -= rem;
 		total_fruits = apples + pears + bananas;
 		Inventory_SaveToProfile(Profile_GetActiveSlot());
 	}
