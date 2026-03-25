@@ -30,7 +30,11 @@ void GSM_Initialize(int startingState)
 // StartScreen GSM wrappers
 // StartScreen uses Init/Update/Draw - map them to the GSM lifecycle slots
 
+<<<<<<< HEAD
 static void StartScreen_GSM_Load() { StartScreen_Load(); }
+=======
+//static void StartScreen_GSM_Load() { StartScreen_Load(); }
+>>>>>>> Tiara
 static void StartScreen_GSM_Initialize() { StartScreen_Init(); }
 static void StartScreen_GSM_Update()
 {
@@ -55,7 +59,11 @@ void GSM_Update()
     switch (currentState)
     {
     case GS_START_SCREEN:
+<<<<<<< HEAD
         fpLoad = StartScreen_GSM_Load;
+=======
+        /*fpLoad = StartScreen_GSM_Load;*/
+>>>>>>> Tiara
         fpInitialize = StartScreen_GSM_Initialize;
         fpUpdate = StartScreen_GSM_Update;
         fpDraw = StartScreen_GSM_Render;

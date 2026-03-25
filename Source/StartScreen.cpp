@@ -8,6 +8,7 @@
 #include <cstdio>
 #include <cstring>
 #include "Main.h"
+<<<<<<< HEAD
 #include "AEAudio.h"
 
 // ============================================================
@@ -18,6 +19,8 @@ static AEAudioGroup g_startMusicGroup;
 
 static void ResetAudio(AEAudio& audio) { memset(&audio, 0, sizeof(AEAudio)); }
 static void ResetAudioGroup(AEAudioGroup& g) { memset(&g, 0, sizeof(AEAudioGroup)); }
+=======
+>>>>>>> Tiara
 
 // ============================================================
 // Profile persistence
@@ -195,6 +198,27 @@ static void SS_Profiles_Load()
     fclose(f);
 }
 
+<<<<<<< HEAD
+=======
+// OLD SAVE FUNCTION - NO LONGER USED
+// Now using unified Profile_CreateSlot() and Profile_SetActiveSlot() instead
+/*
+static void SS_Profiles_Save()
+{
+    FILE* f = nullptr;
+    if (fopen_s(&f, PROFILES_FILE, "w") != 0 || !f) return;
+    for (int i = 0; i < MAX_PROFILES; i++)
+    {
+        fprintf(f, "[PROFILE_%d]\n", i);
+        fprintf(f, "EXISTS=%d\n", g_profiles[i].exists ? 1 : 0);
+        fprintf(f, "NAME=%s\n", g_profiles[i].name);
+        fprintf(f, "coins=%d\n\n", g_profiles[i].coins);
+    }
+    fclose(f);
+}
+*/
+
+>>>>>>> Tiara
 // ============================================================
 // Inline "New Game" name-entry popup
 // ============================================================
@@ -280,6 +304,16 @@ static bool IsButtonHovered(Button& btn, float width, float height) {
     return IsMouseOverRect(x, y, width * gScaleX, height * gScaleY);
 }
 
+<<<<<<< HEAD
+=======
+//ButtonID ID (float x, float y) {
+//    if (!newGameButton.hovered && IsButtonHovered(newGameButton, 234.0f, 35.0f)) return BUTTON_NEW_GAME;
+//    if (!continueButton.hovered && IsButtonHovered(continueButton, 300.0f, 80.0f)) return BUTTON_CONTINUE;
+//    if (!settingsButton.hovered && IsButtonHovered(settingsButton, 300.0f, 80.0f)) return BUTTON_SETTINGS;
+//    if (!exitButton.hovered && IsButtonHovered(exitButton, 68.0f, 39.0f)) return BUTTON_EXIT;
+//}
+
+>>>>>>> Tiara
 //Textures
 AEGfxTexture* logoTexture = nullptr;
 AEGfxTexture* gradientBlur = nullptr;
@@ -342,10 +376,13 @@ static void ConfirmNewGame()
     hasSave = true;
     isExiting = true;
     nextState = GS_MAIN_SCREEN;
+<<<<<<< HEAD
 
     // Force-stop start screen music the moment we leave this state
     if (AEAudioIsValidGroup(g_startMusicGroup))
         AEAudioStopGroup(g_startMusicGroup);
+=======
+>>>>>>> Tiara
 }
 AEGfxVertexList* pMeshGradientBlur = nullptr;
 
@@ -354,6 +391,19 @@ AEGfxVertexList* pMeshGradientBlur = nullptr;
 // Helper
 // ------------------------------------------------------------
 
+<<<<<<< HEAD
+=======
+//static bool CheckSaveExists()
+//{
+//    std::ifstream file("save.dat");
+//
+//    if (file.good())
+//        return true;
+//
+//    return false;
+//}
+
+>>>>>>> Tiara
 static void DrawButton(Button& btn, AEGfxVertexList* mesh, f32 width, f32 height, float offset)
 {
     AEMtx33 scale, trans, transform;
@@ -363,12 +413,27 @@ static void DrawButton(Button& btn, AEGfxVertexList* mesh, f32 width, f32 height
     float x = btn.hovered ? btn.x_selected : btn.x;
     float y = btn.hovered ? btn.y_selected : btn.y;
 
+<<<<<<< HEAD
     if (hasSave)
     {
         x = btn.hovered ? btn.x_selected_save : btn.x_save;
         y = btn.hovered ? btn.y_selected_save : btn.y_save;
     }
 
+=======
+
+
+    if (hasSave)
+    {
+
+        x = btn.hovered ? btn.x_selected_save : btn.x_save;
+        y = btn.hovered ? btn.y_selected_save : btn.y_save;
+
+    }
+
+
+
+>>>>>>> Tiara
     if (!tex) return;
 
     AEGfxTextureSet(tex, 0, 0);
@@ -404,7 +469,11 @@ static AEGfxVertexList* createMesh()
 
 bool StartScreen_IsActive()
 {
+<<<<<<< HEAD
     return startScreenActive;
+=======
+    return startScreenActive; // from your start screen cpp
+>>>>>>> Tiara
 }
 
 void StartScreen_Load()
@@ -413,6 +482,7 @@ void StartScreen_Load()
     SS_Profiles_Load();
     hasSave = (CountProfiles() > 0);
     Tutorial_Load();
+<<<<<<< HEAD
 
     // Debug: Confirm Load was called
     printf("[DEBUG] StartScreen_Load() called - loading audio\n");
@@ -437,6 +507,8 @@ void StartScreen_Load()
         printf("[DEBUG] StartScreen_Load(): Start.wav loaded successfully.\n");
     else
         printf("[DEBUG] StartScreen_Load(): FAILED to load Start.wav!\n");
+=======
+>>>>>>> Tiara
 }
 
 void StartScreen_Init()
@@ -455,7 +527,11 @@ void StartScreen_Init()
             ssFont = AEGfxCreateFont("Assets/Crayon pastel.otf", 24);
     }
 
+<<<<<<< HEAD
     // Only load textures/meshes if not already loaded
+=======
+    // Only load textures/meshes if not already loaded (should be in Load function)
+>>>>>>> Tiara
     if (!pTexPanel) pTexPanel = AEGfxTextureLoad("Assets/panel_brown.png");
     if (!pTexInputRect) pTexInputRect = AEGfxTextureLoad("Assets/input_outline_rectangle.png");
 
@@ -478,11 +554,19 @@ void StartScreen_Init()
     if (!exitButton.hover) exitButton.hover = AEGfxTextureLoad("Assets/StartScreen_Exit_Selected.png");
     exitButton.x = logoPosX - 102.0f;
     exitButton.y = 45.0f;
+<<<<<<< HEAD
     exitButton.x_selected = exitButton.x;
     exitButton.y_selected = exitButton.y;
     exitButton.x_save = exitButton.x;
     exitButton.y_save = exitButton.y - (100.0f - 45.0f);
     exitButton.x_selected_save = exitButton.x - 1;
+=======
+    exitButton.x_selected = exitButton.x; // slide left on hover
+    exitButton.y_selected = exitButton.y;
+    exitButton.x_save = exitButton.x; // no slide when save exists
+    exitButton.y_save = exitButton.y - (100.0f - 45.0f);
+    exitButton.x_selected_save = exitButton.x - 1; // no slide when save exists
+>>>>>>> Tiara
     exitButton.y_selected_save = exitButton.y_save;
 
     // Initialize "Continue" button 
@@ -490,11 +574,19 @@ void StartScreen_Init()
     if (!continueButton.hover) continueButton.hover = AEGfxTextureLoad("Assets/StartScreen_Continue_Selected.png");
     continueButton.x = logoPosX - 50.0f;
     continueButton.y = 100.0f;
+<<<<<<< HEAD
     continueButton.x_selected = continueButton.x;
     continueButton.y_selected = continueButton.y;
     continueButton.x_save = continueButton.x;
     continueButton.y_save = continueButton.y;
     continueButton.x_selected_save = continueButton.x;
+=======
+    continueButton.x_selected = continueButton.x; // slide left on hover
+    continueButton.y_selected = continueButton.y;
+    continueButton.x_save = continueButton.x; // no slide when save exists
+    continueButton.y_save = continueButton.y;
+    continueButton.x_selected_save = continueButton.x; // no slide when save exists
+>>>>>>> Tiara
     continueButton.y_selected_save = continueButton.y;
 
     // Initialize "Profile" button
@@ -502,11 +594,19 @@ void StartScreen_Init()
     if (!profileButton.hover) profileButton.hover = AEGfxTextureLoad("Assets/StartScreen_Profile_Selected.png");
     profileButton.x = logoPosX - 72.0f;
     profileButton.y = 45.0f;
+<<<<<<< HEAD
     profileButton.x_selected = profileButton.x;
     profileButton.y_selected = profileButton.y;
     profileButton.x_save = profileButton.x;
     profileButton.y_save = profileButton.y;
     profileButton.x_selected_save = profileButton.x;
+=======
+    profileButton.x_selected = profileButton.x; // slide left on hover
+    profileButton.y_selected = profileButton.y;
+    profileButton.x_save = profileButton.x; // no slide when save exists    
+    profileButton.y_save = profileButton.y;
+    profileButton.x_selected_save = profileButton.x; // no slide when save exists   
+>>>>>>> Tiara
     profileButton.y_selected_save = profileButton.y;
 
     // Initialize "New Game" button
@@ -514,10 +614,18 @@ void StartScreen_Init()
     if (!newGameButton.hover) newGameButton.hover = AEGfxTextureLoad("Assets/StartScreen_NewGameButton_Selected.png");
     newGameButton.x = logoPosX - 32.0f;
     newGameButton.y = 100.0f;
+<<<<<<< HEAD
     newGameButton.x_selected = newGameButton.x;
     newGameButton.y_selected = newGameButton.y;
 
     // Ensure Tutorial resources are ready
+=======
+    newGameButton.x_selected = newGameButton.x; // slide left on hover
+    newGameButton.y_selected = newGameButton.y;
+
+    // Ensure Tutorial resources are ready even if StartScreen_Load was
+    // skipped (Tutorial_Load is idempotent -- safe to call more than once).
+>>>>>>> Tiara
     Tutorial_Load();
 
     // Reset animation state
@@ -525,6 +633,7 @@ void StartScreen_Init()
     exitAnimProgress = 0.0f;
     exitAnimFadeOut = 1.0f;
     startScreenActive = true;
+<<<<<<< HEAD
 
     // ============================================================
     // AUDIO PLAYBACK - with fallback loading if Load() wasn't called
@@ -558,6 +667,8 @@ void StartScreen_Init()
     {
         printf("[ERROR] StartScreen_Init(): Audio failed to load! Check Assets/Start.wav\n");
     }
+=======
+>>>>>>> Tiara
 }
 
 void StartScreen_Update(float dt)
@@ -628,6 +739,14 @@ void StartScreen_Update(float dt)
         return;
     }
 
+<<<<<<< HEAD
+=======
+    // If mouse is outside window, keep all false
+    if (mouseX >= 0 && mouseX <= 1600 && mouseY >= 0 && mouseY <= 900)
+    {
+    }
+
+>>>>>>> Tiara
     if (AEInputCheckTriggered(AEVK_RSHIFT)) {
         hasSave = !hasSave; // toggle save file existence for testing
     }
@@ -645,15 +764,21 @@ void StartScreen_Update(float dt)
         {
             if (IsButtonClicked(profileButton, 137.0f, 40.0f))
             {
+<<<<<<< HEAD
                 nextState = GS_NEXT_SCREEN;
 
                 // Force-stop start screen music the moment we leave this state
                 if (AEAudioIsValidGroup(g_startMusicGroup))
                     AEAudioStopGroup(g_startMusicGroup);
+=======
+                // Go to profile screen
+                nextState = GS_NEXT_SCREEN;
+>>>>>>> Tiara
             }
             else if (IsButtonClicked(continueButton, 190.0f, 41.0f))
             {
                 int recentSlot = GetMostRecentProfileSlot();
+<<<<<<< HEAD
                 if (recentSlot >= 0)
                 {
                     Profiles_Reload();
@@ -667,16 +792,42 @@ void StartScreen_Update(float dt)
                 }
             }
 
+=======
+                // Continue game (for now just go to farm screen)
+                /*isExiting = true;*/
+                 // Ensure Profile.cpp's internal array is loaded from disk before
+                // calling Profile_SetActiveSlot (which reads from that array).
+                if (recentSlot >= 0)
+                {
+                    // Ensure Profile.cpp's internal array is loaded from disk before
+                    // calling Profile_SetActiveSlot (which reads from that array).
+                    Profiles_Reload();
+                    Profile_SetActiveSlot(recentSlot); // sets activeSlot + syncs economy
+                    isExiting = true;
+                    nextState = GS_MAIN_SCREEN;
+                }
+            }
+
+            // When a save exists, only check the save-related buttons
+>>>>>>> Tiara
             if (IsButtonHovered(continueButton, 190.0f, 41.0f))
                 continueButton.hovered = true;
             else if (IsButtonHovered(profileButton, 137.0f, 40.0f))
                 profileButton.hovered = true;
             else if (IsButtonHovered(exitButton, 68.0f, 39.0f))
                 exitButton.hovered = true;
+<<<<<<< HEAD
+=======
+
+>>>>>>> Tiara
         }
         else
         {
             if (IsButtonClicked(newGameButton, 234.0f, 35.0f)) {
+<<<<<<< HEAD
+=======
+                /*isExiting = true;*/
+>>>>>>> Tiara
                 if (FirstFreeSlot() == -1)
                 {
                     popupShowFull = true;
@@ -687,15 +838,24 @@ void StartScreen_Update(float dt)
                     OpenNewGamePopup();
                 }
             }
+<<<<<<< HEAD
+=======
+            // No save: check NewGame + Exit
+>>>>>>> Tiara
             if (IsButtonHovered(newGameButton, 234.0f, 35.0f))
                 newGameButton.hovered = true;
             else if (IsButtonHovered(exitButton, 68.0f, 39.0f))
                 exitButton.hovered = true;
+<<<<<<< HEAD
+=======
+
+>>>>>>> Tiara
         }
 
         if (IsButtonClicked(exitButton, 68.0f, 39.0f))
         {
             nextState = GS_EXIT;
+<<<<<<< HEAD
 
             // Force-stop start screen music the moment we leave this state
             if (AEAudioIsValidGroup(g_startMusicGroup))
@@ -713,23 +873,51 @@ void StartScreen_Update(float dt)
     }
     else
     {
+=======
+        }
+
+        // For now, just simulate button click with keyboard for testing
+        if (AEInputCheckTriggered(AEVK_RETURN)) // press Enter to start
+        {
+            isExiting = true;
+        }
+
+    }
+    else
+    {
+        // Animate exit
+>>>>>>> Tiara
         exitAnimProgress += dt * exitAnimSpeed * 0.8;
         exitAnimFadeOut -= (dt * exitAnimSpeed);
         if (exitAnimProgress >= 1.0f)
         {
             exitAnimProgress = 1.0f;
+<<<<<<< HEAD
             startScreenActive = false;
+=======
+            startScreenActive = false; // animation complete
+>>>>>>> Tiara
         }
     }
 }
 
 void StartScreen_Draw()
 {
+<<<<<<< HEAD
     if (!startScreenActive) return;
 
     float slideOffset = exitAnimProgress * 3000.0f;
     float fadeOut = exitAnimFadeOut;
 
+=======
+
+    if (!startScreenActive) return; // don’t draw after animation finished
+
+    float slideOffset = exitAnimProgress * 3000.0f; // pixels to move left
+    float fadeOut = exitAnimFadeOut; // fade out from 1 to 0
+
+    // Transformation Matrices
+>>>>>>> Tiara
     AEMtx33 scale, trans, transform;
 
     //Draw background gradient blur
@@ -748,6 +936,11 @@ void StartScreen_Draw()
 
         AEGfxSetTransform(transform.m);
         AEGfxMeshDraw(pMeshGradientBlur, AE_GFX_MDM_TRIANGLES);
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> Tiara
     }
 
     // Draw logo
@@ -771,6 +964,7 @@ void StartScreen_Draw()
 
     //Exit Button
     if (pMeshExitButton) {
+<<<<<<< HEAD
         if (!exitButton.hovered)
             DrawButton(exitButton, pMeshExitButton, 68.0f, 39.0f, slideOffset);
         else
@@ -780,18 +974,48 @@ void StartScreen_Draw()
     // Not new user, has save file
     if (hasSave)
     {
+=======
+
+        if (!exitButton.hovered)
+        {
+            DrawButton(exitButton, pMeshExitButton, 68.0f, 39.0f, slideOffset);
+        }
+        else if (exitButton.hovered)
+        {
+            DrawButton(exitButton, pMeshExitButton_Selected, 89.0f, 60.0f, slideOffset);
+        }
+    }
+
+
+
+    // Not new user, has save file
+    if (hasSave)
+    {
+        // Draw Continue button
+>>>>>>> Tiara
         if (!continueButton.hovered)
             DrawButton(continueButton, pMeshContinueButton, 190.0f, 41.0f, slideOffset);
         else
             DrawButton(continueButton, pMeshContinueButton_Selected, 211.0f, 61.0f, slideOffset);
 
+<<<<<<< HEAD
+=======
+        // Draw Profile button
+>>>>>>> Tiara
         if (!profileButton.hovered)
             DrawButton(profileButton, pMeshProfileButton, 137.0f, 40.0f, slideOffset);
         else
             DrawButton(profileButton, pMeshProfileButton_Selected, 159.0f, 63.0f, slideOffset);
     }
+<<<<<<< HEAD
     else
     {
+=======
+
+    else
+    {
+
+>>>>>>> Tiara
         if (!newGameButton.hovered)
             DrawButton(newGameButton, pMeshNewGameButton, 234.0f, 35.0f, slideOffset);
         else
@@ -885,6 +1109,14 @@ void StartScreen_Draw()
         }
     }
 
+<<<<<<< HEAD
+=======
+
+    // Draw New Game button
+    // Draw Settings/Profile button
+    // Draw Exit button
+
+>>>>>>> Tiara
     // Tutorial button + panel (drawn on top of everything)
     Tutorial_Draw(slideOffset, fadeOut, hasSave);
 }
@@ -892,6 +1124,7 @@ void StartScreen_Draw()
 void StartScreen_Unload()
 {
     Tutorial_Unload();
+<<<<<<< HEAD
 
     // Stop and release music (mirrors Rhythm.cpp teardown)
     if (AEAudioIsValidGroup(g_startMusicGroup))
@@ -903,6 +1136,8 @@ void StartScreen_Unload()
     ResetAudio(g_startMusic);
     ResetAudioGroup(g_startMusicGroup);
 
+=======
+>>>>>>> Tiara
     // Free popup resources
     if (pMeshPopup) { AEGfxMeshFree(pMeshPopup); pMeshPopup = nullptr; }
     if (pTexInputRect) { AEGfxTextureUnload(pTexInputRect); pTexInputRect = nullptr; }
@@ -926,7 +1161,11 @@ void StartScreen_Unload()
     if (pMeshExitButton) { AEGfxMeshFree(pMeshExitButton); pMeshExitButton = nullptr; }
     if (pMeshExitButton_Selected) { AEGfxMeshFree(pMeshExitButton_Selected); pMeshExitButton_Selected = nullptr; }
 
+<<<<<<< HEAD
     // Unload button textures
+=======
+    // Unload button textures (guard against null)
+>>>>>>> Tiara
     if (newGameButton.normal) { AEGfxTextureUnload(newGameButton.normal); newGameButton.normal = nullptr; }
     if (newGameButton.hover && newGameButton.hover != newGameButton.normal) { AEGfxTextureUnload(newGameButton.hover); newGameButton.hover = nullptr; }
 
@@ -939,7 +1178,11 @@ void StartScreen_Unload()
     if (exitButton.normal) { AEGfxTextureUnload(exitButton.normal); exitButton.normal = nullptr; }
     if (exitButton.hover && exitButton.hover != exitButton.normal) { AEGfxTextureUnload(exitButton.hover); exitButton.hover = nullptr; }
 
+<<<<<<< HEAD
     // Clear state
+=======
+    // Clear any remaining state
+>>>>>>> Tiara
     popupOpen = false;
     popupBuf[0] = '\0';
     popupLen = 0;

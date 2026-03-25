@@ -10,6 +10,22 @@
 #include "Profile.h"
 #include "Inventory.h"
 #include "Crate.h"
+<<<<<<< HEAD
+=======
+
+
+
+//MAIN FLOW FOR GAME
+//Player harvests and then fruit goes into crate
+/*
+Timer triggers
+System checks crate
+Random amount sold
+Money added 
+Crate stock decreases *
+*/
+
+>>>>>>> Tiara
 
 // Global variables - remove 'static' since they're extern in the header
 u64 total_money = 0;
@@ -22,7 +38,12 @@ static f32 next_sale_time = 0.0f; //seconds
 bool timer_reset = true;
 
 //placeholder for base price
+<<<<<<< HEAD
 extern u8 base_price_apple = 0;
+=======
+//extern u8 base_price_apple = 0;
+u8 base_price_apple = 10;
+>>>>>>> Tiara
 
 //Helper functions
 f32 random_time(f32 min, f32 max) {
@@ -41,18 +62,38 @@ std::pair<f32, f32> random_range_pair(f32 min1, f32 max1, f32 min2, f32 max2) {
 	}
 }
 
-void static sell_fruit() {
-	u8 stock = Inventory_GetFruitStock();
-	//determine sale amount
-	u8 sale_amount = min(stock, random_range(1, 3)); //sell between 1 and 3 fruits (use int literals)
+void static sell_fruit()
+{
+	int crateStock = Crate_GetFruitCount(0); // apple crate
 
+<<<<<<< HEAD
 	//determine sale price
 	u64 total_price = static_cast<u64>(sale_amount) * static_cast<u64>(base_price_apple) * static_cast<u64>(money_multiplier);
 	//add money to total
 	Economy_AddMoney(static_cast<int>(total_price));
 	//remove fruit from inventory
 	Inventory_RemoveFruit(sale_amount);
+=======
+	if (crateStock <= 0)
+		return;
+>>>>>>> Tiara
 
+	// determine sale amount (1–3 but not exceeding stock)
+	u8 sale_amount = (u8)min(crateStock, random_range(1, 3));
+
+	// calculate price
+	u64 total_price = static_cast<u64>(sale_amount) *
+		static_cast<u64>(base_price_apple) *
+		static_cast<u64>(money_multiplier);
+
+	// add money
+	Economy_AddMoney((int)total_price);
+
+	// REMOVE FROM CRATE (IMPORTANT FIX)
+	Crate_RemoveFruitAmount(0, sale_amount);
+
+	printf("Sold %d apples from crate.\n", sale_amount);
+	printf("+%llu GOLD!\n", total_price);
 }
 
 // lifecycle
@@ -78,7 +119,12 @@ void Economy_Update(float dt) {
 	timer += dt;
 
 	if (timer >= next_sale_time && total_money <= max_money) {
+<<<<<<< HEAD
 		bool in_stock = Crate_GetFruitCount(0) > 0;
+=======
+		int crateStock = Crate_GetFruitCount(0);
+		bool in_stock = (crateStock > 0);
+>>>>>>> Tiara
 
 		if (in_stock) {
 			sell_fruit();
@@ -106,6 +152,14 @@ void Economy_Update(float dt) {
 void Economy_AddMoney(int amount) {
 	total_money += static_cast<u64>(amount);
 	Economy_SaveToProfile(Profile_GetActiveSlot());
+<<<<<<< HEAD
+=======
+
+	total_money += static_cast<u64>(amount);
+
+	if (total_money > max_money)
+		total_money = max_money;
+>>>>>>> Tiara
 }
 
 bool Economy_SpendMoney(int amount) {

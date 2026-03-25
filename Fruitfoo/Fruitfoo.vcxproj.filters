@@ -60,6 +60,15 @@
     <ClCompile Include="..\Source\Tutorial.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+<<<<<<< HEAD
+=======
+<<<<<<<< HEAD:FruitFoo/FruitFoo.vcxproj.filters
+========
+    <ClCompile Include="..\Source\HelperCreatures.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+>>>>>>>> Tiara:FruitFoo/Fruitfoo.vcxproj.filters
+>>>>>>> Tiara
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Source\GameStateManager.h">
@@ -107,5 +116,14 @@
     <ClInclude Include="..\Source\Tutorial.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+<<<<<<< HEAD
+=======
+<<<<<<<< HEAD:FruitFoo/FruitFoo.vcxproj.filters
+========
+    <ClInclude Include="..\Source\HelperCreatures.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+>>>>>>>> Tiara:FruitFoo/Fruitfoo.vcxproj.filters
+>>>>>>> Tiara
   </ItemGroup>
 </Project>
