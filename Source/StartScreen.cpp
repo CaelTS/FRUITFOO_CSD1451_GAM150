@@ -626,8 +626,6 @@ void StartScreen_Update(float dt)
         hasSave = !hasSave; // toggle save file existence for testing
     }
 
-    float slideOffset = exitAnimProgress * 3000.0f;
-
     // Tutorial -- must run before other buttons; suppresses input while open
     Tutorial_Update();
     if (Tutorial_IsOpen()) return;

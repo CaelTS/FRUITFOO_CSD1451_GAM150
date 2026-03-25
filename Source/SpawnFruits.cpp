@@ -81,7 +81,7 @@ void SpawnFruit_Init() {
 }
 
 void SpawnFruit() {
-    Fruit newApple;
+    Fruit newApple{};
     newApple.texture = gAppleTexture;  // Load the apple texture
 
     newApple.x = random_float(-200.0, 600.0);  // Random X position between 400 to 1000
@@ -103,7 +103,7 @@ void SpawnFruit() {
 }
 
 static void SpawnFruit(float x) {
-    Fruit newApple;
+    Fruit newApple{};
     newApple.texture = AEGfxTextureLoad("Assets/Fruit_Apple.png");  // Load the apple texture
 
     newApple.x = x;  // Random X position between 400 to 1000
