@@ -21,6 +21,7 @@
 #include "Utilities.h"
 #include "Crate.h"   // <-- ADDED: needed for Crate_GetFruitCount / Crate_IsUnlocked
 #include "Inventory.h"
+#include "HelperCreatures.h"
 
 // ---------------------------------------------------------------------------
 // Game State Variables
@@ -211,6 +212,9 @@ void MainScreen_Initialize()
 	Economy_Init();
 	SpawnFruit_Init();
 	UI_Init();
+	Helper_Init();
+
+
 
 	if (previousState != GS_RHYTHM_SCREEN)
 	{
@@ -342,9 +346,11 @@ void MainScreen_Update()
 
 	UI_Input();  // Farm_Update() already handles its own clicks before this runs
 
+
 	Economy_Update(dt);
 	UpdateSpawnFruits(dt);
 	UpdateFruitSpawner(dt);
+	Helper_Update(dt);
 	CheckForFruitClicks(mouseX, mouseY);
 
 	// Check if farm triggered rhythm
@@ -487,6 +493,7 @@ void MainScreen_Render()
 	MainScreen_DrawCrateFruits();
 
 	RenderSpawnFruits();
+	Helper_Draw();
 
 	if (TR_IsActive())
 	{

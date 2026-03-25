@@ -60,3 +60,11 @@ void UI_RebuildCrateHitboxesFromStall(float stallX, float stallY, float stallW, 
 void UI_DrawCrateHoverTint_Yellow();
 float UI_GetCrateSlotX(int index);
 float UI_GetCrateSlotY(int index);
+
+struct PlotSlot
+{
+    float x, y;
+    float width, height;
+};
+
+extern std::vector<PlotSlot> plotSlots;

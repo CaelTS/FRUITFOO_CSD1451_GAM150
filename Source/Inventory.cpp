@@ -75,7 +75,7 @@ int GetInventoryCount()
 
 int GetInventoryLimit()
 {
-	return 10; // or inventory_capacity if you add it
+	return 100; // or inventory_capacity if you add it
 }
 
 
