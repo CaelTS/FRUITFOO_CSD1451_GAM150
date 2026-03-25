@@ -29,8 +29,12 @@ static int activePlotIndex = -1;
 
 float UI_GetPlotCenterX();
 float UI_GetPlotCenterY();
-
-std::vector<PlotSlot> plotSlots;
+struct PlotSlot
+{
+    float x, y;
+    float width, height;
+};
+static std::vector<PlotSlot> plotSlots;
 static AEGfxTexture* plotSlotTexture = nullptr;
 
 static AEGfxTexture* menuTexture = nullptr;
@@ -729,13 +733,8 @@ void UI_UpdateButtons()
 
 void UI_Draw()
 {
-
-    
-
-    // THEN menu stuff
     if (!menuOpen)
         return;
- 
 
     AEMtx33 scale, trans, transform;
 

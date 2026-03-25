@@ -21,7 +21,6 @@
 #include "Utilities.h"
 #include "Crate.h"   // <-- ADDED: needed for Crate_GetFruitCount / Crate_IsUnlocked
 #include "Inventory.h"
-<<<<<<< HEAD
 #include "AEAudio.h"
 
 // ============================================================
@@ -44,9 +43,6 @@ static void MainBGM_Stop()
 	if (AEAudioIsValidGroup(g_mainBGMGroup))
 		AEAudioStopGroup(g_mainBGMGroup);
 }
-=======
-#include "HelperCreatures.h"
->>>>>>> Tiara
 
 // ---------------------------------------------------------------------------
 // Game State Variables
@@ -182,7 +178,6 @@ void MainScreen_Load()
 	Farm_Load();
 	Crate_Load();
 
-<<<<<<< HEAD
 	// Load main screen BGM
 	g_mainBGM = AEAudioLoadMusic("Assets/bgm.wav");
 	g_mainBGMGroup = AEAudioCreateGroup();
@@ -195,16 +190,6 @@ void MainScreen_Load()
 	AEGfxTriAdd(0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f, 0.5f, 0.5f, 0xFFFFFFFF, 1.0f, 0.0f, -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
 	pMeshPauseQuad = AEGfxMeshEnd();
 
-=======
-	// Pause popup assets
-	pTexPausePanel = AEGfxTextureLoad("Assets/panel_brown.png");
-	pTexPauseBtn = AEGfxTextureLoad("Assets/input_outline_rectangle.png");
-	AEGfxMeshStart();
-	AEGfxTriAdd(-0.5f, -0.5f, 0xFFFFFFFF, 0.0f, 1.0f, 0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f, -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
-	AEGfxTriAdd(0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f, 0.5f, 0.5f, 0xFFFFFFFF, 1.0f, 0.0f, -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
-	pMeshPauseQuad = AEGfxMeshEnd();
-
->>>>>>> Tiara
 	if (!pBackground) OutputDebugStringA("ERROR: Failed to load 'Assets/MainMenu_Background.png'.\n");
 	if (!pBaseStall)  OutputDebugStringA("ERROR: Failed to load 'Assets/base level 1 with apple.png'.\n");
 	if (!pTexApple)   OutputDebugStringA("ERROR: Failed to load 'Assets/Apple.png'.\n");
@@ -252,12 +237,6 @@ void MainScreen_Initialize()
 	Economy_Init();
 	SpawnFruit_Init();
 	UI_Init();
-<<<<<<< HEAD
-=======
-	Helper_Init();
-
-
->>>>>>> Tiara
 
 	if (previousState != GS_RHYTHM_SCREEN)
 	{
@@ -278,7 +257,6 @@ void MainScreen_Initialize()
 	if (fontId < 0)
 		OutputDebugStringA("ERROR: Failed to load 'Assets/Crayon pastel.otf'.\n");
 
-<<<<<<< HEAD
 	// Start BGM only if we're going straight into the game (no start screen overlay).
 	// If gStartScreenActive is true, BGM will be started once the overlay dismisses.
 	if (!gStartScreenActive)
@@ -292,16 +270,6 @@ void MainScreen_Initialize()
 		pMeshBackground = AEGfxMeshEnd();
 	}
 
-=======
-	if (!pMeshBackground)
-	{
-		AEGfxMeshStart();
-		AEGfxTriAdd(-0.5f, -0.5f, 0xFFFFFFFF, 0.0f, 1.0f, 0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f, -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
-		AEGfxTriAdd(0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f, 0.5f, 0.5f, 0xFFFFFFFF, 1.0f, 0.0f, -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
-		pMeshBackground = AEGfxMeshEnd();
-	}
-
->>>>>>> Tiara
 	if (!pMeshGrass)
 	{
 		AEGfxMeshStart();
@@ -347,14 +315,10 @@ void MainScreen_Update()
 	{
 		StartScreen_Update(dt);
 		if (!StartScreen_IsActive())
-<<<<<<< HEAD
 		{
 			gStartScreenActive = false;
 			MainBGM_Start(); // start screen dismissed — begin BGM now
 		}
-=======
-			gStartScreenActive = false;
->>>>>>> Tiara
 		return; // block all game input while start screen is active
 	}
 
@@ -392,10 +356,7 @@ void MainScreen_Update()
 				Profile_EndSession();
 				g_pauseOpen = false;
 				g_returnedFromPause = true;
-<<<<<<< HEAD
 				MainBGM_Stop(); // going back to start screen — force stop BGM
-=======
->>>>>>> Tiara
 				StartScreen_Init();         // reset animation + buttons in place
 				gStartScreenActive = true; // show overlay without leaving GS_MAIN_SCREEN
 			}
@@ -416,17 +377,9 @@ void MainScreen_Update()
 
 	UI_Input();  // Farm_Update() already handles its own clicks before this runs
 
-<<<<<<< HEAD
 	Economy_Update(dt);
 	UpdateSpawnFruits(dt);
 	UpdateFruitSpawner(dt);
-=======
-
-	Economy_Update(dt);
-	UpdateSpawnFruits(dt);
-	UpdateFruitSpawner(dt);
-	Helper_Update(dt);
->>>>>>> Tiara
 	CheckForFruitClicks(mouseX, mouseY);
 
 	// Check if farm triggered rhythm
@@ -434,10 +387,7 @@ void MainScreen_Update()
 	{
 		OutputDebugStringA("Farm requested rhythm game\n");
 		Farm_ClearRhythmFlag();
-<<<<<<< HEAD
 		MainBGM_Stop(); // leaving for rhythm — force stop BGM
-=======
->>>>>>> Tiara
 		nextState = GS_RHYTHM_SCREEN;
 	}
 }
@@ -573,10 +523,6 @@ void MainScreen_Render()
 	MainScreen_DrawCrateFruits();
 
 	RenderSpawnFruits();
-<<<<<<< HEAD
-=======
-	Helper_Draw();
->>>>>>> Tiara
 
 	if (TR_IsActive())
 	{
@@ -735,7 +681,6 @@ void MainScreen_Render()
 
 void MainScreen_Free()
 {
-<<<<<<< HEAD
 	// Stop and unload main BGM
 	MainBGM_Stop();
 	if (AEAudioIsValidAudio(g_mainBGM))
@@ -750,13 +695,6 @@ void MainScreen_Free()
 	if (pMeshStall)      AEGfxMeshFree(pMeshStall);
 	if (pMeshFruit)      AEGfxMeshFree(pMeshFruit);
 
-=======
-	if (pMeshBackground) AEGfxMeshFree(pMeshBackground);
-	if (pMeshGrass)      AEGfxMeshFree(pMeshGrass);
-	if (pMeshStall)      AEGfxMeshFree(pMeshStall);
-	if (pMeshFruit)      AEGfxMeshFree(pMeshFruit);
-
->>>>>>> Tiara
 	if (pBackground) AEGfxTextureUnload(pBackground);
 	if (pTexApple)   AEGfxTextureUnload(pTexApple);
 	if (pTexPear)    AEGfxTextureUnload(pTexPear);

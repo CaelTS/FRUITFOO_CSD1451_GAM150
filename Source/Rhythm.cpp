@@ -341,11 +341,7 @@ static void StartGameplay() {
 
     CreateRandomChart(g_songDuration);
 
-<<<<<<< HEAD
     g_currentSong = AEAudioLoadMusic("Assets/nakkentangkudasai.wav");
-=======
-    g_currentSong = AEAudioLoadMusic("Assets/kk.wav");
->>>>>>> Tiara
 }
 
 void Rhythm_Update() {

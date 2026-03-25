@@ -59,16 +59,4 @@ void UI_RebuildCrateHitboxesFromStall(float stallX, float stallY, float stallW, 
 // Simple yellow hover tint (same look as your Upgrades highlight).
 void UI_DrawCrateHoverTint_Yellow();
 float UI_GetCrateSlotX(int index);
-<<<<<<< HEAD
 float UI_GetCrateSlotY(int index);
-=======
-float UI_GetCrateSlotY(int index);
-
-struct PlotSlot
-{
-    float x, y;
-    float width, height;
-};
-
-extern std::vector<PlotSlot> plotSlots;
->>>>>>> Tiara
