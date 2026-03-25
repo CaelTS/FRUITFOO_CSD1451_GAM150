@@ -1243,12 +1243,6 @@ void UI_Draw()
     AEGfxSetTransform(transform.m);
     AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);*/
 
-    // Draw Header
-    float headerX = (upgradesPanelX - upgradesPanelW * 0.45f) / 800.0f;
-    float headerY = (upgradesPanelY + upgradesPanelH * 0.5f - 40.0f) / 450.0f;
-
-    AEGfxPrint(fontId, "Upgrades", headerX, headerY, 1.0f, 1, 1, 1, 1);
-
     // Draw upgrades text & hover highlight
     float upgStartY = upgradesPanelY + 60.0f;
     float upgSpacing = 70.0f;
