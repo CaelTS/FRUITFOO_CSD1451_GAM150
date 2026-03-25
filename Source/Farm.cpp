@@ -1,5 +1,6 @@
 ﻿#include "Farm.h"
 #include "AEEngine.h"
+#include "AEAudio.h"
 #include "UI.h"
 #include "Profile.h"
 #include <iostream>
@@ -11,22 +12,33 @@
 extern AEGfxVertexList* g_pMeshFullScreen;
 
 // ------------------------------------------------------------
+// FARM AUDIO
+// ------------------------------------------------------------
+static AEAudio      g_farmTickSFX;
+static AEAudioGroup g_farmTickGroup;
+static AEAudio      g_farmHarvestSFX;
+static AEAudioGroup g_farmHarvestGroup;
+
+// ------------------------------------------------------------
 // FARM DATA STRUCTURE
 // ------------------------------------------------------------
 
-//struct FarmPlot
-//{
-  //  bool isUnlocked = false;
+struct FarmPlot
+{
+    bool isUnlocked = false;
 
-  //  bool isPlanted = false;
-   // bool isReady = false;
-   // float growTimer = 0.0f;
-   // int seedType = -1;
+    bool isPlanted = false;
+    bool isReady = false;
+    float growTimer = 0.0f;
+    int seedType = -1;
 
- //   bool rhythmTriggered = false;
-  //  bool waitingForRhythm = false;
-  //  bool growthFrozen = false;  // NEW: permanently freeze growth when X is clicked
-//};
+    bool rhythmTriggered = false;
+    bool waitingForRhythm = false;
+    bool growthFrozen = false;  // NEW: permanently freeze growth when X is clicked
+
+    // Track which growth milestone sounds have already played (25/50/75/100)
+    bool milestoneReached[4] = { false, false, false, false };
+};
 
 static bool g_rhythmUsed = false;
 static bool g_requestRhythm = false;
@@ -44,7 +56,7 @@ static int  g_harvestPopupPlotIndex = -1;  // which plot is waiting for destinat
 static bool g_harvestPopupOpen = false;
 
 
-std::vector<FarmPlot> farmPlots;
+static std::vector<FarmPlot> farmPlots;
 static AEGfxTexture* plantedTexture = nullptr;
 static AEGfxTexture* deleteIcon = nullptr;
 static AEGfxTexture* fruitStage25 = nullptr;
@@ -144,6 +156,12 @@ void Farm_Load()
     lockedPlot = AEGfxTextureLoad("Assets/lockedplot.png");
     fruitAppleTexture = AEGfxTextureLoad("Assets/Fruit_Apple.png");
 
+    // Load farm growth sounds
+    g_farmTickSFX = AEAudioLoadSound("Assets/Tick.wav");
+    g_farmTickGroup = AEAudioCreateGroup();
+    g_farmHarvestSFX = AEAudioLoadSound("Assets/Harvest.wav");
+    g_farmHarvestGroup = AEAudioCreateGroup();
+
     FlyingFruit_Init();
 }
 
@@ -162,6 +180,7 @@ void Farm_Initialize()
         farmPlots[i].rhythmTriggered = false;
         farmPlots[i].waitingForRhythm = false;
         farmPlots[i].growthFrozen = false;  // Reset freeze state on init
+        for (int m = 0; m < 4; m++) farmPlots[i].milestoneReached[m] = false;
     }
 
     // Migration guard: ensure plot 0 is always unlocked
@@ -201,28 +220,30 @@ bool Farm_IsPlotLocked(int index)
 
 void Farm_Update()
 {
+    if (!UI_IsMenuOpen())
+        return;
+
     float dt = (float)AEFrameRateControllerGetFrameTime();
 
-    // Always update flying fruits
     FlyingFruit_Update(dt);
 
-    // Mouse
     s32 mouseX, mouseY;
     AEInputGetCursorPosition(&mouseX, &mouseY);
 
     float worldX = (float)mouseX - 800.0f;
     float worldY = 450.0f - (float)mouseY;
 
-    // Only restrict INPUT, not logic
-    bool allowInput = UI_IsMenuOpen();
-
     // ---------------------------------------------------------------
-    // HARVEST POPUP (FULL ORIGINAL LOGIC RESTORED)
+    // Harvest destination popup: handle button clicks first so the
+    // SPACE check below cannot open a second popup the same frame.
     // ---------------------------------------------------------------
     if (g_harvestPopupOpen && g_harvestPopupPlotIndex >= 0)
     {
-        if (allowInput && AEInputCheckTriggered(AEVK_LBUTTON))
+        if (AEInputCheckTriggered(AEVK_LBUTTON))
         {
+            // Button layout (world-space, centered on screen like other prompts):
+            //   [Inventory]  left  button  centered at (-80, -40)  130 x 45
+            //   [Crate]      right button  centered at ( 80, -40)  130 x 45
             const float btnW = 130.0f, btnH = 45.0f;
             const float invBtnX = -80.0f, btnY = -40.0f;
             const float crateBtnX = 80.0f;
@@ -239,8 +260,9 @@ void Farm_Update()
             {
                 int idx = g_harvestPopupPlotIndex;
                 FarmPlot& plot = farmPlots[idx];
-                int harvestedType = plot.seedType;
+                int harvestedType = plot.seedType; // 0=apple 1=pear 2=banana
 
+                // Clear plot state
                 plot.isPlanted = false;
                 plot.isReady = false;
                 plot.seedType = -1;
@@ -248,7 +270,6 @@ void Farm_Update()
                 plot.rhythmTriggered = false;
                 plot.waitingForRhythm = false;
                 plot.growthFrozen = false;
-
                 Profile_SetPlotData(idx, false, false, 0.0f, -1);
 
                 if (harvestedType >= 0)
@@ -258,12 +279,18 @@ void Farm_Update()
 
                     if (clickedInventory)
                     {
-                        Inventory_AddFruit(1, (u8)harvestedType);
+                        Inventory_AddFruit(1, static_cast<u8>(harvestedType));
+                        std::cout << "Harvested plot " << idx
+                            << " -> Inventory (type " << harvestedType << ")\n";
+                        // Fly toward the left UI panel (inventory side)
                         FlyingFruit_Spawn(plotX, plotY, -600.0f, 100.0f, harvestedType);
                     }
-                    else
+                    else // clickedCrate
                     {
                         Crate_AddFruitTyped(harvestedType, 1);
+                        std::cout << "Harvested plot " << idx
+                            << " -> Crate (type " << harvestedType << ")\n";
+                        // Fly toward the matching crate slot on the stall
                         float crateX = UI_GetCrateSlotX(harvestedType);
                         float crateY = UI_GetCrateSlotY(harvestedType);
                         FlyingFruit_Spawn(plotX, plotY, crateX, crateY, harvestedType);
@@ -272,33 +299,31 @@ void Farm_Update()
 
                 g_harvestPopupOpen = false;
                 g_harvestPopupPlotIndex = -1;
-                g_rhythmPlotIndex = -1;
+                g_rhythmPlotIndex = -1;          // prevent rhythm prompt re-appearing after harvest
                 return;
             }
         }
 
+        // Popup is open � swallow SPACE so it cannot re-trigger
         return;
     }
 
-    // ---------------------------------------------------------------
-    // HARVEST KEY
-    // ---------------------------------------------------------------
-    if (allowInput && AEInputCheckTriggered(AEVK_SPACE))
+    // Harvest � SPACE opens the destination popup for the first ready plot
+    if (AEInputCheckTriggered(AEVK_SPACE))
     {
         for (int i = 0; i < (int)farmPlots.size(); i++)
         {
-            if (farmPlots[i].isReady)
+            auto& plot = farmPlots[i];
+            if (plot.isReady)
             {
                 g_harvestPopupPlotIndex = i;
                 g_harvestPopupOpen = true;
-                break;
+                std::cout << "Harvest popup opened for plot " << i << "\n";
+                break; // one popup at a time
             }
         }
     }
 
-    // ---------------------------------------------------------------
-    // MAIN FARM LOOP (FIXED)
-    // ---------------------------------------------------------------
     for (int i = 0; i < (int)farmPlots.size(); i++)
     {
         FarmPlot& plot = farmPlots[i];
@@ -306,97 +331,165 @@ void Farm_Update()
         if (!plot.isPlanted)
             continue;
 
-        // Frozen
+        // ----------------------------------------------------------------
+        // FROZEN STATE: growth permanently stopped by clicking X on rhythm prompt
+        // But we still show the rhythm prompt and allow re-launching
+        // ----------------------------------------------------------------
         if (plot.growthFrozen)
         {
-            if (allowInput && AEInputCheckTriggered(AEVK_LBUTTON))
+            // Check for click on tick to re-launch rhythm game
+            if (AEInputCheckTriggered(AEVK_LBUTTON))
             {
                 float iconSize = 50.0f;
                 float tickX = -70.0f, tickY = -40.0f;
 
+                // Tick => re-launch rhythm game (unfreeze and play)
                 if (worldX >= tickX - iconSize / 2 && worldX <= tickX + iconSize / 2 &&
                     worldY >= tickY - iconSize / 2 && worldY <= tickY + iconSize / 2)
                 {
-                    plot.growthFrozen = false;
+                    plot.growthFrozen = false;  // Unfreeze
                     plot.rhythmTriggered = false;
                     plot.waitingForRhythm = true;
                     g_rhythmPlotIndex = i;
                     g_requestRhythm = true;
+
+                    std::cout << "Frozen plot " << i << ": re-launching rhythm\n";
                     return;
                 }
             }
+
+            // Growth is frozen but prompt stays visible - skip growth logic
             continue;
         }
 
-        // Paused
+        // ----------------------------------------------------------------
+        // PAUSED STATE: player ESC'd from rhythm game OR clicked X.
+        // Growth is frozen until they click tick (re-launch) or cross (skip/freeze).
+        // ----------------------------------------------------------------
         if (g_rhythmPaused && g_rhythmPausedPlotIndex == i)
         {
-            if (allowInput && AEInputCheckTriggered(AEVK_LBUTTON))
+            if (AEInputCheckTriggered(AEVK_LBUTTON))
             {
                 float iconSize = 50.0f;
                 float tickX = -70.0f, tickY = -40.0f;
                 float crossX = 70.0f, crossY = -40.0f;
 
+                // Tick => re-launch rhythm game
                 if (worldX >= tickX - iconSize / 2 && worldX <= tickX + iconSize / 2 &&
                     worldY >= tickY - iconSize / 2 && worldY <= tickY + iconSize / 2)
                 {
                     g_rhythmPaused = false;
                     g_rhythmPausedPlotIndex = -1;
+                    plot.rhythmTriggered = false;
                     plot.waitingForRhythm = true;
                     g_rhythmPlotIndex = i;
                     g_requestRhythm = true;
+
+                    std::cout << "Paused Tick: re-launching rhythm\n";
                     return;
                 }
 
+                // Cross => PERMANENTLY freeze growth at current level
                 if (worldX >= crossX - iconSize / 2 && worldX <= crossX + iconSize / 2 &&
                     worldY >= crossY - iconSize / 2 && worldY <= crossY + iconSize / 2)
                 {
                     g_rhythmPaused = false;
                     g_rhythmPausedPlotIndex = -1;
+
+                    // Mark as frozen - growth stops permanently
                     plot.growthFrozen = true;
                     plot.rhythmTriggered = true;
+                    plot.waitingForRhythm = false;
+
+                    std::cout << "Paused Cross: growth FROZEN permanently at "
+                        << (plot.growTimer / GROW_TIME * 100.0f) << "%\n";
                     return;
                 }
             }
-            continue;
+
+            continue;   // growth frozen while prompt is visible
         }
 
-        // Waiting
+        // ----------------------------------------------------------------
+        // FIRST-TIME RHYTHM PROMPT: reached 50%, asking player to play.
+        // ----------------------------------------------------------------
         if (plot.waitingForRhythm)
         {
-            if (allowInput && AEInputCheckTriggered(AEVK_LBUTTON))
+            if (AEInputCheckTriggered(AEVK_LBUTTON))
             {
                 float iconSize = 50.0f;
                 float tickX = -70.0f, tickY = -40.0f;
                 float crossX = 70.0f, crossY = -40.0f;
 
+                // Tick => launch rhythm game
                 if (worldX >= tickX - iconSize / 2 && worldX <= tickX + iconSize / 2 &&
                     worldY >= tickY - iconSize / 2 && worldY <= tickY + iconSize / 2)
                 {
                     plot.waitingForRhythm = false;
                     g_requestRhythm = true;
                     g_rhythmPlotIndex = i;
+
+                    std::cout << "Tick clicked\n";
                     return;
                 }
 
+                // Cross => continues growing but lesser rewards
                 if (worldX >= crossX - iconSize / 2 && worldX <= crossX + iconSize / 2 &&
                     worldY >= crossY - iconSize / 2 && worldY <= crossY + iconSize / 2)
                 {
+                    //  CLEAR PAUSE STATE (THIS IS THE MISSING PART)
+                    g_rhythmPaused = false;
+                    g_rhythmPausedPlotIndex = -1;
+                    g_rhythmPlotIndex = -1;
+
+                    // RESUME GROWTH
+                    plot.growthFrozen = false;
                     plot.waitingForRhythm = false;
                     plot.rhythmTriggered = true;
+
+
+                    std::cout << "Cross clicked, growth as per usual just with less rewards\n";
                     return;
                 }
             }
+
             continue;
         }
 
+        // Pause growth if rhythm transition is pending
         if (g_requestRhythm)
             continue;
 
-        //  GROWTH (FIXED)
+        // ----------------------------------------------------------------
+        // NORMAL GROWTH (only if not frozen)
+        // ----------------------------------------------------------------
         plot.growTimer += dt;
 
         float ratio = plot.growTimer / GROW_TIME;
+
+        // 25% milestone — tick sound
+        if (ratio >= 0.25f && !plot.milestoneReached[0])
+        {
+            plot.milestoneReached[0] = true;
+            if (AEAudioIsValidAudio(g_farmTickSFX) && AEAudioIsValidGroup(g_farmTickGroup))
+                AEAudioPlay(g_farmTickSFX, g_farmTickGroup, 1.0f, 1.0f, 0);
+        }
+
+        // 50% milestone — tick sound (rhythm prompt fires here too)
+        if (ratio >= 0.5f && !plot.milestoneReached[1])
+        {
+            plot.milestoneReached[1] = true;
+            if (AEAudioIsValidAudio(g_farmTickSFX) && AEAudioIsValidGroup(g_farmTickGroup))
+                AEAudioPlay(g_farmTickSFX, g_farmTickGroup, 1.0f, 1.0f, 0);
+        }
+
+        // 75% milestone — tick sound
+        if (ratio >= 0.75f && !plot.milestoneReached[2])
+        {
+            plot.milestoneReached[2] = true;
+            if (AEAudioIsValidAudio(g_farmTickSFX) && AEAudioIsValidGroup(g_farmTickGroup))
+                AEAudioPlay(g_farmTickSFX, g_farmTickGroup, 1.0f, 1.0f, 0);
+        }
 
         if (ratio >= 0.5f && !plot.rhythmTriggered && g_rhythmPlotIndex == -1)
         {
@@ -408,19 +501,28 @@ void Farm_Update()
         if (ratio >= 1.0f && !plot.isReady)
         {
             plot.isReady = true;
+            plot.milestoneReached[3] = true;
+
+            // Harvest sound — plot fully grown
+            if (AEAudioIsValidAudio(g_farmHarvestSFX) && AEAudioIsValidGroup(g_farmHarvestGroup))
+                AEAudioPlay(g_farmHarvestSFX, g_farmHarvestGroup, 3.0f, 1.0f, 0);
+
+            // Clear all rhythm prompt state — the plant is fully grown,
+            // the rhythm prompt is no longer relevant and must not show.
             plot.waitingForRhythm = false;
             plot.growthFrozen = false;
-
-            if (g_rhythmPlotIndex == i)
-                g_rhythmPlotIndex = -1;
-
-            if (g_rhythmPausedPlotIndex == i)
-            {
-                g_rhythmPaused = false;
-                g_rhythmPausedPlotIndex = -1;
-            }
+            if (g_rhythmPlotIndex == i)        g_rhythmPlotIndex = -1;
+            if (g_rhythmPausedPlotIndex == i) { g_rhythmPaused = false; g_rhythmPausedPlotIndex = -1; }
 
             Profile_SetPlotData(i, plot.isPlanted, plot.isReady, plot.growTimer, plot.seedType);
+            std::cout << "Plot " << i << " is ready for harvest!\n";
+        }
+
+        // Periodically save growth timer (~every 1 second)
+        static float lastSaveTimer[4] = { -1.0f, -1.0f, -1.0f, -1.0f };
+        if (plot.growTimer - lastSaveTimer[i] >= 1.0f) {
+            Profile_SetPlotData(i, plot.isPlanted, plot.isReady, plot.growTimer, plot.seedType);
+            lastSaveTimer[i] = plot.growTimer;
         }
     }
 }
@@ -784,6 +886,17 @@ void Farm_Unload()
     if (plantedTexture) { AEGfxTextureUnload(plantedTexture);     plantedTexture = nullptr; }
     if (deleteIcon) { AEGfxTextureUnload(deleteIcon);         deleteIcon = nullptr; }
     if (fruitAppleTexture) { AEGfxTextureUnload(fruitAppleTexture);  fruitAppleTexture = nullptr; }
+
+    // Unload farm audio
+    if (AEAudioIsValidAudio(g_farmTickSFX))      AEAudioUnloadAudio(g_farmTickSFX);
+    if (AEAudioIsValidGroup(g_farmTickGroup))     AEAudioUnloadAudioGroup(g_farmTickGroup);
+    if (AEAudioIsValidAudio(g_farmHarvestSFX))   AEAudioUnloadAudio(g_farmHarvestSFX);
+    if (AEAudioIsValidGroup(g_farmHarvestGroup))  AEAudioUnloadAudioGroup(g_farmHarvestGroup);
+    memset(&g_farmTickSFX, 0, sizeof(AEAudio));
+    memset(&g_farmTickGroup, 0, sizeof(AEAudioGroup));
+    memset(&g_farmHarvestSFX, 0, sizeof(AEAudio));
+    memset(&g_farmHarvestGroup, 0, sizeof(AEAudioGroup));
+
     std::cout << "Farm_Unload\n";
 }
 
@@ -813,6 +926,7 @@ void Farm_PlantSeed(int plotIndex, int seedType)
     plot.rhythmTriggered = false;
     plot.waitingForRhythm = false;
     plot.growthFrozen = false;  // Reset freeze state on new plant
+    for (int m = 0; m < 4; m++) plot.milestoneReached[m] = false;
 
     // Clear any leftover rhythm state for this plot
     if (g_rhythmPlotIndex == plotIndex)
@@ -847,6 +961,7 @@ void Farm_ClearPlot(int index)
     farmPlots[index].rhythmTriggered = false;
     farmPlots[index].waitingForRhythm = false;
     farmPlots[index].growthFrozen = false;  // Reset freeze state on clear
+    for (int m = 0; m < 4; m++) farmPlots[index].milestoneReached[m] = false;
 
     if (g_rhythmPlotIndex == index)
         g_rhythmPlotIndex = -1;

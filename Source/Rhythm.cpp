@@ -341,7 +341,7 @@ static void StartGameplay() {
 
     CreateRandomChart(g_songDuration);
 
-    g_currentSong = AEAudioLoadMusic("Assets/kk.wav");
+    g_currentSong = AEAudioLoadMusic("Assets/nakkentangkudasai.wav");
 }
 
 void Rhythm_Update() {
