@@ -144,6 +144,8 @@ static float g_wateringCanAnimTimer = 0.0f;  // Animation timer
 static const float WATERING_CAN_ANIM_DURATION = 0.3f;  // Total animation time (up and back)
 static bool g_wateringCanIsAnimating = false;  // Whether animation is active
 
+static bool gMusicEnabled = true;
+
 // ================= HELPERS =================
 
 static void StartGameplay();  // Forward declaration – defined after Rhythm_Initialize
@@ -379,8 +381,8 @@ void Rhythm_Update() {
         g_preSongTimer += dt;
         if (g_preSongTimer >= g_audioOffset) {
             g_audioStarted = true;
-            if (IsValidAudio(g_currentSong) && IsValidGroup(g_musicGroup)) {
-                AEAudioPlay(g_currentSong, g_musicGroup, 8.0f, 1.0f, 0);
+            if (gMusicEnabled && IsValidAudio(g_currentSong) && IsValidGroup(g_musicGroup)) {
+                AEAudioPlay(g_currentSong, g_musicGroup, 1.0f, 1.0f, 0);
                 printf("Audio started playing\n");
             }
         }
@@ -795,4 +797,17 @@ RhythmRewardTier Rhythm_GetRewardTier()
         return REWARD_POOR;
     }
     return REWARD_POOR;
+}
+
+void Rhythm_SetMusicEnabled(bool enabled)
+{
+    gMusicEnabled = enabled;
+
+    if (!AEAudioIsValidGroup(g_musicGroup))
+        return;
+
+    if (enabled)
+        AEAudioResumeGroup(g_musicGroup);
+    else
+        AEAudioPauseGroup(g_musicGroup);
 }
