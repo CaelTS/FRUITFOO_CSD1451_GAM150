@@ -13,6 +13,8 @@
 #include "Crate.h"
 #include "Upgrades.h"
 #include "Main.h"
+#include "UIAudio.h"
+#include "GameStateManager.h"
 
 
 extern AEGfxVertexList* g_pMeshFullScreen;
@@ -56,6 +58,9 @@ static AEGfxTexture* collectionIcon = nullptr;
 static AEGfxTexture* collectionBG = nullptr;
 
 static AEGfxTexture* settingsIcon = nullptr;
+static AEGfxTexture* settingsBG = nullptr;
+static AEGfxTexture* settingsOn = nullptr;
+static AEGfxTexture* settingsOff = nullptr;
 
 static AEGfxTexture* appleSeedIcon = nullptr;
 static AEGfxTexture* appleSeedInfo = nullptr;
@@ -213,6 +218,37 @@ static const float INV_TRASH_X = 180.0f;
 static const float INV_TRASH_Y = -250.0f;
 static const float INV_TRASH_SIZE = 48.0f;
 
+// -------------------------
+// Settings panel state
+// -------------------------
+ bool gSoundEnabled = true;
+ bool gMusicEnabled = true;
+
+static bool gHoverSoundToggle = false;
+static bool gHoverMusicToggle = false;
+static bool gHoverSettingsExit = false;
+static bool gHoverSettingsClose = false;
+
+void MainBGM_SetEnabled(bool enabled);
+
+// -------------------------
+// Settings layout
+// -------------------------
+static const float SET_PANEL_W = 962.0f;
+static const float SET_PANEL_H = 609.0f;
+static const float SET_PANEL_X = 200.0f;
+static const float SET_PANEL_Y = 0.0f;
+
+static const float SET_SOUND_Y = 70.0f;
+static const float SET_MUSIC_Y = 15.0f;
+
+static const float SET_TOGGLE_X = 130.0f;
+static const float SET_TOGGLE_W = 235.0f;
+static const float SET_TOGGLE_H = 57.0f;
+
+static const float SET_CLOSE_X = 230.0f;
+static const float SET_CLOSE_Y = 150.0f;
+static const float SET_CLOSE_SIZE = 28.0f;
 
 
 void UI_Init()
@@ -239,6 +275,10 @@ void UI_Init()
     collectionBG = AEGfxTextureLoad("Assets/collectionBG.png");
 
     settingsIcon = AEGfxTextureLoad("Assets/Settings.png");
+
+    settingsBG = AEGfxTextureLoad("Assets/Settings_BG.png");
+    settingsOn = AEGfxTextureLoad("Assets/Settings_ON.png");
+    settingsOff = AEGfxTextureLoad("Assets/Settings_OFF.png");
 
     appleSeedIcon = AEGfxTextureLoad("Assets/AppleSeed.png");
     appleSeedInfo = AEGfxTextureLoad("Assets/AppleSeedInfo.png");
@@ -318,6 +358,8 @@ void UI_UpdateButtons()
     float worldX = static_cast<float>(mx) - 800.0f;
     float worldY = 450.0f - static_cast<float>(my);
 
+    bool clickConsumed = false;
+
     // -------------------------------------------------
     // MENU BUTTONS
     // -------------------------------------------------
@@ -331,6 +373,9 @@ void UI_UpdateButtons()
 
         if (button.isHovered && AEInputCheckTriggered(AEVK_LBUTTON))
         {
+
+            clickConsumed = true;
+
             if (popupOpen && activePopupIndex == button.type)
             {
                 // Clicking the same button closes the popup
@@ -346,6 +391,8 @@ void UI_UpdateButtons()
         }
 
     }
+
+
 
     // -------------------------------------------------
     // PLOT "+" BUTTON (TOGGLE PANEL)
@@ -780,13 +827,103 @@ void UI_UpdateButtons()
 
     }
 
+    // ================= Settings input =================
+    if (popupOpen && activePopupIndex == BUTTON_SETTINGS)
+    {
+        // SOUND toggle
+        gHoverSoundToggle =
+            worldX >= (SET_PANEL_X + SET_TOGGLE_X) - SET_TOGGLE_W * 0.5f &&
+            worldX <= (SET_PANEL_X + SET_TOGGLE_X) + SET_TOGGLE_W * 0.5f &&
+            worldY >= (SET_PANEL_Y + SET_SOUND_Y + 45.0f) - SET_TOGGLE_H * 0.5f &&
+            worldY <= (SET_PANEL_Y + SET_SOUND_Y + 45.0f) + SET_TOGGLE_H * 0.5f;
+
+        if (gHoverSoundToggle && AEInputCheckTriggered(AEVK_LBUTTON))
+        {
+            gSoundEnabled = !gSoundEnabled;
+            UIAudio_EnableSFX(gSoundEnabled);
+            UIAudio_PlayToggle();
+        }
+
+        // MUSIC toggle
+        gHoverMusicToggle =
+            worldX >= (SET_PANEL_X + SET_TOGGLE_X) - SET_TOGGLE_W * 0.5f &&
+            worldX <= (SET_PANEL_X + SET_TOGGLE_X) + SET_TOGGLE_W * 0.5f &&
+            worldY >= (SET_PANEL_Y + SET_MUSIC_Y + 5.0f) - SET_TOGGLE_H * 0.5f &&
+            worldY <= (SET_PANEL_Y + SET_MUSIC_Y + 5.0f) + SET_TOGGLE_H * 0.5f;
+
+        if (gHoverMusicToggle && AEInputCheckTriggered(AEVK_LBUTTON))
+        {
+            gMusicEnabled = !gMusicEnabled;
+            UIAudio_SetMusicEnabled(gMusicEnabled);
+            MainBGM_SetEnabled(gMusicEnabled);
+            UIAudio_PlayToggle();
+        }
+    }
+    // -------------------------------------------------
+    // CLOSE POPUP WHEN CLICKING OUTSIDE
+    // -------------------------------------------------
+    if (popupOpen && AEInputCheckTriggered(AEVK_LBUTTON))
+    {
+        bool clickInside = false;
+
+        switch (activePopupIndex)
+        {
+        case BUTTON_INVENTORY:
+        {
+            clickInside =
+                worldX >= -INV_PANEL_W * 0.5f &&
+                worldX <= INV_PANEL_W * 0.5f &&
+                worldY >= -INV_PANEL_H * 0.5f &&
+                worldY <= INV_PANEL_H * 0.5f;
+            break;
+        }
+
+        case BUTTON_COLLECTION:
+        {
+            const float panelCenterX = 180.0f;
+            const float panelCenterY = 0.0f;
+
+            const float panelHalfW = 800.0f * 0.5f;
+            const float panelHalfH = 600.0f * 0.4f;
+
+            clickInside =
+                worldX >= panelCenterX - panelHalfW &&
+                worldX <= panelCenterX + panelHalfW &&
+                worldY >= panelCenterY - panelHalfH &&
+                worldY <= panelCenterY + panelHalfH;
+
+            break;
+        }
+        case BUTTON_SETTINGS:
+        {
+            float panelHalfW = (SET_PANEL_W * ScaleX) * 0.5f;
+            float panelHalfH = (SET_PANEL_H * ScaleY) * 0.46f;
+
+            clickInside =
+                worldX >= SET_PANEL_X - panelHalfW &&
+                worldX <= SET_PANEL_X + panelHalfW &&
+                worldY >= SET_PANEL_Y - panelHalfH &&
+                worldY <= SET_PANEL_Y + panelHalfH;
+            break;
+        }
+        }
+
+        if (clickInside)
+        {
+            clickConsumed = true;
+        }
+
+        if (!clickInside && !clickConsumed)
+        {
+            popupOpen = false;
+            activePopupIndex = -1;
+        }
+    }
 }
 
 
 void UI_Draw()
 {
-
-
 
     // THEN menu stuff
     if (!menuOpen)
@@ -845,33 +982,6 @@ void UI_Draw()
 
     if (popupOpen)
     {
-        float popupW = 400.0f;
-        float popupH = 250.0f;
-        float popupX = 0.0f;
-        float popupY = 0.0f;
-
-
-
-        // Draw dark background
-        AEGfxSetRenderMode(AE_GFX_RM_COLOR);
-        AEGfxSetBlendMode(AE_GFX_BM_BLEND);
-        AEGfxSetColorToMultiply(0.1f, 0.1f, 0.1f, 0.95f);
-
-        AEMtx33Scale(&scale, popupW, popupH);
-        AEMtx33Trans(&trans, popupX, popupY);
-        AEMtx33Concat(&transform, &trans, &scale);
-
-        AEGfxSetTransform(transform.m);
-        AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
-
-        // Reset render state before printing text
-        AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
-        AEGfxSetBlendMode(AE_GFX_BM_BLEND);
-        AEGfxSetColorToMultiply(1, 1, 1, 1);
-
-        // Text position
-        float xText = (popupX - popupW * 0.45f) / 800.0f;
-        float yText = (popupY + popupH * 0.25f) / 450.0f;
 
         switch (activePopupIndex)
         {
@@ -1093,6 +1203,24 @@ void UI_Draw()
                         AEGfxSetTransform(transform.m);
                         AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
 
+                        if (gSelectedInvItem == INV_ITEM_APPLE)
+                        {
+                            // Semi‑transparent yellow/orange tint overlay
+                            AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+                            AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+                            AEGfxSetColorToMultiply(1.0f, 0.75f, 0.2f, 0.4f);
+
+                            AEMtx33Scale(&scale, iconSize + 10.0f, iconSize + 10.0f);
+                            AEMtx33Trans(&trans, itemX, itemY);
+                            AEMtx33Concat(&transform, &trans, &scale);
+                            AEGfxSetTransform(transform.m);
+                            AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+                            // Reset render mode
+                            AEGfxSetColorToMultiply(1, 1, 1, 1);
+                            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+                        }
+
                         // Count
                         char cnt[8];
                         sprintf_s(cnt, "%d", GetFruitCount());
@@ -1113,6 +1241,24 @@ void UI_Draw()
                         AEMtx33Concat(&transform, &trans, &scale);
                         AEGfxSetTransform(transform.m);
                         AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+                        if (gSelectedInvItem == INV_ITEM_APPLE_SEED)
+                        {
+                            // Soft green tint to distinguish seed selection
+                            AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+                            AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+                            AEGfxSetColorToMultiply(0.3f, 1.0f, 0.4f, 0.4f);
+
+                            AEMtx33Scale(&scale, iconSize + 10.0f, iconSize + 10.0f);
+                            AEMtx33Trans(&trans, itemX, itemY);
+                            AEMtx33Concat(&transform, &trans, &scale);
+                            AEGfxSetTransform(transform.m);
+                            AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+                            // Reset state
+                            AEGfxSetColorToMultiply(1, 1, 1, 1);
+                            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+                        }
 
                         /** char cnt[8];
                          sprintf_s(cnt, "%d", Economy_GetSeedCount());
@@ -1210,10 +1356,38 @@ void UI_Draw()
         }
         case BUTTON_SETTINGS:
         {
-            AEGfxPrint(fontId, "Settings", xText, yText, 1.0f, 1, 1, 1, 1);
-            AEGfxPrint(fontId, "Game options here.",
-                xText, yText - 0.08f,
-                0.8f, 1, 1, 1, 1);
+            // Background
+            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+            AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+            AEGfxSetColorToMultiply(1, 1, 1, 1);
+            AEGfxTextureSet(settingsBG, 0, 0);
+
+            AEMtx33Scale(&scale, SET_PANEL_W* ScaleX, SET_PANEL_H* ScaleY);
+            AEMtx33Trans(&trans, SET_PANEL_X, SET_PANEL_Y);
+            AEMtx33Concat(&transform, &trans, &scale);
+            AEGfxSetTransform(transform.m);
+            AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+            // SOUND toggle
+            AEGfxSetColorToMultiply(1, gHoverSoundToggle ? 0.85f : 1, gHoverSoundToggle ? 0.85f : 1, 1);
+            AEGfxTextureSet(gSoundEnabled ? settingsOn : settingsOff, 0, 0);
+
+            AEMtx33Scale(&scale, SET_TOGGLE_W* ScaleX, SET_TOGGLE_H* ScaleY);
+            AEMtx33Trans(&trans, SET_TOGGLE_X + SET_PANEL_X, SET_SOUND_Y + SET_PANEL_Y + 45.0f);
+            AEMtx33Concat(&transform, &trans, &scale);
+            AEGfxSetTransform(transform.m);
+            AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+            // MUSIC toggle
+            AEGfxSetColorToMultiply(1, gHoverMusicToggle ? 0.85f : 1, gHoverMusicToggle ? 0.85f : 1, 1);
+            AEGfxTextureSet(gMusicEnabled ? settingsOn : settingsOff, 0, 0);
+
+            AEMtx33Scale(&scale, SET_TOGGLE_W* ScaleX, SET_TOGGLE_H* ScaleY);
+            AEMtx33Trans(&trans, SET_TOGGLE_X + SET_PANEL_X, SET_MUSIC_Y + SET_PANEL_Y + 5.0f);
+            AEMtx33Concat(&transform, &trans, &scale);
+            AEGfxSetTransform(transform.m);
+            AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
             break;
         }
         }
@@ -1733,6 +1907,9 @@ void UI_Exit()
     AEGfxTextureUnload(collectionBG);
 
     AEGfxTextureUnload(settingsIcon);
+    AEGfxTextureUnload(settingsBG);
+    AEGfxTextureUnload(settingsOn);
+    AEGfxTextureUnload(settingsOff);
 
     AEGfxTextureUnload(appleSeedIcon);
     AEGfxTextureUnload(appleSeedInfo);
