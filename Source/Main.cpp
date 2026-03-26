@@ -24,7 +24,6 @@
 #include "HelperCreatures.h"
 #include "Upgrades.h"
 #include "AEAudio.h"
-#include "UIAudio.h"
 
 // ============================================================
 // Main screen BGM
@@ -46,16 +45,6 @@ static void MainBGM_Stop()
 	if (AEAudioIsValidGroup(g_mainBGMGroup))
 		AEAudioStopGroup(g_mainBGMGroup);
 }
-
-
-void MainBGM_SetEnabled(bool enabled)
-{
-	if (enabled)
-		MainBGM_Start();
-	else
-		MainBGM_Stop();
-}
-
 
 // ---------------------------------------------------------------------------
 // Game State Variables
@@ -254,12 +243,6 @@ void MainScreen_Initialize()
 	UI_Init();
 	Helper_Init();
 
-
-	UIAudio_EnableSFX(gSoundEnabled);
-	UIAudio_SetMusicEnabled(gMusicEnabled);
-	MainBGM_SetEnabled(gMusicEnabled);
-
-
 	if (previousState != GS_RHYTHM_SCREEN)
 	{
 		Farm_Initialize();
@@ -281,7 +264,7 @@ void MainScreen_Initialize()
 
 	// Start BGM only if we're going straight into the game (no start screen overlay).
 	// If gStartScreenActive is true, BGM will be started once the overlay dismisses.
-	if (!gStartScreenActive && gMusicEnabled)
+	if (!gStartScreenActive)
 		MainBGM_Start();
 
 	if (!pMeshBackground)
@@ -339,7 +322,6 @@ void MainScreen_Update()
 		if (!StartScreen_IsActive())
 		{
 			gStartScreenActive = false;
-			if (gMusicEnabled)
 			MainBGM_Start(); // start screen dismissed — begin BGM now
 		}
 		return; // block all game input while start screen is active

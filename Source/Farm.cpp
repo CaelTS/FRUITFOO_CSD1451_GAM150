@@ -8,7 +8,6 @@
 #include <cmath>
 #include "Inventory.h"
 #include "Crate.h"
-#include "UIAudio.h"
 
 extern AEGfxVertexList* g_pMeshFullScreen;
 
@@ -419,29 +418,22 @@ void Farm_Update()
         if (ratio >= 0.25f && !plot.milestoneReached[0])
         {
             plot.milestoneReached[0] = true;
-            if (UIAudio_SFXEnabled() && AEAudioIsValidAudio(g_farmTickSFX) && AEAudioIsValidGroup(g_farmTickGroup))
-            {
+            if (AEAudioIsValidAudio(g_farmTickSFX) && AEAudioIsValidGroup(g_farmTickGroup))
                 AEAudioPlay(g_farmTickSFX, g_farmTickGroup, 1.0f, 1.0f, 0);
-            }
-            
         }
 
         if (ratio >= 0.5f && !plot.milestoneReached[1])
         {
             plot.milestoneReached[1] = true;
-            if (UIAudio_SFXEnabled() && AEAudioIsValidAudio(g_farmTickSFX) && AEAudioIsValidGroup(g_farmTickGroup))
-            {
+            if (AEAudioIsValidAudio(g_farmTickSFX) && AEAudioIsValidGroup(g_farmTickGroup))
                 AEAudioPlay(g_farmTickSFX, g_farmTickGroup, 1.0f, 1.0f, 0);
-            }
         }
 
         if (ratio >= 0.75f && !plot.milestoneReached[2])
         {
             plot.milestoneReached[2] = true;
-            if (UIAudio_SFXEnabled() && AEAudioIsValidAudio(g_farmTickSFX) && AEAudioIsValidGroup(g_farmTickGroup))
-            {
+            if (AEAudioIsValidAudio(g_farmTickSFX) && AEAudioIsValidGroup(g_farmTickGroup))
                 AEAudioPlay(g_farmTickSFX, g_farmTickGroup, 1.0f, 1.0f, 0);
-            }
         }
 
         if (ratio >= 0.5f && !plot.rhythmTriggered && g_rhythmPlotIndex == -1)
@@ -457,10 +449,8 @@ void Farm_Update()
             plot.milestoneReached[3] = true;
 
             // Harvest sound — plot fully grown
-            if (UIAudio_SFXEnabled() && AEAudioIsValidAudio(g_farmHarvestSFX) && AEAudioIsValidGroup(g_farmHarvestGroup))
-            {
+            if (AEAudioIsValidAudio(g_farmHarvestSFX) && AEAudioIsValidGroup(g_farmHarvestGroup))
                 AEAudioPlay(g_farmHarvestSFX, g_farmHarvestGroup, 3.0f, 1.0f, 0);
-            }
 
             plot.waitingForRhythm = false;
             plot.growthFrozen = false;

@@ -101,7 +101,4 @@ enum RhythmRewardTier {
 // Call after Rhythm_IsSongFinished() returns true to get the reward tier.
 RhythmRewardTier Rhythm_GetRewardTier();
 
-// =================SETTINGS =================
-void Rhythm_SetMusicEnabled(bool enabled);
-
 #endif // RHYTHM_H
