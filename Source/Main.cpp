@@ -210,35 +210,10 @@ void MainScreen_Load()
 
 void MainScreen_Initialize()
 {
-	// Start Screen Init
-	if (g_returnedFromPause)
-	{
-		// Pause->Main Menu: overlay already active, nothing to change
-	}
-	else if (previousState == GS_NEXT_SCREEN && !Profile_WentBack())
-	{
-		// Profile selected -- go straight into game
-		gStartScreenActive = false;
-		startScreenActive = false;
-	}
-	else if (previousState == GS_RHYTHM_SCREEN)
-	{
-		// Returning from rhythm -- skip start screen
-		gStartScreenActive = false;
-		startScreenActive = false;
-	}
-	else if (previousState == GS_START_SCREEN)
-	{
-		// From standalone start screen state -- go straight to game
-		gStartScreenActive = false;
-		startScreenActive = false;
-	}
-	else
-	{
-		// First launch -- show start screen overlay
-		gStartScreenActive = true;
-		StartScreen_Init();
-	}
+	// Start screen is now its own GSM state (GS_START_SCREEN).
+	// By the time MainScreen_Initialize runs, the start screen is done.
+	gStartScreenActive = false;
+	startScreenActive = false;
 
 	// Reset pause popup state
 	g_pauseOpen = false;
@@ -337,7 +312,7 @@ void MainScreen_Update()
 		{
 			gStartScreenActive = false;
 			if (gMusicEnabled)
-			MainBGM_Start(); // start screen dismissed — begin BGM now
+				MainBGM_Start(); // start screen dismissed — begin BGM now
 		}
 		return; // block all game input while start screen is active
 	}
@@ -768,7 +743,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	AEGfxTriAdd(0.5f, -0.5f, 0xFFFFFFFF, 1, 1, 0.5f, 0.5f, 0xFFFFFFFF, 1, 0, -0.5f, 0.5f, 0xFFFFFFFF, 0, 0);
 	g_pMeshFullScreen = AEGfxMeshEnd();
 
-	GSM_Initialize(GS_MAIN_SCREEN);
+	GSM_Initialize(GS_START_SCREEN);
 
 	while (gGameRunning)
 	{

@@ -1,4 +1,3 @@
-
 #include "UIAudio.h"
 #include "AEAudio.h"
 #include "Rhythm.h"
@@ -47,6 +46,15 @@ void UIAudio_EnableSFX(bool enable)
 void UIAudio_SetMusicEnabled(bool enabled)
 {
     Rhythm_SetMusicEnabled(enabled);
+}
+
+// Hard-stop Rhythm music immediately on state transitions (e.g. returning to
+// the start screen).  Rhythm_SetMusicEnabled(false) only PAUSES the group —
+// AEAudio keeps the channel active and it bleeds into the next state.
+// Rhythm_Stop() calls AEAudioStopGroup which fully kills playback.
+void UIAudio_StopMusic()
+{
+    Rhythm_Stop();
 }
 
 bool UIAudio_SFXEnabled()
