@@ -93,24 +93,22 @@ static void sell_fruit(int crateIndex, int fruitType) {
 
 // lifecycle
 void Economy_Init() {
-	//initialize random seed
 	srand((unsigned int)time(NULL));
 
-	total_money = 0; //to read from config file 
-	money_multiplier = 1.0f; //to read from config file
+	timer = 0.0f;
 
-	timer = 0.0f; //initialize timer
+	//  LOAD instead of reset
+	int slot = Profile_GetActiveSlot();
+	if (slot >= 0)
+	{
+		Economy_LoadFromProfile(slot);
+	}
 
-	//randomize next sale time
-	std::pair<float, float> range_pair = random_range_pair(5.0f, 10.0f, 4.0f, 20.0f); //random time (fast, slow)between sales
-	f32 first_sale_time = range_pair.first;
-	f32 second_sale_time = range_pair.second;
-
-	next_sale_time = random_time(first_sale_time, second_sale_time);
+	// randomize next sale time
+	std::pair<float, float> range_pair = random_range_pair(5.0f, 10.0f, 4.0f, 20.0f);
+	next_sale_time = random_time(range_pair.first, range_pair.second);
 
 	printf("base price apple: %d\n", base_price_apple);
-
-
 }
 void Economy_Update(float dt) {
 	timer += dt;
