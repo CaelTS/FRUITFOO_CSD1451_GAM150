@@ -229,7 +229,7 @@ static bool gHoverMusicToggle = false;
 static bool gHoverSettingsExit = false;
 static bool gHoverSettingsClose = false;
 
-// MainBGM_SetEnabled is routed through UIAudio_SetMusicEnabled -> Rhythm_SetMusicEnabled
+void MainBGM_SetEnabled(bool enabled);
 
 // -------------------------
 // Settings layout
@@ -850,7 +850,8 @@ void UI_UpdateButtons()
         if (gHoverMusicToggle && AEInputCheckTriggered(AEVK_LBUTTON))
         {
             gMusicEnabled = !gMusicEnabled;
-            UIAudio_SetMusicEnabled(gMusicEnabled);  // routes to Rhythm_SetMusicEnabled internally
+            UIAudio_SetMusicEnabled(gMusicEnabled);
+            MainBGM_SetEnabled(gMusicEnabled);
             UIAudio_PlayToggle();
         }
     }
@@ -1357,7 +1358,7 @@ void UI_Draw()
             AEGfxSetColorToMultiply(1, 1, 1, 1);
             AEGfxTextureSet(settingsBG, 0, 0);
 
-            AEMtx33Scale(&scale, SET_PANEL_W * ScaleX, SET_PANEL_H * ScaleY);
+            AEMtx33Scale(&scale, SET_PANEL_W* ScaleX, SET_PANEL_H* ScaleY);
             AEMtx33Trans(&trans, SET_PANEL_X, SET_PANEL_Y);
             AEMtx33Concat(&transform, &trans, &scale);
             AEGfxSetTransform(transform.m);
@@ -1367,7 +1368,7 @@ void UI_Draw()
             AEGfxSetColorToMultiply(1, gHoverSoundToggle ? 0.85f : 1, gHoverSoundToggle ? 0.85f : 1, 1);
             AEGfxTextureSet(gSoundEnabled ? settingsOn : settingsOff, 0, 0);
 
-            AEMtx33Scale(&scale, SET_TOGGLE_W * ScaleX, SET_TOGGLE_H * ScaleY);
+            AEMtx33Scale(&scale, SET_TOGGLE_W* ScaleX, SET_TOGGLE_H* ScaleY);
             AEMtx33Trans(&trans, SET_TOGGLE_X + SET_PANEL_X, SET_SOUND_Y + SET_PANEL_Y + 45.0f);
             AEMtx33Concat(&transform, &trans, &scale);
             AEGfxSetTransform(transform.m);
@@ -1377,7 +1378,7 @@ void UI_Draw()
             AEGfxSetColorToMultiply(1, gHoverMusicToggle ? 0.85f : 1, gHoverMusicToggle ? 0.85f : 1, 1);
             AEGfxTextureSet(gMusicEnabled ? settingsOn : settingsOff, 0, 0);
 
-            AEMtx33Scale(&scale, SET_TOGGLE_W * ScaleX, SET_TOGGLE_H * ScaleY);
+            AEMtx33Scale(&scale, SET_TOGGLE_W* ScaleX, SET_TOGGLE_H* ScaleY);
             AEMtx33Trans(&trans, SET_TOGGLE_X + SET_PANEL_X, SET_MUSIC_Y + SET_PANEL_Y + 5.0f);
             AEMtx33Concat(&transform, &trans, &scale);
             AEGfxSetTransform(transform.m);
