@@ -224,12 +224,20 @@ void MainScreen_Initialize()
 	SpawnFruit_Init();
 	Upgrades_Init();
 
+	// UIAudio_Init loads audio_settings.txt and caches sSFXEnabled / sMusicEnabled.
+	// UI_Init then reads those back via UIAudio_SFXEnabled() / UIAudio_MusicEnabled()
+	// to sync the visual toggle state (gSoundEnabled / gMusicEnabled).
+	UIAudio_Init();
 	UI_Init();
 	Helper_Init();
 
+	// Apply persisted audio settings to all subsystems.
+	// UIAudio_SetMusicEnabled controls both Rhythm AND MainBGM in one call,
+	// so we do NOT call MainBGM_SetEnabled separately.
+	gSoundEnabled = UIAudio_SFXEnabled();
+	gMusicEnabled = UIAudio_MusicEnabled();
 	UIAudio_EnableSFX(gSoundEnabled);
-	UIAudio_SetMusicEnabled(gMusicEnabled);
-	MainBGM_SetEnabled(gMusicEnabled);
+	UIAudio_SetMusicEnabled(gMusicEnabled); // starts MainBGM if gMusicEnabled=true
 
 
 	if (previousState != GS_RHYTHM_SCREEN)
@@ -250,11 +258,6 @@ void MainScreen_Initialize()
 	fontId = AEGfxCreateFont("Assets/Crayon pastel.otf", 26);
 	if (fontId < 0)
 		OutputDebugStringA("ERROR: Failed to load 'Assets/Crayon pastel.otf'.\n");
-
-	// Start BGM only if we're going straight into the game (no start screen overlay).
-	// If gStartScreenActive is true, BGM will be started once the overlay dismisses.
-	if (!gStartScreenActive && gMusicEnabled)
-		MainBGM_Start();
 
 	if (!pMeshBackground)
 	{
