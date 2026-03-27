@@ -431,11 +431,11 @@ void StartScreen_Load()
         AEAudioUnloadAudioGroup(g_startMusicGroup);
     }
 
-    // Reset and load fresh
+    // Reset and load fresh — group MUST be created before loading audio
     ResetAudio(g_startMusic);
     ResetAudioGroup(g_startMusicGroup);
+    g_startMusicGroup = AEAudioCreateGroup();   // create group first
     g_startMusic = AEAudioLoadMusic("Assets/Start.wav");
-    g_startMusicGroup = AEAudioCreateGroup();
 
     // Debug output
     if (AEAudioIsValidAudio(g_startMusic))
@@ -451,35 +451,21 @@ void StartScreen_Init()
     hasSave = (CountProfiles() > 0);
 
     // ============================================================
-    // AUDIO PLAYBACK - with fallback loading if Load() wasn't called
+    // AUDIO PLAYBACK - audio must have been loaded in StartScreen_Load()
     // ============================================================
-    // FALLBACK: If audio wasn't loaded in Load() (or Load was never called), load it now
-    if (!AEAudioIsValidAudio(g_startMusic) || !AEAudioIsValidGroup(g_startMusicGroup))
-    {
-        printf("[DEBUG] StartScreen_Init(): Audio not valid from Load(), loading now as fallback...\n");
-
-        // Clean up just in case
-        if (AEAudioIsValidAudio(g_startMusic)) AEAudioUnloadAudio(g_startMusic);
-        if (AEAudioIsValidGroup(g_startMusicGroup)) AEAudioUnloadAudioGroup(g_startMusicGroup);
-
-        ResetAudio(g_startMusic);
-        ResetAudioGroup(g_startMusicGroup);
-        g_startMusic = AEAudioLoadMusic("Assets/Start.wav");
-        g_startMusicGroup = AEAudioCreateGroup();
-    }
-
     printf("[DEBUG] StartScreen_Init(): g_startMusic valid=%d, g_startMusicGroup valid=%d\n",
         AEAudioIsValidAudio(g_startMusic), AEAudioIsValidGroup(g_startMusicGroup));
 
     if (AEAudioIsValidAudio(g_startMusic) && AEAudioIsValidGroup(g_startMusicGroup))
     {
+        // Always stop before playing to prevent overlap on re-entry
         AEAudioStopGroup(g_startMusicGroup);
         AEAudioPlay(g_startMusic, g_startMusicGroup, 1.0f, 1.0f, 0);
         printf("[DEBUG] StartScreen_Init(): Start.wav playback started.\n");
     }
     else
     {
-        printf("[ERROR] StartScreen_Init(): Audio failed to load! Check Assets/Start.wav\n");
+        printf("[ERROR] StartScreen_Init(): Audio not valid - was StartScreen_Load() called first?\n");
     }
 
     // Only create if not already allocated
