@@ -36,7 +36,9 @@ struct Upgrade
 void Upgrades_Init();
 void Upgrades_Unload();
 void Upgrades_Purchase(UpgradeID id);
-bool Upgrades_CanPurchase(Upgrade id, int currentMoney);
+
+// Use const reference, don't mutate inside the check
+bool Upgrades_CanPurchase(const Upgrade& u, int currentMoney);
 std::vector<Upgrade>& Upgrades_GetList();
 
 #endif // UPGRADES_H

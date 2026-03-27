@@ -16,6 +16,9 @@ struct FarmPlot
     bool rhythmTriggered = false;
     bool waitingForRhythm = false;
     bool growthFrozen = false;
+
+    // Track which growth milestones have been reached for audio
+    bool milestoneReached[4] = { false, false, false, false };  // 0=25%, 1=50%, 2=75%, 3=100%
 };
 
 // ------------------------------------------------------------

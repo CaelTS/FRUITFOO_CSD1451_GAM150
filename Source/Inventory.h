@@ -15,6 +15,8 @@ bool Inventory_RemoveFruitTyped(u8 amount, u8 fruitType);
 // Inventory panel getters
 int GetInventoryCount();
 int GetInventoryLimit();
+void SetInventoryLimit(int limit); // setter for runtime-capacity
+
 
 int GetFruitCount();
 int GetSeedCount();

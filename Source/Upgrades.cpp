@@ -7,23 +7,8 @@
 #include "Farm.h"
 #include "Economy.h"
 #include "Inventory.h"
+#include "Crate.h"
 
-//placeholder upgrade effects
-static void Inventory_UpgradeCapacity(int qty) {
-	printf("Inventory capacity increased by %d!\n", qty);
-}
-static void Economy_UpgradeFruitPrice(f32 multiplier) {
-    printf("Fruit price increased by %.2f%%!\n", multiplier * 100);
-}
-static void Crate_CapacityUpgrade(int qty) {
-    printf("Crate capacity increased by %d!\n", qty);
-}
-static void Farm_UnlockPlot(int plotNumber) {
-    printf("Plot #%d unlocked!\n", plotNumber);
-}
-static void Crate_UnlockCrate(int crateLevel) {
-    printf("Crate #%d unlocked!\n", crateLevel);
-}
 
 
 
@@ -31,42 +16,42 @@ static std::vector<Upgrade> upgrades;
 
 void Upgrades_Init()
 {
-    
+
     upgrades.clear();
 
     upgrades.push_back({
         UPGRADE_INVENTORY_I, // ID
-		80, // Cost
-		false, // Purchased 
-		AEGfxTextureLoad("Assets/Upgrades/Upgrades_Inventory_I.png") // Texture
+        80, // Cost
+        false, // Purchased 
+        AEGfxTextureLoad("Assets/Upgrades/Upgrades_Inventory_I.png") // Texture
         });
 
     upgrades.push_back({
-		UPGRADE_FRUIT_I,
-		100,
-		false,
+        UPGRADE_FRUIT_I,
+        100,
+        false,
         AEGfxTextureLoad("Assets/Upgrades/Upgrades_Fruits_I.png")
         });
 
-	upgrades.push_back({
+    upgrades.push_back({
         UPGRADE_UNLOCK_PLOT2,
         250,
         false,
         AEGfxTextureLoad("Assets/Upgrades/Upgrades_Plot Unlock_2.png")
-		});
+        });
 
     upgrades.push_back({
         UPGRADE_CRATE_I,
         120,
         false,
         AEGfxTextureLoad("Assets/Upgrades/Upgrades_Crates_I.png")
-		});
+        });
 
     upgrades.push_back({
         UPGRADE_INVENTORY_II,
         260,
         false,
-		AEGfxTextureLoad("Assets/Upgrades/Upgrades_Inventory_II.png")
+        AEGfxTextureLoad("Assets/Upgrades/Upgrades_Inventory_II.png")
         });
 
     upgrades.push_back({
@@ -100,9 +85,9 @@ void Upgrades_Init()
     upgrades.push_back({
         UPGRADE_INVENTORY_III,
         500,
-		false,
+        false,
         AEGfxTextureLoad("Assets/Upgrades/Upgrades_Inventory_III.png")
-		});
+        });
 
     upgrades.push_back({
         UPGRADE_FRUIT_III,
@@ -130,14 +115,14 @@ void Upgrades_Init()
         1200,
         false,
         AEGfxTextureLoad("Assets/Upgrades/Upgrades_Plot Unlock_4.png")
-		});
+        });
 
     upgrades.push_back({
         UPGRADE_LEVEL_UP,
         7000,
         false,
         AEGfxTextureLoad("Assets/Upgrades/Upgrades_LevelUP.png")
-		});
+        });
 }
 
 std::vector<Upgrade>& Upgrades_GetList()
@@ -153,66 +138,76 @@ void Upgrades_Purchase(UpgradeID id) {
                 // Apply upgrade effects
                 switch (id) {
                 case UPGRADE_INVENTORY_I:
-                    Inventory_UpgradeCapacity(10);
+                    SetInventoryLimit(GetInventoryLimit() + 10);
+                    printf("Inventory limit increased to %d!\n", GetInventoryLimit());
                     break;
 
                 case UPGRADE_FRUIT_I:
-                    Economy_UpgradeFruitPrice(10);
+                    Economy_SetBasePriceApple(7);
+                    printf("Base price of apples increased to %d!\n", 7);
                     break;
 
                 case UPGRADE_UNLOCK_PLOT2:
-                    Farm_UnlockPlot(2);
+                    Profile_SetPlotUnlocked(1, true);
+                    printf("Plot 2 unlocked!\n");
                     break;
 
                 case UPGRADE_CRATE_I:
-                    Crate_CapacityUpgrade(10);
+                    Crate_SetMaxStock(Crate_GetMaxStock() + 10);
+                    printf("Crate capacity increased to %d!\n", Crate_GetMaxStock());
                     break;
 
                 case UPGRADE_INVENTORY_II:
-                    Inventory_UpgradeCapacity(20);
+                    SetInventoryLimit(GetInventoryLimit() + 20);
+                    printf("Inventory limit increased to %d!\n", GetInventoryLimit());
                     break;
 
                 case UPGRADE_UNLOCK_CRATE2:
-                    Crate_UnlockCrate(2);
+                    Crate_IsUnlocked(1);
+                    printf("Crate 2 unlocked!\n");
                     break;
 
                 case UPGRADE_FRUIT_II:
-                    Economy_UpgradeFruitPrice(20);
+                    Economy_SetBasePriceApple(9);
+                    printf("Base price of apples increased to %d!\n", 9);
                     break;
 
                 case UPGRADE_CRATE_II:
-                    Crate_CapacityUpgrade(20);
+                    Crate_SetMaxStock(Crate_GetMaxStock() + 20);
+                    printf("Crate capacity increased to %d!\n", Crate_GetMaxStock());
                     break;
 
                 case UPGRADE_UNLOCK_PLOT3:
-                    Farm_UnlockPlot(3);
+                    Profile_SetPlotUnlocked(2, true);
+                    printf("Plot 3 unlocked!\n");
                     break;
 
                 case UPGRADE_INVENTORY_III:
-                    Inventory_UpgradeCapacity(30);
+                    SetInventoryLimit(GetInventoryLimit() + 30);
+                    printf("Inventory limit increased to %d!\n", GetInventoryLimit());
                     break;
 
                 case UPGRADE_FRUIT_III:
-                    Economy_UpgradeFruitPrice(30);
+                    Economy_SetBasePriceApple(11);
+                    printf("Base price of apples increased to %d!\n", 11);
                     break;
                 case UPGRADE_UNLOCK_CRATE3:
-                    Crate_UnlockCrate(3);
+                    Crate_IsUnlocked(2);
+                    printf("Crate 3 unlocked!\n");
                     break;
 
                 case UPGRADE_CRATE_III:
-                    Crate_CapacityUpgrade(30);
+                    Crate_SetMaxStock(Crate_GetMaxStock() + 30);
+                    printf("Crate capacity increased to %d!\n", Crate_GetMaxStock());
                     break;
 
                 case UPGRADE_UNLOCK_PLOT4:
-                    Farm_UnlockPlot(4);
+                    Profile_SetPlotUnlocked(3, true);
+                    printf("Plot 4 unlocked!\n");
                     break;
 
                 case UPGRADE_LEVEL_UP:
-                    Inventory_UpgradeCapacity(50);
-                    Economy_UpgradeFruitPrice(50);
-                    Crate_CapacityUpgrade(50);
-                    Farm_UnlockPlot(5);
-                    Crate_UnlockCrate(4);
+                    // Placeholder for a big upgrade, e.g. unlock all plots, max inventory, and max crate capacity
                     break;
                 }
                 break; // Exit loop after finding the upgrade
@@ -221,12 +216,11 @@ void Upgrades_Purchase(UpgradeID id) {
     }
 }
 
-bool Upgrades_CanPurchase(Upgrade id, int currentMoney) {
-	if (currentMoney < id.cost) return false; // Not enough money
-    else if (currentMoney >= id.cost) { // Can afford
-		id.purchased = true;
-		return true;
-    }
+bool Upgrades_CanPurchase(const Upgrade& u, int currentMoney) {
+    // Can't buy something already purchased
+    if (u.purchased) return false;
+    // Need enough money
+    return (currentMoney >= u.cost);
 }
 
 void Upgrades_Unload()

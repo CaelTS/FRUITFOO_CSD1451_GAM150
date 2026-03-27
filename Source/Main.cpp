@@ -22,6 +22,38 @@
 #include "Crate.h"   // <-- ADDED: needed for Crate_GetFruitCount / Crate_IsUnlocked
 #include "Inventory.h"
 #include "HelperCreatures.h"
+#include "Upgrades.h"
+#include "AEAudio.h"
+#include "UIAudio.h"
+
+// ============================================================
+// Main screen BGM
+// ============================================================
+static AEAudio      g_mainBGM;
+static AEAudioGroup g_mainBGMGroup;
+
+static void MainBGM_Start()
+{
+	if (AEAudioIsValidAudio(g_mainBGM) && AEAudioIsValidGroup(g_mainBGMGroup))
+	{
+		AEAudioStopGroup(g_mainBGMGroup);
+		AEAudioPlay(g_mainBGM, g_mainBGMGroup, 0.3f, 1.0f, -1); // -1 = infinite loop
+	}
+}
+
+static void MainBGM_Stop()
+{
+	if (AEAudioIsValidGroup(g_mainBGMGroup))
+		AEAudioStopGroup(g_mainBGMGroup);
+}
+
+void MainBGM_SetEnabled(bool enabled)
+{
+	if (enabled)
+		MainBGM_Start();
+	else
+		MainBGM_Stop();
+}
 
 // ---------------------------------------------------------------------------
 // Game State Variables
@@ -157,6 +189,10 @@ void MainScreen_Load()
 	Farm_Load();
 	Crate_Load();
 
+	// Load main screen BGM
+	g_mainBGM = AEAudioLoadMusic("Assets/bgm.wav");
+	g_mainBGMGroup = AEAudioCreateGroup();
+
 	// Pause popup assets
 	pTexPausePanel = AEGfxTextureLoad("Assets/panel_brown.png");
 	pTexPauseBtn = AEGfxTextureLoad("Assets/input_outline_rectangle.png");
@@ -211,9 +247,14 @@ void MainScreen_Initialize()
 
 	Economy_Init();
 	SpawnFruit_Init();
+	Upgrades_Init();
+
 	UI_Init();
 	Helper_Init();
 
+	UIAudio_EnableSFX(gSoundEnabled);
+	UIAudio_SetMusicEnabled(gMusicEnabled);
+	MainBGM_SetEnabled(gMusicEnabled);
 
 
 	if (previousState != GS_RHYTHM_SCREEN)
@@ -234,6 +275,11 @@ void MainScreen_Initialize()
 	fontId = AEGfxCreateFont("Assets/Crayon pastel.otf", 26);
 	if (fontId < 0)
 		OutputDebugStringA("ERROR: Failed to load 'Assets/Crayon pastel.otf'.\n");
+
+	// Start BGM only if we're going straight into the game (no start screen overlay).
+	// If gStartScreenActive is true, BGM will be started once the overlay dismisses.
+	if (!gStartScreenActive && gMusicEnabled)
+		MainBGM_Start();
 
 	if (!pMeshBackground)
 	{
@@ -288,7 +334,11 @@ void MainScreen_Update()
 	{
 		StartScreen_Update(dt);
 		if (!StartScreen_IsActive())
+		{
 			gStartScreenActive = false;
+			if (gMusicEnabled)
+			MainBGM_Start(); // start screen dismissed — begin BGM now
+		}
 		return; // block all game input while start screen is active
 	}
 
@@ -326,6 +376,7 @@ void MainScreen_Update()
 				Profile_EndSession();
 				g_pauseOpen = false;
 				g_returnedFromPause = true;
+				MainBGM_Stop(); // going back to start screen — force stop BGM
 				StartScreen_Init();         // reset animation + buttons in place
 				gStartScreenActive = true; // show overlay without leaving GS_MAIN_SCREEN
 			}
@@ -346,7 +397,6 @@ void MainScreen_Update()
 
 	UI_Input();  // Farm_Update() already handles its own clicks before this runs
 
-
 	Economy_Update(dt);
 	UpdateSpawnFruits(dt);
 	UpdateFruitSpawner(dt);
@@ -358,6 +408,7 @@ void MainScreen_Update()
 	{
 		OutputDebugStringA("Farm requested rhythm game\n");
 		Farm_ClearRhythmFlag();
+		MainBGM_Stop(); // leaving for rhythm — force stop BGM
 		nextState = GS_RHYTHM_SCREEN;
 	}
 }
@@ -489,7 +540,7 @@ void MainScreen_Render()
 
 	UI_DrawCrateHoverTint_Yellow();
 
-	// Draw fruit icons inside crate bins based on live stock counts  <-- ADDED
+	// Draw fruit icons inside crate bins based on live stock counts
 	MainScreen_DrawCrateFruits();
 
 	RenderSpawnFruits();
@@ -652,6 +703,15 @@ void MainScreen_Render()
 
 void MainScreen_Free()
 {
+	// Stop and unload main BGM
+	MainBGM_Stop();
+	if (AEAudioIsValidAudio(g_mainBGM))
+		AEAudioUnloadAudio(g_mainBGM);
+	if (AEAudioIsValidGroup(g_mainBGMGroup))
+		AEAudioUnloadAudioGroup(g_mainBGMGroup);
+	memset(&g_mainBGM, 0, sizeof(AEAudio));
+	memset(&g_mainBGMGroup, 0, sizeof(AEAudioGroup));
+
 	if (pMeshBackground) AEGfxMeshFree(pMeshBackground);
 	if (pMeshGrass)      AEGfxMeshFree(pMeshGrass);
 	if (pMeshStall)      AEGfxMeshFree(pMeshStall);
@@ -678,7 +738,6 @@ void MainScreen_Free()
 
 	pMeshBackground = pMeshGrass = pMeshStall = pMeshFruit = nullptr;
 	pBackground = pTexApple = pTexPear = pTexBanana = nullptr;
-
 }
 
 void MainScreen_Unload()

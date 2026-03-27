@@ -81,7 +81,7 @@ void SpawnFruit_Init() {
 }
 
 void SpawnFruit() {
-    Fruit newApple;
+    Fruit newApple{};
     newApple.texture = gAppleTexture;  // Load the apple texture
 
     newApple.x = random_float(-200.0, 600.0);  // Random X position between 400 to 1000
@@ -103,7 +103,7 @@ void SpawnFruit() {
 }
 
 static void SpawnFruit(float x) {
-    Fruit newApple;
+    Fruit newApple{};
     newApple.texture = AEGfxTextureLoad("Assets/Fruit_Apple.png");  // Load the apple texture
 
     newApple.x = x;  // Random X position between 400 to 1000
@@ -144,9 +144,9 @@ const float targetY = -240.0f; // how high the apple should move up during colle
 // Update function: Updates the position of all apples
 void UpdateSpawnFruits(float dt) {
 
-    if (AEInputCheckReleased(AEVK_SPACE)) { // Simulate reward after rhythm game by pressing spacebar, can be removed later
-        spawnMultiple = true;
-    }
+    //if (AEInputCheckReleased(AEVK_SPACE)) { // Simulate reward after rhythm game by pressing spacebar, can be removed later
+    //    spawnMultiple = true;
+    //}
 
     if (spawnMultiple) {
         currentTimer += dt;
