@@ -229,7 +229,6 @@ static bool gHoverMusicToggle = false;
 static bool gHoverSettingsExit = false;
 static bool gHoverSettingsClose = false;
 
-void MainBGM_SetEnabled(bool enabled);
 
 // -------------------------
 // Settings layout
@@ -851,7 +850,6 @@ void UI_UpdateButtons()
         {
             gMusicEnabled = !gMusicEnabled;
             UIAudio_SetMusicEnabled(gMusicEnabled);
-            MainBGM_SetEnabled(gMusicEnabled);
             UIAudio_PlayToggle();
         }
     }
