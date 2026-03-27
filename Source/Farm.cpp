@@ -1,6 +1,5 @@
 ﻿#include "Farm.h"
 #include "AEEngine.h"
-#include "AEAudio.h"
 #include "UI.h"
 #include "Profile.h"
 #include <iostream>
@@ -8,17 +7,8 @@
 #include <cmath>
 #include "Inventory.h"
 #include "Crate.h"
-#include "UIAudio.h"
 
 extern AEGfxVertexList* g_pMeshFullScreen;
-
-// ------------------------------------------------------------
-// FARM AUDIO
-// ------------------------------------------------------------
-static AEAudio      g_farmTickSFX;
-static AEAudioGroup g_farmTickGroup;
-static AEAudio      g_farmHarvestSFX;
-static AEAudioGroup g_farmHarvestGroup;
 
 // ------------------------------------------------------------
 // FARM DATA STRUCTURE
@@ -154,12 +144,6 @@ void Farm_Load()
     lockedPlot = AEGfxTextureLoad("Assets/lockedplot.png");
     fruitAppleTexture = AEGfxTextureLoad("Assets/Fruit_Apple.png");
 
-    // Load farm growth sounds
-    g_farmTickSFX = AEAudioLoadSound("Assets/Tick.wav");
-    g_farmTickGroup = AEAudioCreateGroup();
-    g_farmHarvestSFX = AEAudioLoadSound("Assets/Harvest.wav");
-    g_farmHarvestGroup = AEAudioCreateGroup();
-
     FlyingFruit_Init();
 }
 
@@ -178,7 +162,6 @@ void Farm_Initialize()
         farmPlots[i].rhythmTriggered = false;
         farmPlots[i].waitingForRhythm = false;
         farmPlots[i].growthFrozen = false;  // Reset freeze state on init
-        for (int m = 0; m < 4; m++) farmPlots[i].milestoneReached[m] = false;
     }
 
     // Migration guard: ensure plot 0 is always unlocked
@@ -415,34 +398,6 @@ void Farm_Update()
 
         float ratio = plot.growTimer / GROW_TIME;
 
-        // Play tick sounds at growth milestones (25%, 50%, 75%)
-        if (ratio >= 0.25f && !plot.milestoneReached[0])
-        {
-            plot.milestoneReached[0] = true;
-            if (UIAudio_SFXEnabled() && AEAudioIsValidAudio(g_farmTickSFX) && AEAudioIsValidGroup(g_farmTickGroup))
-            {
-                AEAudioPlay(g_farmTickSFX, g_farmTickGroup, 1.0f, 1.0f, 0);
-            }
-        }
-
-        if (ratio >= 0.5f && !plot.milestoneReached[1])
-        {
-            plot.milestoneReached[1] = true;
-            if (UIAudio_SFXEnabled() && AEAudioIsValidAudio(g_farmTickSFX) && AEAudioIsValidGroup(g_farmTickGroup))
-            {
-                AEAudioPlay(g_farmTickSFX, g_farmTickGroup, 1.0f, 1.0f, 0);
-            }
-        }
-
-        if (ratio >= 0.75f && !plot.milestoneReached[2])
-        {
-            plot.milestoneReached[2] = true;
-            if (UIAudio_SFXEnabled() && AEAudioIsValidAudio(g_farmTickSFX) && AEAudioIsValidGroup(g_farmTickGroup))
-            {
-                AEAudioPlay(g_farmTickSFX, g_farmTickGroup, 1.0f, 1.0f, 0);
-            }
-        }
-
         if (ratio >= 0.5f && !plot.rhythmTriggered && g_rhythmPlotIndex == -1)
         {
             plot.rhythmTriggered = true;
@@ -453,15 +408,6 @@ void Farm_Update()
         if (ratio >= 1.0f && !plot.isReady)
         {
             plot.isReady = true;
-            plot.milestoneReached[3] = true;
-
-            // Harvest sound — plot fully grown
-            if (UIAudio_SFXEnabled() && AEAudioIsValidAudio(g_farmHarvestSFX) && AEAudioIsValidGroup(g_farmHarvestGroup))
-            {
-                AEAudioPlay(g_farmHarvestSFX, g_farmHarvestGroup, 3.0f, 1.0f, 0);
-            }
-
-
             plot.waitingForRhythm = false;
             plot.growthFrozen = false;
 
@@ -756,7 +702,7 @@ void Farm_Render()
             AEGfxPrint(fontId, "Send fruit to:", -0.21f, 0.06f, 1.5f, 0.15f, 0.08f, 0.02f, 1.0f);
         }
 
-        // [Inventory] button  left,  world-space center (-80, -40)
+        // [Inventory] button  � left,  world-space center (-80, -40)
         {
             const float btnW = 130.0f, btnH = 45.0f;
             const float btnX = -80.0f, btnY = -40.0f;
@@ -791,7 +737,7 @@ void Farm_Render()
             }
         }
 
-        // [Crate] button  right, world-space center (80, -40)
+        // [Crate] button  � right, world-space center (80, -40)
         {
             const float btnW = 130.0f, btnH = 45.0f;
             const float btnX = 80.0f, btnY = -40.0f;
@@ -838,17 +784,6 @@ void Farm_Unload()
     if (plantedTexture) { AEGfxTextureUnload(plantedTexture);     plantedTexture = nullptr; }
     if (deleteIcon) { AEGfxTextureUnload(deleteIcon);         deleteIcon = nullptr; }
     if (fruitAppleTexture) { AEGfxTextureUnload(fruitAppleTexture);  fruitAppleTexture = nullptr; }
-
-    // Unload farm audio
-    if (AEAudioIsValidAudio(g_farmTickSFX))      AEAudioUnloadAudio(g_farmTickSFX);
-    if (AEAudioIsValidGroup(g_farmTickGroup))     AEAudioUnloadAudioGroup(g_farmTickGroup);
-    if (AEAudioIsValidAudio(g_farmHarvestSFX))   AEAudioUnloadAudio(g_farmHarvestSFX);
-    if (AEAudioIsValidGroup(g_farmHarvestGroup))  AEAudioUnloadAudioGroup(g_farmHarvestGroup);
-    memset(&g_farmTickSFX, 0, sizeof(AEAudio));
-    memset(&g_farmTickGroup, 0, sizeof(AEAudioGroup));
-    memset(&g_farmHarvestSFX, 0, sizeof(AEAudio));
-    memset(&g_farmHarvestGroup, 0, sizeof(AEAudioGroup));
-
     std::cout << "Farm_Unload\n";
 }
 
@@ -878,7 +813,6 @@ void Farm_PlantSeed(int plotIndex, int seedType)
     plot.rhythmTriggered = false;
     plot.waitingForRhythm = false;
     plot.growthFrozen = false;  // Reset freeze state on new plant
-    for (int m = 0; m < 4; m++) plot.milestoneReached[m] = false;
 
     // Clear any leftover rhythm state for this plot
     if (g_rhythmPlotIndex == plotIndex)
@@ -913,7 +847,6 @@ void Farm_ClearPlot(int index)
     farmPlots[index].rhythmTriggered = false;
     farmPlots[index].waitingForRhythm = false;
     farmPlots[index].growthFrozen = false;  // Reset freeze state on clear
-    for (int m = 0; m < 4; m++) farmPlots[index].milestoneReached[m] = false;
 
     if (g_rhythmPlotIndex == index)
         g_rhythmPlotIndex = -1;

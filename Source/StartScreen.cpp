@@ -8,16 +8,6 @@
 #include <cstdio>
 #include <cstring>
 #include "Main.h"
-#include "AEAudio.h"
-
-// ============================================================
-// Audio  (mirrors the pattern used in Rhythm.cpp)
-// ============================================================
-static AEAudio      g_startMusic;
-static AEAudioGroup g_startMusicGroup;
-
-static void ResetAudio(AEAudio& audio) { memset(&audio, 0, sizeof(AEAudio)); }
-static void ResetAudioGroup(AEAudioGroup& g) { memset(&g, 0, sizeof(AEAudioGroup)); }
 
 // ============================================================
 // Profile persistence
@@ -195,6 +185,24 @@ static void SS_Profiles_Load()
     fclose(f);
 }
 
+// OLD SAVE FUNCTION - NO LONGER USED
+// Now using unified Profile_CreateSlot() and Profile_SetActiveSlot() instead
+/*
+static void SS_Profiles_Save()
+{
+    FILE* f = nullptr;
+    if (fopen_s(&f, PROFILES_FILE, "w") != 0 || !f) return;
+    for (int i = 0; i < MAX_PROFILES; i++)
+    {
+        fprintf(f, "[PROFILE_%d]\n", i);
+        fprintf(f, "EXISTS=%d\n", g_profiles[i].exists ? 1 : 0);
+        fprintf(f, "NAME=%s\n", g_profiles[i].name);
+        fprintf(f, "coins=%d\n\n", g_profiles[i].coins);
+    }
+    fclose(f);
+}
+*/
+
 // ============================================================
 // Inline "New Game" name-entry popup
 // ============================================================
@@ -205,6 +213,7 @@ static bool  popupShowFull = false;
 static float popupFullTimer = 0.0f;
 
 static AEGfxTexture* pTexPanel = nullptr;
+
 
 enum ButtonID
 {
@@ -236,6 +245,7 @@ struct Button
     bool hovered = false;
 };
 
+
 //Buttons
 Button newGameButton;
 Button continueButton;
@@ -251,11 +261,13 @@ extern float gScaleX;
 extern float gScaleY;
 
 //animation variable
-bool startScreenActive = true;   // Is the start screen still active?
+extern bool startScreenActive = true;   // Is the start screen still active?
+static bool isExiting = false;          // Has the exit animation started?
+static float exitAnimProgress = 0.0f;   // 0.0 -> 1.0 animation progress
+static float exitAnimFadeOut = 1.0f;   // 0.0 -> 1.0 fade out progress
+static float exitAnimSpeed = 1.3f;      // Speed of slide animation
 
-// ============================================================
-// Local helper function button click detection
-// ============================================================
+//Local helper function button click detection
 static bool IsButtonClicked(Button& btn, float width, float height) {
     float x = hasSave ? btn.x_save : btn.x;
     float y = hasSave ? btn.y_save : btn.y;
@@ -277,9 +289,17 @@ static bool IsButtonHovered(Button& btn, float width, float height) {
     return IsMouseOverRect(x, y, width * gScaleX, height * gScaleY);
 }
 
+//ButtonID ID (float x, float y) {
+//    if (!newGameButton.hovered && IsButtonHovered(newGameButton, 234.0f, 35.0f)) return BUTTON_NEW_GAME;
+//    if (!continueButton.hovered && IsButtonHovered(continueButton, 300.0f, 80.0f)) return BUTTON_CONTINUE;
+//    if (!settingsButton.hovered && IsButtonHovered(settingsButton, 300.0f, 80.0f)) return BUTTON_SETTINGS;
+//    if (!exitButton.hovered && IsButtonHovered(exitButton, 68.0f, 39.0f)) return BUTTON_EXIT;
+//}
+
 //Textures
 AEGfxTexture* logoTexture = nullptr;
 AEGfxTexture* gradientBlur = nullptr;
+
 
 // Meshes
 AEGfxVertexList* pMeshLogo = nullptr;
@@ -293,13 +313,6 @@ AEGfxVertexList* pMeshExitButton = nullptr;
 AEGfxVertexList* pMeshExitButton_Selected = nullptr;
 AEGfxVertexList* pMeshTutorialButton = nullptr;
 AEGfxVertexList* pMeshTutorialButton_Selected = nullptr;
-AEGfxVertexList* pMeshGradientBlur = nullptr;
-
-// Animation variables - now static inside the file scope
-static bool isExiting = false;          // Has the exit animation started?
-static float exitAnimProgress = 0.0f;   // 0.0 -> 1.0 animation progress
-static float exitAnimFadeOut = 1.0f;    // 0.0 -> 1.0 fade out progress
-static float exitAnimSpeed = 1.3f;      // Speed of slide animation
 
 // ============================================================
 // Popup helpers
@@ -311,14 +324,12 @@ static void OpenNewGamePopup()
     popupLen = 0;
     popupShowFull = false;
 }
-
 static void ClosePopup()
 {
     popupOpen = false;
     popupBuf[0] = '\0';
     popupLen = 0;
 }
-
 static void ConfirmNewGame()
 {
     if (popupLen == 0) return;
@@ -349,15 +360,23 @@ static void ConfirmNewGame()
     hasSave = true;
     isExiting = true;
     nextState = GS_MAIN_SCREEN;
-
-    // Force-stop start screen music the moment we leave this state
-    if (AEAudioIsValidGroup(g_startMusicGroup))
-        AEAudioStopGroup(g_startMusicGroup);
 }
+AEGfxVertexList* pMeshGradientBlur = nullptr;
+
 
 // ------------------------------------------------------------
 // Helper
 // ------------------------------------------------------------
+
+//static bool CheckSaveExists()
+//{
+//    std::ifstream file("save.dat");
+//
+//    if (file.good())
+//        return true;
+//
+//    return false;
+//}
 
 static void DrawButton(Button& btn, AEGfxVertexList* mesh, f32 width, f32 height, float offset)
 {
@@ -368,11 +387,17 @@ static void DrawButton(Button& btn, AEGfxVertexList* mesh, f32 width, f32 height
     float x = btn.hovered ? btn.x_selected : btn.x;
     float y = btn.hovered ? btn.y_selected : btn.y;
 
+
+
     if (hasSave)
     {
+
         x = btn.hovered ? btn.x_selected_save : btn.x_save;
         y = btn.hovered ? btn.y_selected_save : btn.y_save;
+
     }
+
+
 
     if (!tex) return;
 
@@ -409,7 +434,7 @@ static AEGfxVertexList* createMesh()
 
 bool StartScreen_IsActive()
 {
-    return startScreenActive;
+    return startScreenActive; // from your start screen cpp
 }
 
 void StartScreen_Load()
@@ -418,30 +443,6 @@ void StartScreen_Load()
     SS_Profiles_Load();
     hasSave = (CountProfiles() > 0);
     Tutorial_Load();
-
-    // Debug: Confirm Load was called
-    printf("[DEBUG] StartScreen_Load() called - loading audio\n");
-
-    // Clean up any existing audio first
-    if (AEAudioIsValidAudio(g_startMusic)) {
-        AEAudioStopGroup(g_startMusicGroup);
-        AEAudioUnloadAudio(g_startMusic);
-    }
-    if (AEAudioIsValidGroup(g_startMusicGroup)) {
-        AEAudioUnloadAudioGroup(g_startMusicGroup);
-    }
-
-    // Reset and load fresh
-    ResetAudio(g_startMusic);
-    ResetAudioGroup(g_startMusicGroup);
-    g_startMusic = AEAudioLoadMusic("Assets/Start.wav");
-    g_startMusicGroup = AEAudioCreateGroup();
-
-    // Debug output
-    if (AEAudioIsValidAudio(g_startMusic))
-        printf("[DEBUG] StartScreen_Load(): Start.wav loaded successfully.\n");
-    else
-        printf("[DEBUG] StartScreen_Load(): FAILED to load Start.wav!\n");
 }
 
 void StartScreen_Init()
@@ -449,38 +450,6 @@ void StartScreen_Init()
     // Reload profile data to ensure we have latest state
     SS_Profiles_Load();
     hasSave = (CountProfiles() > 0);
-
-    // ============================================================
-    // AUDIO PLAYBACK - with fallback loading if Load() wasn't called
-    // ============================================================
-    // FALLBACK: If audio wasn't loaded in Load() (or Load was never called), load it now
-    if (!AEAudioIsValidAudio(g_startMusic) || !AEAudioIsValidGroup(g_startMusicGroup))
-    {
-        printf("[DEBUG] StartScreen_Init(): Audio not valid from Load(), loading now as fallback...\n");
-
-        // Clean up just in case
-        if (AEAudioIsValidAudio(g_startMusic)) AEAudioUnloadAudio(g_startMusic);
-        if (AEAudioIsValidGroup(g_startMusicGroup)) AEAudioUnloadAudioGroup(g_startMusicGroup);
-
-        ResetAudio(g_startMusic);
-        ResetAudioGroup(g_startMusicGroup);
-        g_startMusic = AEAudioLoadMusic("Assets/Start.wav");
-        g_startMusicGroup = AEAudioCreateGroup();
-    }
-
-    printf("[DEBUG] StartScreen_Init(): g_startMusic valid=%d, g_startMusicGroup valid=%d\n",
-        AEAudioIsValidAudio(g_startMusic), AEAudioIsValidGroup(g_startMusicGroup));
-
-    if (AEAudioIsValidAudio(g_startMusic) && AEAudioIsValidGroup(g_startMusicGroup))
-    {
-        AEAudioStopGroup(g_startMusicGroup);
-        AEAudioPlay(g_startMusic, g_startMusicGroup, 1.0f, 1.0f, 0);
-        printf("[DEBUG] StartScreen_Init(): Start.wav playback started.\n");
-    }
-    else
-    {
-        printf("[ERROR] StartScreen_Init(): Audio failed to load! Check Assets/Start.wav\n");
-    }
 
     // Only create if not already allocated
     if (!pMeshPopup) pMeshPopup = createMesh();
@@ -670,10 +639,6 @@ void StartScreen_Update(float dt)
             {
                 // Go to profile screen
                 nextState = GS_NEXT_SCREEN;
-
-                // Force-stop start screen music the moment we leave this state
-                if (AEAudioIsValidGroup(g_startMusicGroup))
-                    AEAudioStopGroup(g_startMusicGroup);
             }
             else if (IsButtonClicked(continueButton, 190.0f, 41.0f))
             {
@@ -690,10 +655,6 @@ void StartScreen_Update(float dt)
                     Profile_SetActiveSlot(recentSlot); // sets activeSlot + syncs economy
                     isExiting = true;
                     nextState = GS_MAIN_SCREEN;
-
-                    // Force-stop start screen music the moment we leave this state
-                    if (AEAudioIsValidGroup(g_startMusicGroup))
-                        AEAudioStopGroup(g_startMusicGroup);
                 }
             }
 
@@ -731,10 +692,6 @@ void StartScreen_Update(float dt)
         if (IsButtonClicked(exitButton, 68.0f, 39.0f))
         {
             nextState = GS_EXIT;
-
-            // Force-stop start screen music the moment we leave this state
-            if (AEAudioIsValidGroup(g_startMusicGroup))
-                AEAudioStopGroup(g_startMusicGroup);
         }
 
         // Tutorial button (always visible, both layouts)
@@ -765,7 +722,8 @@ void StartScreen_Update(float dt)
 
 void StartScreen_Draw()
 {
-    if (!startScreenActive) return; // don't draw after animation finished
+
+    if (!startScreenActive) return; // don’t draw after animation finished
 
     float slideOffset = exitAnimProgress * 3000.0f; // pixels to move left
     float fadeOut = exitAnimFadeOut; // fade out from 1 to 0
@@ -789,6 +747,8 @@ void StartScreen_Draw()
 
         AEGfxSetTransform(transform.m);
         AEGfxMeshDraw(pMeshGradientBlur, AE_GFX_MDM_TRIANGLES);
+
+
     }
 
     // Draw logo
@@ -812,6 +772,7 @@ void StartScreen_Draw()
 
     //Exit Button
     if (pMeshExitButton) {
+
         if (!exitButton.hovered)
         {
             DrawButton(exitButton, pMeshExitButton, 68.0f, 39.0f, slideOffset);
@@ -821,6 +782,8 @@ void StartScreen_Draw()
             DrawButton(exitButton, pMeshExitButton_Selected, 89.0f, 60.0f, slideOffset);
         }
     }
+
+
 
     // Not new user, has save file
     if (hasSave)
@@ -837,8 +800,10 @@ void StartScreen_Draw()
         else
             DrawButton(profileButton, pMeshProfileButton_Selected, 159.0f, 63.0f, slideOffset);
     }
+
     else
     {
+
         if (!newGameButton.hovered)
             DrawButton(newGameButton, pMeshNewGameButton, 234.0f, 35.0f, slideOffset);
         else
@@ -932,7 +897,13 @@ void StartScreen_Draw()
         }
     }
 
+
+    // Draw New Game button
+    // Draw Settings/Profile button
+    // Draw Exit button
+
     // Tutorial button + panel (drawn on top of everything)
+    // Draw tutorial button (panel drawn by Tutorial_Draw when open)
     if (!tutorialButton.hovered)
         DrawButton(tutorialButton, pMeshTutorialButton, 190.0f, 41.0f, slideOffset);
     else
@@ -944,17 +915,6 @@ void StartScreen_Draw()
 void StartScreen_Unload()
 {
     Tutorial_Unload();
-
-    // Stop and release music (mirrors Rhythm.cpp teardown)
-    if (AEAudioIsValidGroup(g_startMusicGroup))
-        AEAudioStopGroup(g_startMusicGroup);
-    if (AEAudioIsValidAudio(g_startMusic))
-        AEAudioUnloadAudio(g_startMusic);
-    if (AEAudioIsValidGroup(g_startMusicGroup))
-        AEAudioUnloadAudioGroup(g_startMusicGroup);
-    ResetAudio(g_startMusic);
-    ResetAudioGroup(g_startMusicGroup);
-
     // Free popup resources
     if (pMeshPopup) { AEGfxMeshFree(pMeshPopup); pMeshPopup = nullptr; }
     if (pTexInputRect) { AEGfxTextureUnload(pTexInputRect); pTexInputRect = nullptr; }
