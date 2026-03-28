@@ -9,7 +9,6 @@
 #include <cstring>
 #include "Main.h"
 #include "AEAudio.h"
-#include "UIAudio.h"
 
 // ============================================================
 // Audio  (mirrors the pattern used in Rhythm.cpp)
@@ -17,68 +16,8 @@
 static AEAudio      g_startMusic;
 static AEAudioGroup g_startMusicGroup;
 
-static void ResetAudio(AEAudio& audio) { memset(&audio, 0, sizeof(AEAudio)); }
-static void ResetAudioGroup(AEAudioGroup& g) { memset(&g, 0, sizeof(AEAudioGroup)); }
-
-// ============================================================
-// Global audio settings (persisted to disk, shared across runs)
-// Stored in Assets/audio_settings.txt so it is NOT tied to any
-// player profile — muting affects every subsequent launch.
-// ============================================================
-static const char* AUDIO_SETTINGS_FILE = "Assets/audio_settings.txt";
-static bool g_startMusicEnabled = true;  // runtime state; loaded from file
-
-// Read music_enabled from the settings file.
-// Missing file → default to enabled (first-ever launch).
-static void AudioSettings_Load()
-{
-    FILE* f = nullptr;
-    if (fopen_s(&f, AUDIO_SETTINGS_FILE, "r") != 0 || !f)
-    {
-        g_startMusicEnabled = true; // file absent → music on
-        return;
-    }
-    char line[64] = {};
-    while (fgets(line, sizeof(line), f))
-    {
-        int val = 1;
-        if (sscanf_s(line, "music_enabled=%d", &val) == 1)
-        {
-            g_startMusicEnabled = (val != 0);
-            break;
-        }
-    }
-    fclose(f);
-}
-
-// Write current state back to the settings file.
-static void AudioSettings_Save()
-{
-    FILE* f = nullptr;
-    if (fopen_s(&f, AUDIO_SETTINGS_FILE, "w") != 0 || !f) return;
-    fprintf(f, "music_enabled=%d\n", g_startMusicEnabled ? 1 : 0);
-    fclose(f);
-}
-
-// Toggle music on/off, update the audio group immediately, and persist.
-static void AudioSettings_ToggleMusic()
-{
-    g_startMusicEnabled = !g_startMusicEnabled;
-    AudioSettings_Save();
-
-    if (g_startMusicEnabled)
-    {
-        // Resume playback if audio is loaded
-        if (AEAudioIsValidAudio(g_startMusic) && AEAudioIsValidGroup(g_startMusicGroup))
-            AEAudioPlay(g_startMusic, g_startMusicGroup, 1.0f, 1.0f, 0);
-    }
-    else
-    {
-        // Mute: stop current playback
-        if (AEAudioIsValidGroup(g_startMusicGroup))
-            AEAudioStopGroup(g_startMusicGroup);
-    }
-}
+//static void ResetAudio(AEAudio& audio) { memset(&audio, 0, sizeof(AEAudio)); }
+//static void ResetAudioGroup(AEAudioGroup& g) { memset(&g, 0, sizeof(AEAudioGroup)); }
 
 // ============================================================
 // Profile persistence
@@ -303,10 +242,6 @@ Button continueButton;
 Button profileButton;
 Button exitButton;
 Button tutorialButton;
-Button muteButton;  // small corner button to toggle start-screen music
-
-// Meshes for the mute button (reuse createMesh pattern)
-static AEGfxVertexList* pMeshMuteButton = nullptr;
 
 static bool hasSave = false; //placeholder until we implement profile system
 static f32 logoPosX = -520.0;
@@ -345,11 +280,9 @@ static bool IsButtonHovered(Button& btn, float width, float height) {
 //Textures
 AEGfxTexture* logoTexture = nullptr;
 AEGfxTexture* gradientBlur = nullptr;
-static AEGfxTexture* pTexBackground = nullptr;  // MainMenu_Background.png drawn under gradient
 
 // Meshes
 AEGfxVertexList* pMeshLogo = nullptr;
-static AEGfxVertexList* pMeshBackground = nullptr;
 AEGfxVertexList* pMeshNewGameButton = nullptr;
 AEGfxVertexList* pMeshNewGameButton_Selected = nullptr;
 AEGfxVertexList* pMeshContinueButton = nullptr;
@@ -486,36 +419,29 @@ void StartScreen_Load()
     hasSave = (CountProfiles() > 0);
     Tutorial_Load();
 
-    // Load persisted audio preference (music on/off across launches)
-    AudioSettings_Load();
+    // Debug: Confirm Load was called
+    printf("[DEBUG] StartScreen_Load() called - loading audio\n");
 
-    // Hard-stop any music playing from a previous game state (e.g. the Rhythm/
-    // main-menu track).  SetMusicEnabled(false) only blocks future plays — it
-    // does NOT stop audio already running.  UIAudio_StopMusic() issues the
-    // actual AEAudioStopGroup on Rhythm's group.
-    UIAudio_StopMusic();
-    printf("[DEBUG] StartScreen_Load(): hard-stopped previous state music\n");
+    //// Clean up any existing audio first
+    //if (AEAudioIsValidAudio(g_startMusic)) {
+    //    AEAudioStopGroup(g_startMusicGroup);
+    //    AEAudioUnloadAudio(g_startMusic);
+    //}
+    //if (AEAudioIsValidGroup(g_startMusicGroup)) {
+    //    AEAudioUnloadAudioGroup(g_startMusicGroup);
+    //}
 
-    // Clean up any existing start-screen audio first
-    if (AEAudioIsValidAudio(g_startMusic)) {
-        AEAudioStopGroup(g_startMusicGroup);
-        AEAudioUnloadAudio(g_startMusic);
-    }
-    if (AEAudioIsValidGroup(g_startMusicGroup)) {
-        AEAudioUnloadAudioGroup(g_startMusicGroup);
-    }
+    //// Reset and load fresh
+    //ResetAudio(g_startMusic);
+    //ResetAudioGroup(g_startMusicGroup);
+    //g_startMusic = AEAudioLoadMusic("Assets/Start.wav");
+    //g_startMusicGroup = AEAudioCreateGroup();
 
-    // Reset and load fresh
-    ResetAudio(g_startMusic);
-    ResetAudioGroup(g_startMusicGroup);
-    g_startMusic = AEAudioLoadMusic("Assets/Start.wav");
-    g_startMusicGroup = AEAudioCreateGroup();
-
-    // Debug output
-    if (AEAudioIsValidAudio(g_startMusic))
-        printf("[DEBUG] StartScreen_Load(): Start.wav loaded successfully.\n");
-    else
-        printf("[DEBUG] StartScreen_Load(): FAILED to load Start.wav!\n");
+    //// Debug output
+    //if (AEAudioIsValidAudio(g_startMusic))
+    //    printf("[DEBUG] StartScreen_Load(): Start.wav loaded successfully.\n");
+    //else
+    //    printf("[DEBUG] StartScreen_Load(): FAILED to load Start.wav!\n");
 }
 
 void StartScreen_Init()
@@ -528,47 +454,33 @@ void StartScreen_Init()
     // AUDIO PLAYBACK - with fallback loading if Load() wasn't called
     // ============================================================
     // FALLBACK: If audio wasn't loaded in Load() (or Load was never called), load it now
-    if (!AEAudioIsValidAudio(g_startMusic) || !AEAudioIsValidGroup(g_startMusicGroup))
-    {
-        printf("[DEBUG] StartScreen_Init(): Audio not valid from Load(), loading now as fallback...\n");
+    //if (!AEAudioIsValidAudio(g_startMusic) || !AEAudioIsValidGroup(g_startMusicGroup))
+    //{
+    //    printf("[DEBUG] StartScreen_Init(): Audio not valid from Load(), loading now as fallback...\n");
 
-        // Hard-stop any music playing from a previous state — SetMusicEnabled(false)
-        // only prevents future plays, it does NOT stop audio already running.
-        UIAudio_StopMusic();
+    //    // Clean up just in case
+    //    if (AEAudioIsValidAudio(g_startMusic)) AEAudioUnloadAudio(g_startMusic);
+    //    if (AEAudioIsValidGroup(g_startMusicGroup)) AEAudioUnloadAudioGroup(g_startMusicGroup);
 
-        // Also ensure the audio preference is loaded in case Load() was skipped
-        AudioSettings_Load();
+    //    ResetAudio(g_startMusic);
+    //    ResetAudioGroup(g_startMusicGroup);
+    //    g_startMusic = AEAudioLoadMusic("Assets/Start.wav");
+    //    g_startMusicGroup = AEAudioCreateGroup();
+    //}
 
-        // Clean up just in case
-        if (AEAudioIsValidAudio(g_startMusic)) AEAudioUnloadAudio(g_startMusic);
-        if (AEAudioIsValidGroup(g_startMusicGroup)) AEAudioUnloadAudioGroup(g_startMusicGroup);
+    //printf("[DEBUG] StartScreen_Init(): g_startMusic valid=%d, g_startMusicGroup valid=%d\n",
+    //    AEAudioIsValidAudio(g_startMusic), AEAudioIsValidGroup(g_startMusicGroup));
 
-        ResetAudio(g_startMusic);
-        ResetAudioGroup(g_startMusicGroup);
-        g_startMusic = AEAudioLoadMusic("Assets/Start.wav");
-        g_startMusicGroup = AEAudioCreateGroup();
-    }
-
-    printf("[DEBUG] StartScreen_Init(): g_startMusic valid=%d, g_startMusicGroup valid=%d\n",
-        AEAudioIsValidAudio(g_startMusic), AEAudioIsValidGroup(g_startMusicGroup));
-
-    if (AEAudioIsValidAudio(g_startMusic) && AEAudioIsValidGroup(g_startMusicGroup))
-    {
-        AEAudioStopGroup(g_startMusicGroup);
-        if (g_startMusicEnabled)
-        {
-            AEAudioPlay(g_startMusic, g_startMusicGroup, 1.0f, 1.0f, 0);
-            printf("[DEBUG] StartScreen_Init(): Start.wav playback started.\n");
-        }
-        else
-        {
-            printf("[DEBUG] StartScreen_Init(): Music disabled by audio_settings.txt, skipping playback.\n");
-        }
-    }
-    else
-    {
-        printf("[ERROR] StartScreen_Init(): Audio failed to load! Check Assets/Start.wav\n");
-    }
+    //if (AEAudioIsValidAudio(g_startMusic) && AEAudioIsValidGroup(g_startMusicGroup))
+    //{
+    //    AEAudioStopGroup(g_startMusicGroup);
+    //    AEAudioPlay(g_startMusic, g_startMusicGroup, 1.0f, 1.0f, 0);
+    //    printf("[DEBUG] StartScreen_Init(): Start.wav playback started.\n");
+    //}
+    //else
+    //{
+    //    printf("[ERROR] StartScreen_Init(): Audio failed to load! Check Assets/Start.wav\n");
+    //}
 
     // Only create if not already allocated
     if (!pMeshPopup) pMeshPopup = createMesh();
@@ -586,10 +498,8 @@ void StartScreen_Init()
 
     if (!logoTexture) logoTexture = AEGfxTextureLoad("Assets/StartScreen_Logo.png");
     if (!gradientBlur) gradientBlur = AEGfxTextureLoad("Assets/StartScreen_GradientBlur.png");
-    if (!pTexBackground) pTexBackground = AEGfxTextureLoad("Assets/MainMenu_Background.png");
 
     if (!pMeshLogo) pMeshLogo = createMesh();
-    if (!pMeshBackground) pMeshBackground = createMesh();
     if (!pMeshGradientBlur) pMeshGradientBlur = createMesh();
     if (!pMeshNewGameButton) pMeshNewGameButton = createMesh();
     if (!pMeshNewGameButton_Selected) pMeshNewGameButton_Selected = createMesh();
@@ -667,23 +577,6 @@ void StartScreen_Init()
     exitAnimProgress = 0.0f;
     exitAnimFadeOut = 1.0f;
     startScreenActive = true;
-
-    // Mute button — fixed in bottom-right corner, independent of hasSave layout
-    // Uses two textures: one for music-on, one for music-off.
-    // Texture names follow the same convention as other start screen buttons.
-    if (!muteButton.normal) muteButton.normal = AEGfxTextureLoad("Assets/StartScreen_MusicOn.png");
-    if (!muteButton.hover)  muteButton.hover = AEGfxTextureLoad("Assets/StartScreen_MusicOff.png");
-    if (!pMeshMuteButton)   pMeshMuteButton = createMesh();
-
-    // Position: bottom-right corner (world coords; adjust to taste)
-    muteButton.x = 700.0f;   // right side
-    muteButton.y = -390.0f;  // near bottom
-    muteButton.x_selected = muteButton.x;
-    muteButton.y_selected = muteButton.y;
-    muteButton.x_save = muteButton.x;
-    muteButton.y_save = muteButton.y;
-    muteButton.x_selected_save = muteButton.x;
-    muteButton.y_selected_save = muteButton.y;
 }
 
 void StartScreen_Update(float dt)
@@ -778,9 +671,9 @@ void StartScreen_Update(float dt)
                 // Go to profile screen
                 nextState = GS_NEXT_SCREEN;
 
-                // Force-stop start screen music the moment we leave this state
-                if (AEAudioIsValidGroup(g_startMusicGroup))
-                    AEAudioStopGroup(g_startMusicGroup);
+                //// Force-stop start screen music the moment we leave this state
+                //if (AEAudioIsValidGroup(g_startMusicGroup))
+                //    AEAudioStopGroup(g_startMusicGroup);
             }
             else if (IsButtonClicked(continueButton, 190.0f, 41.0f))
             {
@@ -798,9 +691,9 @@ void StartScreen_Update(float dt)
                     isExiting = true;
                     nextState = GS_MAIN_SCREEN;
 
-                    // Force-stop start screen music the moment we leave this state
-                    if (AEAudioIsValidGroup(g_startMusicGroup))
-                        AEAudioStopGroup(g_startMusicGroup);
+                    //// Force-stop start screen music the moment we leave this state
+                    //if (AEAudioIsValidGroup(g_startMusicGroup))
+                    //    AEAudioStopGroup(g_startMusicGroup);
                 }
             }
 
@@ -839,19 +732,10 @@ void StartScreen_Update(float dt)
         {
             nextState = GS_EXIT;
 
-            // Force-stop start screen music the moment we leave this state
-            if (AEAudioIsValidGroup(g_startMusicGroup))
-                AEAudioStopGroup(g_startMusicGroup);
+            //// Force-stop start screen music the moment we leave this state
+            //if (AEAudioIsValidGroup(g_startMusicGroup))
+            //    AEAudioStopGroup(g_startMusicGroup);
         }
-
-        // Mute button — always visible; toggles music and persists state to disk
-        // Button dimensions: 96x96 px (adjust to match your actual texture)
-        if (IsButtonClicked(muteButton, 96.0f, 96.0f))
-        {
-            AudioSettings_ToggleMusic();
-            UIAudio_PlayClick();  // audible feedback (SFX, not music)
-        }
-        muteButton.hovered = IsButtonHovered(muteButton, 96.0f, 96.0f);
 
         // Tutorial button (always visible, both layouts)
         if (IsButtonClicked(tutorialButton, 190.0f, 41.0f))
@@ -888,23 +772,6 @@ void StartScreen_Draw()
 
     // Transformation Matrices
     AEMtx33 scale, trans, transform;
-
-    // Draw the main menu background image first (fills the screen)
-    AEGfxSetBackgroundColor(0.2f, 0.2f, 0.2f);
-    if (pMeshBackground && pTexBackground)
-    {
-        AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
-        AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
-        AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
-        AEGfxSetBlendMode(AE_GFX_BM_BLEND);
-        AEGfxSetTransparency(1.0f);
-        AEGfxTextureSet(pTexBackground, 0, 0);
-        AEMtx33Trans(&trans, 0.0f, 0.0f);
-        AEMtx33Scale(&scale, 1920.0f * gScaleX, 1080.0f * gScaleY);
-        AEMtx33Concat(&transform, &trans, &scale);
-        AEGfxSetTransform(transform.m);
-        AEGfxMeshDraw(pMeshBackground, AE_GFX_MDM_TRIANGLES);
-    }
 
     //Draw background gradient blur
     if (pMeshGradientBlur)
@@ -1071,31 +938,6 @@ void StartScreen_Draw()
     else
         DrawButton(tutorialButton, pMeshTutorialButton_Selected, 211.0f, 61.0f, slideOffset);
 
-    // Mute button — drawn in corner, always visible.
-    // Shows MusicOn texture when music is enabled; MusicOff when muted.
-    // We repurpose the hover texture slot to hold the "off" image, and
-    // temporarily swap normal/hover so DrawButton picks the right one.
-    if (pMeshMuteButton && muteButton.normal)
-    {
-        AEGfxVertexList* muteMesh = pMeshMuteButton;
-        AEGfxTexture* muteTex = g_startMusicEnabled ? muteButton.normal : muteButton.hover;
-        if (muteTex)
-        {
-            AEMtx33 sc, tr, tf;
-            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
-            AEGfxSetBlendMode(AE_GFX_BM_BLEND);
-            AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
-            AEGfxSetColorToAdd(0.0f, 0.0f, 0.0f, 0.0f);
-            AEGfxSetTransparency(exitAnimFadeOut);
-            AEGfxTextureSet(muteTex, 0, 0);
-            AEMtx33Trans(&tr, muteButton.x - slideOffset, muteButton.y);
-            AEMtx33Scale(&sc, 96.0f * gScaleX, 96.0f * gScaleY);
-            AEMtx33Concat(&tf, &tr, &sc);
-            AEGfxSetTransform(tf.m);
-            AEGfxMeshDraw(muteMesh, AE_GFX_MDM_TRIANGLES);
-        }
-    }
-
     Tutorial_Draw();
 }
 
@@ -1110,8 +952,8 @@ void StartScreen_Unload()
         AEAudioUnloadAudio(g_startMusic);
     if (AEAudioIsValidGroup(g_startMusicGroup))
         AEAudioUnloadAudioGroup(g_startMusicGroup);
-    ResetAudio(g_startMusic);
-    ResetAudioGroup(g_startMusicGroup);
+ /*   ResetAudio(g_startMusic);
+    ResetAudioGroup(g_startMusicGroup);*/
 
     // Free popup resources
     if (pMeshPopup) { AEGfxMeshFree(pMeshPopup); pMeshPopup = nullptr; }
@@ -1122,10 +964,8 @@ void StartScreen_Unload()
 
     // Free logo / background
     if (pMeshLogo) { AEGfxMeshFree(pMeshLogo); pMeshLogo = nullptr; }
-    if (pMeshBackground) { AEGfxMeshFree(pMeshBackground); pMeshBackground = nullptr; }
     if (pMeshGradientBlur) { AEGfxMeshFree(pMeshGradientBlur); pMeshGradientBlur = nullptr; }
     if (gradientBlur) { AEGfxTextureUnload(gradientBlur); gradientBlur = nullptr; }
-    if (pTexBackground) { AEGfxTextureUnload(pTexBackground); pTexBackground = nullptr; }
     if (logoTexture) { AEGfxTextureUnload(logoTexture); logoTexture = nullptr; }
 
     // Free button meshes
@@ -1155,10 +995,6 @@ void StartScreen_Unload()
 
     if (tutorialButton.normal) { AEGfxTextureUnload(tutorialButton.normal); tutorialButton.normal = nullptr; }
     if (tutorialButton.hover && tutorialButton.hover != tutorialButton.normal) { AEGfxTextureUnload(tutorialButton.hover); tutorialButton.hover = nullptr; }
-
-    if (pMeshMuteButton) { AEGfxMeshFree(pMeshMuteButton); pMeshMuteButton = nullptr; }
-    if (muteButton.normal) { AEGfxTextureUnload(muteButton.normal); muteButton.normal = nullptr; }
-    if (muteButton.hover && muteButton.hover != muteButton.normal) { AEGfxTextureUnload(muteButton.hover); muteButton.hover = nullptr; }
 
     // Clear any remaining state
     popupOpen = false;

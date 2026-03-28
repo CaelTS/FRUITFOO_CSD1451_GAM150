@@ -31,28 +31,40 @@
 // ============================================================
 static AEAudio      g_mainBGM;
 static AEAudioGroup g_mainBGMGroup;
+// Track whether we've started playback to avoid restarting
+static bool         g_mainBGMPlaying = false;
 
 static void MainBGM_Start()
 {
-	if (AEAudioIsValidAudio(g_mainBGM) && AEAudioIsValidGroup(g_mainBGMGroup))
-	{
-		AEAudioStopGroup(g_mainBGMGroup);
-		AEAudioPlay(g_mainBGM, g_mainBGMGroup, 0.3f, 1.0f, -1); // -1 = infinite loop
-	}
+    // Require valid audio + group
+    if (!AEAudioIsValidAudio(g_mainBGM) || !AEAudioIsValidGroup(g_mainBGMGroup))
+        return;
+
+    // If already playing, do nothing (prevents restart)
+    if (g_mainBGMPlaying)
+        return;
+
+    // Start playback (looping)
+    AEAudioPlay(g_mainBGM, g_mainBGMGroup, 0.3f, 1.0f, -1); // -1 = infinite loop
+    g_mainBGMPlaying = true;
 }
 
 static void MainBGM_Stop()
 {
-	if (AEAudioIsValidGroup(g_mainBGMGroup))
-		AEAudioStopGroup(g_mainBGMGroup);
+    if (AEAudioIsValidGroup(g_mainBGMGroup))
+    {
+        AEAudioStopGroup(g_mainBGMGroup);
+    }
+    // mark as stopped so Start can start fresh later
+    g_mainBGMPlaying = false;
 }
 
 void MainBGM_SetEnabled(bool enabled)
 {
-	if (enabled)
-		MainBGM_Start();
-	else
-		MainBGM_Stop();
+    if (enabled)
+        MainBGM_Start();
+    else
+        MainBGM_Stop();
 }
 
 // ---------------------------------------------------------------------------
