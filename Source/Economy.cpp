@@ -112,9 +112,14 @@ void Economy_Init() {
 }
 void Economy_Update(float dt) {
 	timer += dt;
+	//if (AEInputCheckReleased(AEVK_LBUTTON)) {
+	//	total_money = 10000; // for testing: instantly fill money on click
+	//	printf("Manual money add! Total money: %llu\n", total_money);
+	//}
 
 	if (!(timer >= next_sale_time) || total_money >= max_money)
 		return;
+
 
 	// Trigger sale window only when timer passes and we haven't hit max money
 	if (timer >= next_sale_time && total_money < max_money) {

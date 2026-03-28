@@ -1029,3 +1029,30 @@ float Farm_GetGrowTime()
 {
     return GROW_TIME;
 }
+
+// Setter: unlock or lock a farm plot and persist to profile.
+void Farm_SetPlotUnlocked(int index, bool unlocked)
+{
+    if (index < 0 || index >= (int)farmPlots.size())
+        return;
+
+    farmPlots[index].isUnlocked = unlocked;
+    Profile_SetPlotUnlocked(index, unlocked); // persist immediately
+
+    std::cout << "Farm: plot " << index << " unlocked=" << (unlocked ? "true" : "false") << "\n";
+
+    // If locking a plot, clear any active state to avoid dangling data.
+    if (!unlocked)
+    {
+        farmPlots[index].isPlanted = false;
+        farmPlots[index].isReady = false;
+        farmPlots[index].growTimer = 0.0f;
+        farmPlots[index].seedType = -1;
+        farmPlots[index].rhythmTriggered = false;
+        farmPlots[index].waitingForRhythm = false;
+        farmPlots[index].growthFrozen = false;
+        for (int m = 0; m < 4; ++m) farmPlots[index].milestoneReached[m] = false;
+
+        Profile_SetPlotData(index, false, false, 0.0f, -1);
+    }
+}

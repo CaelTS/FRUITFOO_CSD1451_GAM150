@@ -148,7 +148,7 @@ void Upgrades_Purchase(UpgradeID id) {
                     break;
 
                 case UPGRADE_UNLOCK_PLOT2:
-                    Profile_SetPlotUnlocked(1, true);
+					Farm_SetPlotUnlocked(1, true);
                     printf("Plot 2 unlocked!\n");
                     break;
 
@@ -178,7 +178,7 @@ void Upgrades_Purchase(UpgradeID id) {
                     break;
 
                 case UPGRADE_UNLOCK_PLOT3:
-                    Profile_SetPlotUnlocked(2, true);
+                    Farm_SetPlotUnlocked(2, true);
                     printf("Plot 3 unlocked!\n");
                     break;
 
@@ -202,7 +202,7 @@ void Upgrades_Purchase(UpgradeID id) {
                     break;
 
                 case UPGRADE_UNLOCK_PLOT4:
-                    Profile_SetPlotUnlocked(3, true);
+                    Farm_SetPlotUnlocked(3, true);
                     printf("Plot 4 unlocked!\n");
                     break;
 
