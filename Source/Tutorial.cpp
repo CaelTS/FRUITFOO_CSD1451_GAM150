@@ -21,7 +21,8 @@ static AEGfxTexture* pTexArrowLeft = nullptr;  // arrowBrown_left.png
 static AEGfxTexture* pTexArrowRight = nullptr;  // arrowBrown_right.png
 static AEGfxTexture* pTexDot = nullptr;  // iconCircle_brown.png
 static AEGfxVertexList* pMeshQuad = nullptr;
-static s8 tutFont = -1;
+static s8 tutFontRegular = -1;      // Nunito Regular
+static s8 tutFontSemibold = -1;     // Nunito Semibold
 
 // ---------------------------------------------------------------------------
 // Layout constants  (pixel-space, world origin = screen centre)
@@ -64,7 +65,7 @@ struct TutPage
 static const TutPage PAGES[] =
 {
     {
-        "~ Welcome to Fruit Stall! ~",
+        "Welcome to Fruit Stall!",
         {
             "Grow fruit, run a market stall,",
             "and earn coins to build your",
@@ -214,6 +215,14 @@ static void DrawColorRect(float cx, float cy, float w, float h,
     AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
 }
 
+// Helper function to safely get a usable font (fallback to semibold or regular)
+static s8 GetUsableFont(s8 primary, s8 secondary, s8 fallback)
+{
+    if (primary >= 0) return primary;
+    if (secondary >= 0) return secondary;
+    return fallback;
+}
+
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
@@ -229,13 +238,18 @@ void Tutorial_Load()
     if (!pTexDot)         pTexDot = AEGfxTextureLoad("Assets/iconCircle_brown.png");
     if (!pMeshQuad)       pMeshQuad = MakeTutQuad();
 
-    // FIX 3: assert on load failures so a missing asset is caught immediately
-    // rather than the button silently not appearing.
-    if (tutFont < 0)
+    // Load Nunito fonts
+    if (tutFontRegular < 0)
     {
-        tutFont = AEGfxCreateFont("Assets/Crayon pastel.otf", 22);
-        if (tutFont < 0)
-            tutFont = AEGfxCreateFont("Assets/liberation-mono.ttf", 20);
+        tutFontRegular = AEGfxCreateFont("Assets/Nunito-Regular.ttf", 22);
+    }
+
+    if (tutFontSemibold < 0)
+    {
+        tutFontSemibold = AEGfxCreateFont("Assets/Nunito-SemiBold.ttf", 26);
+        // Fallback to regular if semibold fails
+        if (tutFontSemibold < 0)
+            tutFontSemibold = tutFontRegular;
     }
 
     g_tutOpen = false;
@@ -249,7 +263,12 @@ void Tutorial_Unload()
     if (pTexArrowRight) { AEGfxTextureUnload(pTexArrowRight);  pTexArrowRight = nullptr; }
     if (pTexDot) { AEGfxTextureUnload(pTexDot);         pTexDot = nullptr; }
     if (pMeshQuad) { AEGfxMeshFree(pMeshQuad);            pMeshQuad = nullptr; }
-    if (tutFont >= 0) { AEGfxDestroyFont(tutFont);           tutFont = -1; }
+    if (tutFontRegular >= 0) { AEGfxDestroyFont(tutFontRegular);   tutFontRegular = -1; }
+    if (tutFontSemibold >= 0 && tutFontSemibold != tutFontRegular)
+    {
+        AEGfxDestroyFont(tutFontSemibold);
+        tutFontSemibold = -1;
+    }
 }
 
 bool Tutorial_IsOpen()
@@ -327,9 +346,11 @@ void Tutorial_Draw()
     // 2. Panel background (panel_blue.png)
     DrawTex(pTexPanel, PANEL_X, PANEL_Y, PANEL_W, PANEL_H);
 
-    // 3. Title + body text
-    s8 fnt = (tutFont >= 0) ? tutFont : fontId;
-    if (fnt >= 0)
+    // 3. Title + body text using Nunito fonts
+    s8 fontRegular = (tutFontRegular >= 0) ? tutFontRegular : fontId;
+    s8 fontSemibold = (tutFontSemibold >= 0) ? tutFontSemibold : fontRegular;
+
+    if (fontRegular >= 0)
     {
         AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
         AEGfxSetBlendMode(AE_GFX_BM_BLEND);
@@ -337,36 +358,37 @@ void Tutorial_Draw()
 
         const TutPage& pg = PAGES[g_page];
 
-        // Title (centred by approximate char-width formula)
-        float titleScale = 1.15f;
+        // Title using Nunito Semibold (larger, bold appearance)
+        float titleScale = 1.25f;
         int   titleLen = static_cast<int>(strlen(pg.title));
         float titleX = -(titleLen * 11.0f * titleScale) / (2.0f * 800.0f);
         float titleY = 0.32f;
-        AEGfxPrint(fnt, pg.title, titleX, titleY, titleScale,
+        // Use semibold for title with gold color
+        AEGfxPrint(fontSemibold, pg.title, titleX, titleY, titleScale,
             1.0f, 0.88f, 0.35f, 1.0f);
 
-        // Body lines
-        float bodyScale = 0.78f;
+        // Body lines using Nunito Regular
+        float bodyScale = 0.82f;
         float lineY = 0.13f;
         float lineStep = 0.083f;
         for (int i = 0; i < pg.lineCount; i++)
         {
             if (pg.lines[i][0] == '\0') { lineY -= lineStep * 0.5f; continue; }
             int   len = static_cast<int>(strlen(pg.lines[i]));
-            float lx = -(len * 11.0f * bodyScale) / (2.0f * 800.0f);
-            AEGfxPrint(fnt, pg.lines[i], lx, lineY, bodyScale,
+            float lx = -(len * 10.5f * bodyScale) / (2.0f * 800.0f);
+            AEGfxPrint(fontRegular, pg.lines[i], lx, lineY, bodyScale,
                 0.95f, 0.92f, 0.82f, 1.0f);
             lineY -= lineStep;
         }
 
-        // Page number e.g. "3 / 8"
+        // Page number e.g. "3 / 8" using Nunito Regular
         char pageStr[16];
         sprintf_s(pageStr, sizeof(pageStr), "%d / %d", g_page + 1, PAGE_COUNT);
-        AEGfxPrint(fnt, pageStr, -0.03f, -0.36f, 0.70f, 1.0f, 0.88f, 0.35f, 0.8f);
+        AEGfxPrint(fontRegular, pageStr, -0.03f, -0.36f, 0.70f, 1.0f, 0.88f, 0.35f, 0.8f);
 
-        // ESC hint
-        AEGfxPrint(fnt, "[ ESC ] or click outside to close",
-            -0.25f, -0.43f, 0.50f, 0.85f, 0.82f, 0.72f, 0.75f);
+        // ESC hint using Nunito Regular (smaller)
+        AEGfxPrint(fontRegular, "[ ESC ] or click outside to close",
+            -0.25f, -0.43f, 0.55f, 0.85f, 0.82f, 0.72f, 0.75f);
     }
 
     // 4. Left arrow
