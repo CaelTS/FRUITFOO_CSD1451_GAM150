@@ -339,12 +339,6 @@ void UI_Init()
     /*upgrades = { {"Speed Boost", 100, false}, {"Crate Storage", 150, false}, {"Faster Growth", 200, false}, {"Quality Fruits", 300, false}, {"Stall Revamp", 500, false} };*/
     (void)Upgrades_GetList(); // pre-cache upgrade list
 
-    // Sync toggle display bools with whatever was loaded from audio_settings.txt.
-    // UIAudio_Init() must have been called before UI_Init() for this to reflect
-    // the persisted state (MainScreen_Initialize calls UIAudio_Init first via
-    // UIAudio_EnableSFX / UIAudio_SetMusicEnabled).
-    gSoundEnabled = UIAudio_SFXEnabled();
-    gMusicEnabled = UIAudio_MusicEnabled();
 }
 
 void UI_Input()
@@ -1365,7 +1359,7 @@ void UI_Draw()
             AEGfxSetColorToMultiply(1, 1, 1, 1);
             AEGfxTextureSet(settingsBG, 0, 0);
 
-            AEMtx33Scale(&scale, SET_PANEL_W * ScaleX, SET_PANEL_H * ScaleY);
+            AEMtx33Scale(&scale, SET_PANEL_W* ScaleX, SET_PANEL_H* ScaleY);
             AEMtx33Trans(&trans, SET_PANEL_X, SET_PANEL_Y);
             AEMtx33Concat(&transform, &trans, &scale);
             AEGfxSetTransform(transform.m);
@@ -1375,7 +1369,7 @@ void UI_Draw()
             AEGfxSetColorToMultiply(1, gHoverSoundToggle ? 0.85f : 1, gHoverSoundToggle ? 0.85f : 1, 1);
             AEGfxTextureSet(gSoundEnabled ? settingsOn : settingsOff, 0, 0);
 
-            AEMtx33Scale(&scale, SET_TOGGLE_W * ScaleX, SET_TOGGLE_H * ScaleY);
+            AEMtx33Scale(&scale, SET_TOGGLE_W* ScaleX, SET_TOGGLE_H* ScaleY);
             AEMtx33Trans(&trans, SET_TOGGLE_X + SET_PANEL_X, SET_SOUND_Y + SET_PANEL_Y + 45.0f);
             AEMtx33Concat(&transform, &trans, &scale);
             AEGfxSetTransform(transform.m);
@@ -1385,7 +1379,7 @@ void UI_Draw()
             AEGfxSetColorToMultiply(1, gHoverMusicToggle ? 0.85f : 1, gHoverMusicToggle ? 0.85f : 1, 1);
             AEGfxTextureSet(gMusicEnabled ? settingsOn : settingsOff, 0, 0);
 
-            AEMtx33Scale(&scale, SET_TOGGLE_W * ScaleX, SET_TOGGLE_H * ScaleY);
+            AEMtx33Scale(&scale, SET_TOGGLE_W* ScaleX, SET_TOGGLE_H* ScaleY);
             AEMtx33Trans(&trans, SET_TOGGLE_X + SET_PANEL_X, SET_MUSIC_Y + SET_PANEL_Y + 5.0f);
             AEMtx33Concat(&transform, &trans, &scale);
             AEGfxSetTransform(transform.m);
