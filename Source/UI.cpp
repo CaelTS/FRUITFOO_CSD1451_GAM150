@@ -521,47 +521,6 @@ void UI_UpdateButtons()
             break;
         }
     }
-
-    // --- Upgrades ---
-
-        //const float panelX = UP_BOX_X;
-        //const float panelY = UP_BOX_Y;
-        //const float upgradesW = UP_BOX_W;
-
-        //const float startYUp = panelY + UP_LIST_TOP_OFFSET;
-        //const float spacingUp = UP_ROW_SPACING;
-        //const float boxW = upgradesW - (2.0f * UP_ROW_W_MARGIN);
-        //const float boxH = UP_ROW_H;
-
-        //int shownUp = 0;
-
-        //for (size_t i = upgradesStartIndex; i < upgrades.size() && shownUp < MAX_VISIBLE_UPGRADES; ++i)
-        //{
-        //    auto& u = upgrades[(int)i];
-        //    if (u.purchased) continue;
-
-        //    const float rowCenterY = startYUp - shownUp * spacingUp;
-
-        //    // Same rect as draw()
-        //    const float rowW = boxW;
-        //    const float rowH = boxH;
-        //    const float hoverW = rowW - (UP_HOVER_INSET_L + UP_HOVER_INSET_R);
-        //    const float hoverH = rowH - 2.0f * UP_HOVER_INSET_TB;
-        //    const float hoverX = panelX + 0.5f * (UP_HOVER_INSET_L - UP_HOVER_INSET_R) + UP_HOVER_X_OFFSET;
-
-        //    const float hoverY = rowCenterY + UP_HOVER_Y_NUDGE;
-
-        //    const bool over =
-        //        worldX >= hoverX - hoverW * 0.5f && worldX <= hoverX + hoverW * 0.5f &&
-        //        worldY >= hoverY - hoverH * 0.5f && worldY <= hoverY + hoverH * 0.5f;
-
-        //    if (over && AEInputCheckTriggered(AEVK_LBUTTON))
-        //    {
-        //        u.purchased = true;
-        //        break;
-        //    }
-        //    ++shownUp;
-        //}
     float upgradesPanelW = UPGRADES_PANEL_W;
 
     float panelX = UPGRADES_PANEL_X;
@@ -575,7 +534,6 @@ void UI_UpdateButtons()
     int shownUp = 0;
     for (size_t i = upgradesStartIndex; i < upgrades.size() && shownUp < MAX_VISIBLE_UPGRADES; ++i)
     {
-        /*auto& u = upgrades[static_cast<int>(i)];*/
         auto& u = upgrades[i];
         if (u.purchased) continue;  // skip purchased upgrades
 
@@ -1808,7 +1766,188 @@ void UI_DrawFruitBasketTooltips()
     }
 }
 
+void UI_DrawPlotTooltips()
+{
+    // Get mouse position
+    int mx, my;
+    AEInputGetCursorPosition(&mx, &my);
 
+    const float halfW = 1600.0f * 0.5f;
+    const float halfH = 900.0f * 0.5f;
+    const float worldX = (float)mx - halfW;
+    const float worldY = halfH - (float)my;
+
+    // Get reference to farm plots
+    extern std::vector<FarmPlot> farmPlots;
+
+    // Check each plot slot
+    for (size_t i = 0; i < plotSlots.size(); i++)
+    {
+        const PlotSlot& slot = plotSlots[i];
+
+        // Skip if plot is locked
+        if (Farm_IsPlotLocked(static_cast<int>(i)))
+            continue;
+
+        // Skip if plot is not planted
+        if (!Farm_IsPlotPlanted(static_cast<int>(i)))
+            continue;
+
+        // Check if mouse is over this plot
+        bool isOver = worldX >= slot.x - slot.width * 0.5f &&
+            worldX <= slot.x + slot.width * 0.5f &&
+            worldY >= slot.y - slot.height * 0.5f &&
+            worldY <= slot.y + slot.height * 0.5f;
+
+        if (isOver)
+        {
+            const FarmPlot& plot = farmPlots[i];
+            float growTime = Farm_GetGrowTime();
+
+            // Calculate remaining time
+            char line1[64] = "";
+            char line2[64] = "";
+            int lineCount = 1;
+
+            if (plot.isReady)
+            {
+                sprintf_s(line1, "Ready to harvest!");
+                sprintf_s(line2, "Press SPACE");
+                lineCount = 2;
+
+                // Draw tooltip for ready plot
+                float tipX = slot.x;
+                float tipY = slot.y + slot.height * 0.7f;
+
+                const float tooltipW = 200.0f;
+                const float tooltipH = (lineCount == 2) ? 70.0f : 40.0f;
+
+                // Draw background
+                AEMtx33 scale, trans, transform;
+                AEMtx33Scale(&scale, tooltipW, tooltipH);
+                AEMtx33Trans(&trans, tipX, tipY);
+                AEMtx33Concat(&transform, &trans, &scale);
+
+                AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+                AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+                AEGfxSetColorToMultiply(0.1f, 0.1f, 0.1f, 0.85f);
+                AEGfxSetTransform(transform.m);
+                AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+                // Draw text lines
+                AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+                AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+                AEGfxSetColorToMultiply(1.0f, 1.0f, 0.5f, 1.0f);
+
+                float startY = tipY + (lineCount == 2 ? 10.0f : 0.0f);
+
+                float nx = (tipX - tooltipW * 0.4f) / halfW;
+                float ny = (startY + 8.0f) / halfH;
+                AEGfxPrint(fontId, line1, nx, ny, 0.65f, 1.0f, 1.0f, 0.5f, 0.9f);
+
+                if (lineCount == 2)
+                {
+                    ny = (startY - 18.0f) / halfH;
+                    AEGfxPrint(fontId, line2, nx, ny, 0.65f, 1.0f, 1.0f, 0.5f, 0.9f);
+                }
+            }
+            else if (plot.isPlanted && !plot.growthFrozen)
+            {
+                float remaining = growTime - plot.growTimer;
+                if (remaining < 0.0f) remaining = 0.0f;
+
+                sprintf_s(line1, "Growing...");
+
+                // Format time
+                if (remaining >= 60.0f)
+                {
+                    int minutes = (int)(remaining / 60.0f);
+                    int seconds = (int)remaining % 60;
+                    sprintf_s(line2, "%d:%02d remaining", minutes, seconds);
+                }
+                else
+                {
+                    sprintf_s(line2, "%.0f sec remaining", remaining);
+                }
+                lineCount = 2;
+
+                // Draw tooltip
+                float tipX = slot.x;
+                float tipY = slot.y + slot.height * 0.7f;
+
+                const float tooltipW = 200.0f;
+                const float tooltipH = 70.0f;
+
+                // Draw background
+                AEMtx33 scale, trans, transform;
+                AEMtx33Scale(&scale, tooltipW, tooltipH);
+                AEMtx33Trans(&trans, tipX, tipY);
+                AEMtx33Concat(&transform, &trans, &scale);
+
+                AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+                AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+                AEGfxSetColorToMultiply(0.1f, 0.1f, 0.1f, 0.85f);
+                AEGfxSetTransform(transform.m);
+                AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+                // Draw text lines
+                AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+                AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+                AEGfxSetColorToMultiply(0.8f, 0.9f, 1.0f, 1.0f);
+
+                float startY = tipY + 10.0f;
+
+                float nx = (tipX - tooltipW * 0.4f) / halfW;
+                float ny = (startY + 8.0f) / halfH;
+                AEGfxPrint(fontId, line1, nx, ny, 0.65f, 0.8f, 0.9f, 1.0f, 0.9f);
+
+                ny = (startY - 18.0f) / halfH;
+                AEGfxPrint(fontId, line2, nx, ny, 0.65f, 0.8f, 0.9f, 1.0f, 0.9f);
+            }
+            else if (plot.growthFrozen)
+            {
+                sprintf_s(line1, "Growth frozen!");
+                sprintf_s(line2, "Need rhythm game");
+                lineCount = 2;
+
+                // Draw tooltip
+                float tipX = slot.x;
+                float tipY = slot.y + slot.height * 0.7f;
+
+                const float tooltipW = 180.0f;
+                const float tooltipH = 70.0f;
+
+                // Draw background
+                AEMtx33 scale, trans, transform;
+                AEMtx33Scale(&scale, tooltipW, tooltipH);
+                AEMtx33Trans(&trans, tipX, tipY);
+                AEMtx33Concat(&transform, &trans, &scale);
+
+                AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+                AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+                AEGfxSetColorToMultiply(0.1f, 0.1f, 0.1f, 0.85f);
+                AEGfxSetTransform(transform.m);
+                AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+                // Draw text lines
+                AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+                AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+                AEGfxSetColorToMultiply(1.0f, 0.7f, 0.5f, 1.0f);
+
+                float startY = tipY + 10.0f;
+
+                float nx = (tipX - tooltipW * 0.4f) / halfW;
+                float ny = (startY + 8.0f) / halfH;
+                AEGfxPrint(fontId, line1, nx, ny, 0.65f, 1.0f, 0.7f, 0.5f, 0.9f);
+
+                ny = (startY - 18.0f) / halfH;
+                AEGfxPrint(fontId, line2, nx, ny, 0.65f, 1.0f, 0.7f, 0.5f, 0.9f);
+            }
+
+            break; // Only show one tooltip at a time
+        }
+    }
+}
 
 void UI_DrawCrateHoverTint_Yellow()
 {

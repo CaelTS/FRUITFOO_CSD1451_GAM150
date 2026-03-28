@@ -20,3 +20,18 @@ bool ClickedOnRect(float rectX, float rectY, float rectWidth, float rectHeight) 
 	}
 	return false;
 }
+
+// Helper to format seconds into MM:SS or just seconds
+void FormatTime(float seconds, char* buffer, int bufferSize)
+{
+	if (seconds >= 60.0f)
+	{
+		int minutes = (int)(seconds / 60.0f);
+		int secs = (int)(seconds) % 60;
+		sprintf_s(buffer, bufferSize, "%d:%02d", minutes, secs);
+	}
+	else
+	{
+		sprintf_s(buffer, bufferSize, "%.0f sec", seconds);
+	}
+}

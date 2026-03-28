@@ -1024,3 +1024,8 @@ int Farm_GetRhythmSeedType()
     if (idx < 0 || idx >= (int)farmPlots.size()) return 0;
     return farmPlots[idx].seedType;
 }
+
+float Farm_GetGrowTime()
+{
+    return GROW_TIME;
+}

@@ -57,3 +57,4 @@ void Farm_SetRhythmPaused(bool paused);
 bool Farm_IsRhythmPaused();
 bool Farm_IsWaitingForRhythm();
 int  Farm_GetRhythmSeedType();
+float Farm_GetGrowTime();
