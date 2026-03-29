@@ -63,6 +63,7 @@ static AEGfxTexture* settingsOn = nullptr;
 static AEGfxTexture* settingsOff = nullptr;
 
 static AEGfxTexture* appleSeedIcon = nullptr;
+static AEGfxTexture* pearSeedIcon = nullptr;
 static AEGfxTexture* leftArrowTexture = nullptr;
 static AEGfxTexture* rightArrowTexture = nullptr;
 
@@ -79,9 +80,10 @@ enum ButtonType
 enum SeedType
 {
     SEED_APPLE = 0,
-    SEED_COUNT = 3
+    SEED_PEAR,
+    SEED_BANANA,
+    SEED_COUNT
 };
-
 struct MenuButton
 {
     float x, y;
@@ -101,8 +103,8 @@ struct SeedData
 static SeedData seedDatabase[SEED_COUNT] =
 {
     { 10, 5.0f, 1, "Apple Seed" },
-    {  0, 0.0f, 0, ""           },  // empty slot
-    {  0, 0.0f, 0, ""           },  // empty slot
+    { 15, 7.0f, 2, "Pear Seed" },   // <-- NEW
+    { 20, 9.0f, 3, "Banana Seed" }  // optional
 };
 
 // The current seed page shown in the panel
@@ -277,6 +279,7 @@ void UI_Init()
     settingsOff = AEGfxTextureLoad("Assets/Settings_OFF.png");
 
     appleSeedIcon = AEGfxTextureLoad("Assets/AppleSeed.png");
+    pearSeedIcon = AEGfxTextureLoad("Assets/PearSeed.png");
     leftArrowTexture = AEGfxTextureLoad("Assets/ArrowLeft.png");
     rightArrowTexture = AEGfxTextureLoad("Assets/ArrowRight.png");
     plotSlotTexture = AEGfxTextureLoad("Assets/Plot1.png");
@@ -454,17 +457,17 @@ void UI_UpdateButtons()
             }
         }
 
-        // Hover highlight (only meaningful on the apple slot)
-        hoveredSeed = (overSeed && currentSeedIndex == SEED_APPLE) ? SEED_APPLE : -1;
+        // Hover highlight (only meaningful on the apple and pear slots)
+        hoveredSeed = (overSeed && (currentSeedIndex == SEED_APPLE || currentSeedIndex == 1)) ? currentSeedIndex : -1;
 
-        // Planting — only allowed on the apple slot
-        if (overSeed && clickThisFrame && currentSeedIndex == SEED_APPLE)
+        // Planting — allowed on apple and pear slots
+        if (overSeed && clickThisFrame && (currentSeedIndex == SEED_APPLE || currentSeedIndex == 1))
         {
-            selectedSeed = SEED_APPLE;
+            selectedSeed = currentSeedIndex;
 
             if (activePlotIndex != -1)
             {
-                Farm_PlantSeed(activePlotIndex, SEED_APPLE);
+                Farm_PlantSeed(activePlotIndex, currentSeedIndex);
                 std::cout << "Planted on plot: " << activePlotIndex << "\n";
 
                 seedsPopupOpen = false;
@@ -1401,6 +1404,96 @@ void UI_Draw()
             AEGfxPrint(fontId, "Funny how the smallest things become the best.",
                 descX, (descBoxTop - lineH * 2.5f) / 450.0f, descScale, tr, tg, tb, 1);
         }
+        else if (currentSeedIndex == 1)
+        {
+            // Hover highlight
+            if (hoveredSeed == 1)
+            {
+                AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+                AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+                AEGfxSetColorToMultiply(0.4f, 0.8f, 0.2f, 0.9f);
+
+                AEMtx33Scale(&scale, 112, 112);
+                AEMtx33Trans(&trans, seedspanelX, seedY);
+                AEMtx33Concat(&transform, &trans, &scale);
+                AEGfxSetTransform(transform.m);
+                AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+                AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+                AEGfxSetColorToMultiply(1, 1, 1, 1);
+            }
+
+            // Seed icon
+            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+            AEGfxSetColorToMultiply(1, 1, 1, 1);
+            AEGfxTextureSet(pearSeedIcon, 0, 0);
+
+            AEMtx33Scale(&scale, 100, 100);
+            AEMtx33Trans(&trans, seedspanelX, seedY);
+            AEMtx33Concat(&transform, &trans, &scale);
+            AEGfxSetTransform(transform.m);
+            AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+            // Seed count badge
+            int  pearSeedCount = GetSeedCount();
+            char pearSeedCountText[8];
+            sprintf_s(pearSeedCountText, "%d", pearSeedCount);
+
+            float badgeX = seedspanelX + 35.0f;
+            float badgeY = seedY - 30.0f;
+            float textBadgeX = badgeX - ((pearSeedCount < 10) ? 4.0f : 8.0f);
+
+            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+            AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+            AEGfxSetColorToMultiply(1, 1, 1, 1);
+            AEGfxPrint(fontId, pearSeedCountText, textBadgeX / 800.0f, badgeY / 450.0f, 0.7f, 1, 1, 1, 1);
+
+            // Info text — same layout as apple block
+            const float panelLeft = seedspanelX - 200.0f;
+            const float panelTop = seedspanelY + 275.0f;
+            const float scaleTexX = 400.0f / 616.0f;
+            const float scaleTexY = 550.0f / 662.0f;
+
+            const float coinCx = panelLeft + 118.0f * scaleTexX;
+            const float coinCy = panelTop - 462.0f * scaleTexY;
+            const float waterCx = panelLeft + 398.0f * scaleTexX;
+            const float waterCy = coinCy;
+            const float clockCx = coinCx;
+            const float clockCy = panelTop - 525.0f * scaleTexY;
+            const float tOff = 21.0f;
+            const float tr = 0.25f, tg = 0.13f, tb = 0.02f;
+            const float brownBoxCx = panelLeft + 308.0f * scaleTexX;
+            const float brownBoxCy = panelTop - 385.0f * scaleTexY;
+
+            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+            AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+            AEGfxSetColorToMultiply(1, 1, 1, 1);
+
+            AEGfxPrint(fontId, "Pear Seed",
+                (brownBoxCx - 80.0f) / 800.0f, brownBoxCy / 450.0f,
+                1.1f, tr, tg, tb, 1);
+            AEGfxPrint(fontId, "15 / min",
+                (coinCx + tOff) / 800.0f, coinCy / 450.0f,
+                1.0f, tr, tg, tb, 1);
+            AEGfxPrint(fontId, "2",
+                (waterCx + tOff) / 800.0f, waterCy / 450.0f,
+                1.0f, tr, tg, tb, 1);
+            AEGfxPrint(fontId, "42 mins",
+                (clockCx + tOff) / 800.0f, clockCy / 450.0f,
+                1.0f, tr, tg, tb, 1);
+
+            const float descBoxTop = panelTop - 585.0f * scaleTexY + 10.0f;
+            const float descScale = 0.5f;
+            const float lineH = 13.0f;
+            const float descX = (panelLeft + 68.0f) / 800.0f;
+
+            AEGfxPrint(fontId, "The pear seed -- takes patience, but worth it.",
+                descX, (descBoxTop - lineH * 0.5f) / 450.0f, descScale, tr, tg, tb, 1);
+            AEGfxPrint(fontId, "Soft, sweet fruit. Grandma's favorite.",
+                descX, (descBoxTop - lineH * 1.5f) / 450.0f, descScale, tr, tg, tb, 1);
+            AEGfxPrint(fontId, "Give it time and it will never disappoint.",
+                descX, (descBoxTop - lineH * 2.5f) / 450.0f, descScale, tr, tg, tb, 1);
+        }
         // else: empty slot — nothing drawn on top of the panel background
     }
 
@@ -1827,6 +1920,7 @@ void UI_Exit()
     AEGfxTextureUnload(settingsOff);
 
     AEGfxTextureUnload(appleSeedIcon);
+    AEGfxTextureUnload(pearSeedIcon);
     AEGfxTextureUnload(plotSlotTexture);
     AEGfxTextureUnload(leftArrowTexture);
     AEGfxTextureUnload(rightArrowTexture);
