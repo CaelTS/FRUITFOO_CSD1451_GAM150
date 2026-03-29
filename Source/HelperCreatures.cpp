@@ -6,6 +6,7 @@
 #include <cmath>
 #include <vector>
 #include "SpawnFruits.h"
+#include "Main.h"
 
 extern std::vector<Fruit> fruits;
 extern AEGfxVertexList* g_pMeshFullScreen;
@@ -169,6 +170,7 @@ void Helper_Update(float dt)
             // optional: move fruit slightly upward before disappearing
             fruits[targetFruit].y += 10.0f;
             Inventory_AddFruit(1, 0);
+            MainScreen_OnHelperCollect(1);
 
             isPicking = false;
             targetFruit = -1;

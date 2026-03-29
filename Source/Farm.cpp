@@ -8,6 +8,7 @@
 #include <cmath>
 #include "Inventory.h"
 #include "Crate.h"
+#include "UIAudio.h"
 
 extern AEGfxVertexList* g_pMeshFullScreen;
 
@@ -418,22 +419,28 @@ void Farm_Update()
         if (ratio >= 0.25f && !plot.milestoneReached[0])
         {
             plot.milestoneReached[0] = true;
-            if (AEAudioIsValidAudio(g_farmTickSFX) && AEAudioIsValidGroup(g_farmTickGroup))
+            if (UIAudio_SFXEnabled() && AEAudioIsValidAudio(g_farmTickSFX) && AEAudioIsValidGroup(g_farmTickGroup))
+            {
                 AEAudioPlay(g_farmTickSFX, g_farmTickGroup, 1.0f, 1.0f, 0);
+            }
         }
 
         if (ratio >= 0.5f && !plot.milestoneReached[1])
         {
             plot.milestoneReached[1] = true;
-            if (AEAudioIsValidAudio(g_farmTickSFX) && AEAudioIsValidGroup(g_farmTickGroup))
+            if (UIAudio_SFXEnabled() && AEAudioIsValidAudio(g_farmTickSFX) && AEAudioIsValidGroup(g_farmTickGroup))
+            {
                 AEAudioPlay(g_farmTickSFX, g_farmTickGroup, 1.0f, 1.0f, 0);
+            }
         }
 
         if (ratio >= 0.75f && !plot.milestoneReached[2])
         {
             plot.milestoneReached[2] = true;
-            if (AEAudioIsValidAudio(g_farmTickSFX) && AEAudioIsValidGroup(g_farmTickGroup))
+            if (UIAudio_SFXEnabled() && AEAudioIsValidAudio(g_farmTickSFX) && AEAudioIsValidGroup(g_farmTickGroup))
+            {
                 AEAudioPlay(g_farmTickSFX, g_farmTickGroup, 1.0f, 1.0f, 0);
+            }
         }
 
         if (ratio >= 0.5f && !plot.rhythmTriggered && g_rhythmPlotIndex == -1)
@@ -449,8 +456,11 @@ void Farm_Update()
             plot.milestoneReached[3] = true;
 
             // Harvest sound — plot fully grown
-            if (AEAudioIsValidAudio(g_farmHarvestSFX) && AEAudioIsValidGroup(g_farmHarvestGroup))
+            if (UIAudio_SFXEnabled() && AEAudioIsValidAudio(g_farmHarvestSFX) && AEAudioIsValidGroup(g_farmHarvestGroup))
+            {
                 AEAudioPlay(g_farmHarvestSFX, g_farmHarvestGroup, 3.0f, 1.0f, 0);
+            }
+
 
             plot.waitingForRhythm = false;
             plot.growthFrozen = false;
@@ -1013,4 +1023,36 @@ int Farm_GetRhythmSeedType()
     int idx = g_rhythmPlotIndex;
     if (idx < 0 || idx >= (int)farmPlots.size()) return 0;
     return farmPlots[idx].seedType;
+}
+
+float Farm_GetGrowTime()
+{
+    return GROW_TIME;
+}
+
+// Setter: unlock or lock a farm plot and persist to profile.
+void Farm_SetPlotUnlocked(int index, bool unlocked)
+{
+    if (index < 0 || index >= (int)farmPlots.size())
+        return;
+
+    farmPlots[index].isUnlocked = unlocked;
+    Profile_SetPlotUnlocked(index, unlocked); // persist immediately
+
+    std::cout << "Farm: plot " << index << " unlocked=" << (unlocked ? "true" : "false") << "\n";
+
+    // If locking a plot, clear any active state to avoid dangling data.
+    if (!unlocked)
+    {
+        farmPlots[index].isPlanted = false;
+        farmPlots[index].isReady = false;
+        farmPlots[index].growTimer = 0.0f;
+        farmPlots[index].seedType = -1;
+        farmPlots[index].rhythmTriggered = false;
+        farmPlots[index].waitingForRhythm = false;
+        farmPlots[index].growthFrozen = false;
+        for (int m = 0; m < 4; ++m) farmPlots[index].milestoneReached[m] = false;
+
+        Profile_SetPlotData(index, false, false, 0.0f, -1);
+    }
 }

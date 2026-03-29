@@ -16,8 +16,8 @@
 static AEAudio      g_startMusic;
 static AEAudioGroup g_startMusicGroup;
 
-static void ResetAudio(AEAudio& audio) { memset(&audio, 0, sizeof(AEAudio)); }
-static void ResetAudioGroup(AEAudioGroup& g) { memset(&g, 0, sizeof(AEAudioGroup)); }
+//static void ResetAudio(AEAudio& audio) { memset(&audio, 0, sizeof(AEAudio)); }
+//static void ResetAudioGroup(AEAudioGroup& g) { memset(&g, 0, sizeof(AEAudioGroup)); }
 
 // ============================================================
 // Profile persistence
@@ -422,26 +422,26 @@ void StartScreen_Load()
     // Debug: Confirm Load was called
     printf("[DEBUG] StartScreen_Load() called - loading audio\n");
 
-    // Clean up any existing audio first
-    if (AEAudioIsValidAudio(g_startMusic)) {
-        AEAudioStopGroup(g_startMusicGroup);
-        AEAudioUnloadAudio(g_startMusic);
-    }
-    if (AEAudioIsValidGroup(g_startMusicGroup)) {
-        AEAudioUnloadAudioGroup(g_startMusicGroup);
-    }
+    //// Clean up any existing audio first
+    //if (AEAudioIsValidAudio(g_startMusic)) {
+    //    AEAudioStopGroup(g_startMusicGroup);
+    //    AEAudioUnloadAudio(g_startMusic);
+    //}
+    //if (AEAudioIsValidGroup(g_startMusicGroup)) {
+    //    AEAudioUnloadAudioGroup(g_startMusicGroup);
+    //}
 
-    // Reset and load fresh
-    ResetAudio(g_startMusic);
-    ResetAudioGroup(g_startMusicGroup);
-    g_startMusic = AEAudioLoadMusic("Assets/Start.wav");
-    g_startMusicGroup = AEAudioCreateGroup();
+    //// Reset and load fresh
+    //ResetAudio(g_startMusic);
+    //ResetAudioGroup(g_startMusicGroup);
+    //g_startMusic = AEAudioLoadMusic("Assets/Start.wav");
+    //g_startMusicGroup = AEAudioCreateGroup();
 
-    // Debug output
-    if (AEAudioIsValidAudio(g_startMusic))
-        printf("[DEBUG] StartScreen_Load(): Start.wav loaded successfully.\n");
-    else
-        printf("[DEBUG] StartScreen_Load(): FAILED to load Start.wav!\n");
+    //// Debug output
+    //if (AEAudioIsValidAudio(g_startMusic))
+    //    printf("[DEBUG] StartScreen_Load(): Start.wav loaded successfully.\n");
+    //else
+    //    printf("[DEBUG] StartScreen_Load(): FAILED to load Start.wav!\n");
 }
 
 void StartScreen_Init()
@@ -454,33 +454,33 @@ void StartScreen_Init()
     // AUDIO PLAYBACK - with fallback loading if Load() wasn't called
     // ============================================================
     // FALLBACK: If audio wasn't loaded in Load() (or Load was never called), load it now
-    if (!AEAudioIsValidAudio(g_startMusic) || !AEAudioIsValidGroup(g_startMusicGroup))
-    {
-        printf("[DEBUG] StartScreen_Init(): Audio not valid from Load(), loading now as fallback...\n");
+    //if (!AEAudioIsValidAudio(g_startMusic) || !AEAudioIsValidGroup(g_startMusicGroup))
+    //{
+    //    printf("[DEBUG] StartScreen_Init(): Audio not valid from Load(), loading now as fallback...\n");
 
-        // Clean up just in case
-        if (AEAudioIsValidAudio(g_startMusic)) AEAudioUnloadAudio(g_startMusic);
-        if (AEAudioIsValidGroup(g_startMusicGroup)) AEAudioUnloadAudioGroup(g_startMusicGroup);
+    //    // Clean up just in case
+    //    if (AEAudioIsValidAudio(g_startMusic)) AEAudioUnloadAudio(g_startMusic);
+    //    if (AEAudioIsValidGroup(g_startMusicGroup)) AEAudioUnloadAudioGroup(g_startMusicGroup);
 
-        ResetAudio(g_startMusic);
-        ResetAudioGroup(g_startMusicGroup);
-        g_startMusic = AEAudioLoadMusic("Assets/Start.wav");
-        g_startMusicGroup = AEAudioCreateGroup();
-    }
+    //    ResetAudio(g_startMusic);
+    //    ResetAudioGroup(g_startMusicGroup);
+    //    g_startMusic = AEAudioLoadMusic("Assets/Start.wav");
+    //    g_startMusicGroup = AEAudioCreateGroup();
+    //}
 
-    printf("[DEBUG] StartScreen_Init(): g_startMusic valid=%d, g_startMusicGroup valid=%d\n",
-        AEAudioIsValidAudio(g_startMusic), AEAudioIsValidGroup(g_startMusicGroup));
+    //printf("[DEBUG] StartScreen_Init(): g_startMusic valid=%d, g_startMusicGroup valid=%d\n",
+    //    AEAudioIsValidAudio(g_startMusic), AEAudioIsValidGroup(g_startMusicGroup));
 
-    if (AEAudioIsValidAudio(g_startMusic) && AEAudioIsValidGroup(g_startMusicGroup))
-    {
-        AEAudioStopGroup(g_startMusicGroup);
-        AEAudioPlay(g_startMusic, g_startMusicGroup, 1.0f, 1.0f, 0);
-        printf("[DEBUG] StartScreen_Init(): Start.wav playback started.\n");
-    }
-    else
-    {
-        printf("[ERROR] StartScreen_Init(): Audio failed to load! Check Assets/Start.wav\n");
-    }
+    //if (AEAudioIsValidAudio(g_startMusic) && AEAudioIsValidGroup(g_startMusicGroup))
+    //{
+    //    AEAudioStopGroup(g_startMusicGroup);
+    //    AEAudioPlay(g_startMusic, g_startMusicGroup, 1.0f, 1.0f, 0);
+    //    printf("[DEBUG] StartScreen_Init(): Start.wav playback started.\n");
+    //}
+    //else
+    //{
+    //    printf("[ERROR] StartScreen_Init(): Audio failed to load! Check Assets/Start.wav\n");
+    //}
 
     // Only create if not already allocated
     if (!pMeshPopup) pMeshPopup = createMesh();
@@ -671,9 +671,9 @@ void StartScreen_Update(float dt)
                 // Go to profile screen
                 nextState = GS_NEXT_SCREEN;
 
-                // Force-stop start screen music the moment we leave this state
-                if (AEAudioIsValidGroup(g_startMusicGroup))
-                    AEAudioStopGroup(g_startMusicGroup);
+                //// Force-stop start screen music the moment we leave this state
+                //if (AEAudioIsValidGroup(g_startMusicGroup))
+                //    AEAudioStopGroup(g_startMusicGroup);
             }
             else if (IsButtonClicked(continueButton, 190.0f, 41.0f))
             {
@@ -691,9 +691,9 @@ void StartScreen_Update(float dt)
                     isExiting = true;
                     nextState = GS_MAIN_SCREEN;
 
-                    // Force-stop start screen music the moment we leave this state
-                    if (AEAudioIsValidGroup(g_startMusicGroup))
-                        AEAudioStopGroup(g_startMusicGroup);
+                    //// Force-stop start screen music the moment we leave this state
+                    //if (AEAudioIsValidGroup(g_startMusicGroup))
+                    //    AEAudioStopGroup(g_startMusicGroup);
                 }
             }
 
@@ -732,9 +732,9 @@ void StartScreen_Update(float dt)
         {
             nextState = GS_EXIT;
 
-            // Force-stop start screen music the moment we leave this state
-            if (AEAudioIsValidGroup(g_startMusicGroup))
-                AEAudioStopGroup(g_startMusicGroup);
+            //// Force-stop start screen music the moment we leave this state
+            //if (AEAudioIsValidGroup(g_startMusicGroup))
+            //    AEAudioStopGroup(g_startMusicGroup);
         }
 
         // Tutorial button (always visible, both layouts)
@@ -952,8 +952,8 @@ void StartScreen_Unload()
         AEAudioUnloadAudio(g_startMusic);
     if (AEAudioIsValidGroup(g_startMusicGroup))
         AEAudioUnloadAudioGroup(g_startMusicGroup);
-    ResetAudio(g_startMusic);
-    ResetAudioGroup(g_startMusicGroup);
+ /*   ResetAudio(g_startMusic);
+    ResetAudioGroup(g_startMusicGroup);*/
 
     // Free popup resources
     if (pMeshPopup) { AEGfxMeshFree(pMeshPopup); pMeshPopup = nullptr; }

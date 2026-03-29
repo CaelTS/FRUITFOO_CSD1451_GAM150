@@ -44,6 +44,9 @@ bool Farm_IsPlotPlanted(int plotIndex);
 void Farm_ClearPlot(int index);
 bool Farm_IsPlotLocked(int index);
 
+// Setter to change a plot's unlocked state (updates profile)
+void Farm_SetPlotUnlocked(int index, bool unlocked);
+
 // ------------------------------------------------------------
 // RHYTHM SYSTEM
 // ------------------------------------------------------------
@@ -57,3 +60,4 @@ void Farm_SetRhythmPaused(bool paused);
 bool Farm_IsRhythmPaused();
 bool Farm_IsWaitingForRhythm();
 int  Farm_GetRhythmSeedType();
+float Farm_GetGrowTime();
