@@ -292,7 +292,6 @@ void MainScreen_Load()
 
 void MainScreen_Initialize()
 {
-<<<<<<< HEAD
     // Start Screen Init
     if (g_returnedFromPause)
     {
@@ -322,12 +321,6 @@ void MainScreen_Initialize()
         gStartScreenActive = true;
         StartScreen_Init();
     }
-=======
-	// Start screen is now its own GSM state (GS_START_SCREEN).
-	// By the time MainScreen_Initialize runs, the start screen is done.
-	gStartScreenActive = false;
-	startScreenActive = false;
->>>>>>> parent of b2bb844 (hiu)
 
     // Reset pause popup state
     g_pauseOpen = false;
@@ -338,29 +331,12 @@ void MainScreen_Initialize()
     SpawnFruit_Init();
     Upgrades_Init();
 
-<<<<<<< HEAD
     UI_Init();
     Helper_Init();
 
     UIAudio_EnableSFX(gSoundEnabled);
     UIAudio_SetMusicEnabled(gMusicEnabled);
     MainBGM_SetEnabled(gMusicEnabled);
-=======
-	// UIAudio_Init loads audio_settings.txt and caches sSFXEnabled / sMusicEnabled.
-	// UI_Init then reads those back via UIAudio_SFXEnabled() / UIAudio_MusicEnabled()
-	// to sync the visual toggle state (gSoundEnabled / gMusicEnabled).
-	UIAudio_Init();
-	UI_Init();
-	Helper_Init();
-
-	// Apply persisted audio settings to all subsystems.
-	// UIAudio_SetMusicEnabled controls both Rhythm AND MainBGM in one call,
-	// so we do NOT call MainBGM_SetEnabled separately.
-	gSoundEnabled = UIAudio_SFXEnabled();
-	gMusicEnabled = UIAudio_MusicEnabled();
-	UIAudio_EnableSFX(gSoundEnabled);
-	UIAudio_SetMusicEnabled(gMusicEnabled); // starts MainBGM if gMusicEnabled=true
->>>>>>> parent of b2bb844 (hiu)
 
     if (previousState != GS_RHYTHM_SCREEN)
     {
@@ -384,23 +360,10 @@ void MainScreen_Initialize()
     if (fontId < 0)
         OutputDebugStringA("ERROR: Failed to load 'Assets/Crayon pastel.otf'.\n");
 
-<<<<<<< HEAD
     // Legend fonts — Nunito gives a clean, modern game-UI feel.
     g_legendFontKey = AEGfxCreateFont("Assets/Nunito-SemiBold.ttf", 28);
     if (g_legendFontKey < 0)
         g_legendFontKey = fontId;
-=======
-	// Legend fonts — Nunito gives a clean, modern game-UI feel.
-	// Drop Nunito-SemiBold.ttf and Nunito-Regular.ttf into Assets/.
-	// Falls back to the main font if the files aren't present yet.
-	g_legendFontKey = AEGfxCreateFont("Assets/Nunito-SemiBold.ttf", 28);
-	if (g_legendFontKey < 0)
-		g_legendFontKey = fontId;
-
-	g_legendFontDesc = AEGfxCreateFont("Assets/Nunito-Regular.ttf", 28);
-	if (g_legendFontDesc < 0)
-		g_legendFontDesc = fontId;
->>>>>>> parent of b2bb844 (hiu)
 
     g_legendFontDesc = AEGfxCreateFont("Assets/Nunito-Regular.ttf", 28);
     if (g_legendFontDesc < 0)
@@ -462,7 +425,6 @@ void MainScreen_Update()
         return;
     }
 
-<<<<<<< HEAD
     if (gStartScreenActive)
     {
         StartScreen_Update(dt);
@@ -474,19 +436,6 @@ void MainScreen_Update()
         }
         return;
     }
-=======
-	if (gStartScreenActive)
-	{
-		StartScreen_Update(dt);
-		if (!StartScreen_IsActive())
-		{
-			gStartScreenActive = false;
-			if (gMusicEnabled)
-				MainBGM_Start(); // start screen dismissed — begin BGM now
-		}
-		return; // block all game input while start screen is active
-	}
->>>>>>> parent of b2bb844 (hiu)
 
     s32 mouseX, mouseY;
     AEInputGetCursorPosition(&mouseX, &mouseY);
@@ -540,15 +489,7 @@ void MainScreen_Update()
     if (AEInputCheckTriggered(AEVK_H))
         g_legendOpen = !g_legendOpen;
 
-<<<<<<< HEAD
     UI_Input();
-=======
-	// Toggle key legend (H)
-	if (AEInputCheckTriggered(AEVK_H))
-		g_legendOpen = !g_legendOpen;
-
-	UI_Input();  // Farm_Update() already handles its own clicks before this runs
->>>>>>> parent of b2bb844 (hiu)
 
     Economy_Update(dt);
     UpdateSpawnFruits(dt);
@@ -837,89 +778,12 @@ void MainScreen_Render()
         const float PNL_X = HW - PNL_W * 0.5f;
         const float PNL_Y = 0.0f;
 
-<<<<<<< HEAD
         AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
         AEGfxSetBlendMode(AE_GFX_BM_BLEND);
         AEGfxPrint(g_legendFontDesc, g_legendOpen ? "[H] Hide" : "[H] Controls",
             (PNL_X - PNL_W * 0.46f) / HW,
             (PNL_Y - PNL_H * 0.46f) / HH,
             0.65f, 0.0f, 0.0f, 0.0f, 0.80f);
-=======
-	// ---------------------------------------------------------------
-	// Key Legend — glass style, flush right border
-	// Toggle with [H]. Always hidden during pause / reward popup.
-	// ---------------------------------------------------------------
-	if (g_legendFontKey >= 0 && !gStartScreenActive && !g_pauseOpen && !g_rewardPopupOpen)
-	{
-		const float HW = 800.0f;
-		const float HH = 450.0f;
-
-		const float PNL_W = 260.0f;
-		const float PNL_H = 380.0f;
-		const float PNL_X = HW - PNL_W * 0.5f;
-		const float PNL_Y = 0.0f;
-
-		// Always draw the [H] hint
-		AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
-		AEGfxSetBlendMode(AE_GFX_BM_BLEND);
-		AEGfxPrint(g_legendFontDesc, g_legendOpen ? "[H] Hide" : "[H] Controls",
-			(PNL_X - PNL_W * 0.46f) / HW,
-			(PNL_Y - PNL_H * 0.46f) / HH,
-			0.65f, 0.0f, 0.0f, 0.0f, 0.80f);
-
-		if (g_legendOpen)
-		{
-			// Frosted glass backdrop
-			AEGfxSetRenderMode(AE_GFX_RM_COLOR);
-			AEGfxSetBlendMode(AE_GFX_BM_BLEND);
-			AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 0.25f);
-			AEMtx33Scale(&scale, PNL_W, PNL_H);
-			AEMtx33Trans(&trans, PNL_X, PNL_Y);
-			AEMtx33Concat(&transform, &trans, &scale);
-			AEGfxSetTransform(transform.m);
-			AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
-
-			AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
-			AEGfxSetBlendMode(AE_GFX_BM_BLEND);
-
-			const float txtScale = 0.85f;
-			const float keyX = (PNL_X - PNL_W * 0.46f) / HW;
-			const float descX = (PNL_X - PNL_W * 0.02f) / HW;
-
-			// Title — SemiBold
-			AEGfxPrint(g_legendFontKey, "CONTROLS",
-				(PNL_X - PNL_W * 0.40f) / HW,
-				(PNL_Y + PNL_H * 0.40f) / HH,
-				txtScale + 0.10f, 0.0f, 0.0f, 0.0f, 1.0f);
-
-			struct { const char* key; const char* desc; }
-			static const E[] = {
-				{ "[M]",     "Menu"        },
-				{ "[ESC]",   "Pause"       },
-				{ "[CLICK]", "Interact"    },
-				{ "[SPACE]", "Collect"     },
-				{ "[E]",     "Exit Rhythm" },
-			};
-			const int N = 5;
-			const float rowTop = PNL_Y + PNL_H * 0.26f;
-			const float rowSpacing = PNL_H / (N + 1.8f);
-
-			for (int i = 0; i < N; i++)
-			{
-				const float ry = (rowTop - i * rowSpacing) / HH;
-				AEGfxPrint(g_legendFontKey, E[i].key, keyX, ry, txtScale, 0.0f, 0.0f, 0.0f, 1.0f);
-				AEGfxPrint(g_legendFontDesc, E[i].desc, descX, ry, txtScale, 0.0f, 0.0f, 0.0f, 0.80f);
-			}
-		}
-	}
-
-	// ---------------------------------------------------------------
-	// Pause popup rendering (drawn last so it sits on top)
-	// ---------------------------------------------------------------
-	if (g_pauseOpen)
-	{
-		AEMtx33 pScale, pTrans, pTransform;
->>>>>>> parent of b2bb844 (hiu)
 
         if (g_legendOpen)
         {
@@ -1164,7 +1028,6 @@ void MainScreen_Free()
         fontId = -1;
     }
 
-<<<<<<< HEAD
     if (g_legendFontKey >= 0 && g_legendFontKey != fontId)
     {
         AEGfxDestroyFont(g_legendFontKey);
@@ -1175,26 +1038,6 @@ void MainScreen_Free()
         AEGfxDestroyFont(g_legendFontDesc);
         g_legendFontDesc = -1;
     }
-=======
-	// Free legend fonts (only if they're not sharing the fallback fontId)
-	if (g_legendFontKey >= 0 && g_legendFontKey != fontId)
-	{
-		AEGfxDestroyFont(g_legendFontKey);
-		g_legendFontKey = -1;
-	}
-	if (g_legendFontDesc >= 0 && g_legendFontDesc != g_legendFontKey && g_legendFontDesc != fontId)
-	{
-		AEGfxDestroyFont(g_legendFontDesc);
-		g_legendFontDesc = -1;
-	}
-
-	// Free pause popup assets
-	if (pTexPausePanel) { AEGfxTextureUnload(pTexPausePanel); pTexPausePanel = nullptr; }
-	if (pTexPauseBtn) { AEGfxTextureUnload(pTexPauseBtn);   pTexPauseBtn = nullptr; }
-	if (pMeshPauseQuad) { AEGfxMeshFree(pMeshPauseQuad);      pMeshPauseQuad = nullptr; }
-	if (pGrass) { AEGfxTextureUnload(pGrass);   pGrass = nullptr; }
-	if (pTexPlus) { AEGfxTextureUnload(pTexPlus); pTexPlus = nullptr; }
->>>>>>> parent of b2bb844 (hiu)
 
     if (pTexPausePanel) { AEGfxTextureUnload(pTexPausePanel); pTexPausePanel = nullptr; }
     if (pTexPauseBtn) { AEGfxTextureUnload(pTexPauseBtn);   pTexPauseBtn = nullptr; }
@@ -1234,11 +1077,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     AEGfxTriAdd(0.5f, -0.5f, 0xFFFFFFFF, 1, 1, 0.5f, 0.5f, 0xFFFFFFFF, 1, 0, -0.5f, 0.5f, 0xFFFFFFFF, 0, 0);
     g_pMeshFullScreen = AEGfxMeshEnd();
 
-<<<<<<< HEAD
     GSM_Initialize(GS_MAIN_SCREEN);
-=======
-	GSM_Initialize(GS_START_SCREEN);
->>>>>>> parent of b2bb844 (hiu)
 
     while (gGameRunning)
     {
