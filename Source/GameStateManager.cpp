@@ -1,4 +1,4 @@
-#include "GameStateManager.h"
+ï»¿#include "GameStateManager.h"
 #include "AEEngine.h"
 #include "Main.h"
 #include "Profile.h"
@@ -41,7 +41,6 @@ static void StartScreen_GSM_Update()
     {
         if (nextState == currentState) // nothing chosen yet
             nextState = GS_MAIN_SCREEN;
-        // else: Continue set GS_NEXT_SCREEN, New Game set GS_MAIN_SCREEN, etc. — keep it
     }
 }
 static void StartScreen_GSM_Render() { StartScreen_Draw(); }
