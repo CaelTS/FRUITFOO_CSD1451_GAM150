@@ -496,20 +496,22 @@ void UI_UpdateButtons()
 
         // Hover detection
         if (overSeed)
-            hoveredSeed = SEED_APPLE;
+            hoveredSeed = currentSeedIndex;
         else
             hoveredSeed = -1;
         if (overSeed && AEInputCheckTriggered(AEVK_LBUTTON))
         {
-            selectedSeed = SEED_APPLE;
+            selectedSeed = currentSeedIndex;
 
             if (activePlotIndex != -1)
             {
                 int plotToPlant = activePlotIndex;
 
-                Farm_PlantSeed(plotToPlant, SEED_APPLE);
+                Farm_PlantSeed(plotToPlant, currentSeedIndex);
+                Inventory_RemoveSeed(1, currentSeedIndex);
 
-                std::cout << "Planted on plot: " << plotToPlant << "\n";
+                std::cout << "Planted seed type: " << currentSeedIndex
+                    << " on plot: " << plotToPlant << "\n";
 
                 seedsPopupOpen = false;
                 activePlotIndex = -1;
@@ -554,7 +556,7 @@ void UI_UpdateButtons()
                 {
                     seedsPopupOpen = true;
                     activePlotIndex = static_cast<int>(i);
-                    selectedSeed = SEED_APPLE;
+                    selectedSeed = currentSeedIndex;
                 }
             }
 
@@ -1251,7 +1253,7 @@ void UI_Draw()
                 }
                 else // SEEDS
                 {
-                    if (GetSeedCount() > 0)
+                    if (Inventory_GetSeedCount(SEED_APPLE) > 0)
                     {
                         AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
                         AEGfxSetBlendMode(AE_GFX_BM_BLEND);
@@ -1283,7 +1285,7 @@ void UI_Draw()
                         }
 
                         char cnt[8];
-                        sprintf_s(cnt, "%d", GetSeedCount());
+                        sprintf_s(cnt, "%d", Inventory_GetSeedCount(SEED_APPLE));
                         AEGfxPrint(fontId, cnt, (itemX + 20) / 800.0f, (itemY - 35) / 450.0f, 0.7f, 1, 1, 1, 1);
 
                     }
@@ -1547,7 +1549,7 @@ void UI_Draw()
             AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
 
             // Seed count badge
-            int  seedCount = GetSeedCount();
+            int seedCount = Inventory_GetSeedCount(SEED_APPLE);
             char seedCountText[8];
             sprintf_s(seedCountText, "%d", seedCount);
 
@@ -1583,16 +1585,30 @@ void UI_Draw()
             AEGfxSetBlendMode(AE_GFX_BM_BLEND);
             AEGfxSetColorToMultiply(1, 1, 1, 1);
 
-            AEGfxPrint(fontId, "Apple Seed",
+            SeedData& data = seedDatabase[SEED_APPLE];
+
+            char costText[32];
+            sprintf_s(costText, "%d / min", data.cost);
+
+            char waterText[32];
+            sprintf_s(waterText, "%d", data.waterNeeded);
+
+            char growText[32];
+            sprintf_s(growText, "%.0f mins", data.growTime);
+
+            AEGfxPrint(fontId, data.name,
                 (brownBoxCx - 80.0f) / 800.0f, brownBoxCy / 450.0f,
                 1.1f, tr, tg, tb, 1);
-            AEGfxPrint(fontId, "10 / min",
+
+            AEGfxPrint(fontId, costText,
                 (coinCx + tOff) / 800.0f, coinCy / 450.0f,
                 1.0f, tr, tg, tb, 1);
-            AEGfxPrint(fontId, "2",
+
+            AEGfxPrint(fontId, waterText,
                 (waterCx + tOff) / 800.0f, waterCy / 450.0f,
                 1.0f, tr, tg, tb, 1);
-            AEGfxPrint(fontId, "30 mins",
+
+            AEGfxPrint(fontId, growText,
                 (clockCx + tOff) / 800.0f, clockCy / 450.0f,
                 1.0f, tr, tg, tb, 1);
 
@@ -1639,7 +1655,7 @@ void UI_Draw()
             AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
 
             // Seed count badge
-            int  pearSeedCount = GetSeedCount();
+            int pearSeedCount = Inventory_GetSeedCount(SEED_PEAR);
             char pearSeedCountText[8];
             sprintf_s(pearSeedCountText, "%d", pearSeedCount);
 
@@ -1673,16 +1689,30 @@ void UI_Draw()
             AEGfxSetBlendMode(AE_GFX_BM_BLEND);
             AEGfxSetColorToMultiply(1, 1, 1, 1);
 
-            AEGfxPrint(fontId, "Pear Seed",
+            SeedData& data = seedDatabase[SEED_PEAR];
+
+            char costText[32];
+            sprintf_s(costText, "%d / min", data.cost);
+
+            char waterText[32];
+            sprintf_s(waterText, "%d", data.waterNeeded);
+
+            char growText[32];
+            sprintf_s(growText, "%.0f mins", data.growTime);
+
+            AEGfxPrint(fontId, data.name,
                 (brownBoxCx - 80.0f) / 800.0f, brownBoxCy / 450.0f,
                 1.1f, tr, tg, tb, 1);
-            AEGfxPrint(fontId, "15 / min",
+
+            AEGfxPrint(fontId, costText,
                 (coinCx + tOff) / 800.0f, coinCy / 450.0f,
                 1.0f, tr, tg, tb, 1);
-            AEGfxPrint(fontId, "2",
+
+            AEGfxPrint(fontId, waterText,
                 (waterCx + tOff) / 800.0f, waterCy / 450.0f,
                 1.0f, tr, tg, tb, 1);
-            AEGfxPrint(fontId, "42 mins",
+
+            AEGfxPrint(fontId, growText,
                 (clockCx + tOff) / 800.0f, clockCy / 450.0f,
                 1.0f, tr, tg, tb, 1);
 
@@ -1733,8 +1763,9 @@ void UI_Draw()
             AEGfxSetColorToMultiply(1, 1, 1, 1);
         }
     }
-
+ 
 }
+
 bool UI_IsMenuOpen()
 {
     return menuOpen;

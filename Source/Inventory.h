@@ -28,6 +28,7 @@ int GetBananaCount();
 int GetAppleSeedCount();
 int GetPearSeedCount();
 int GetBananaSeedCount();
+int Inventory_GetSeedCount(int seedType);
 
 // Inventory <-> Profile bridge (mirrors Economy pattern)
 void Inventory_SaveToProfile(int slot);
