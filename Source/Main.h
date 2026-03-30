@@ -8,5 +8,3 @@ void MainScreen_Update();
 void MainScreen_Render();
 void MainScreen_Free();
 void MainScreen_Unload();
-
-void MainScreen_OnHelperCollect(int amount);
