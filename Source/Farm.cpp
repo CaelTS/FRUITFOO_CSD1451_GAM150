@@ -68,7 +68,6 @@ static AEGfxTexture* tickIcon = nullptr;
 static AEGfxTexture* crossIcon = nullptr;
 static AEGfxTexture* lockedPlot = nullptr;
 static AEGfxTexture* fruitAppleTexture = nullptr;
-static AEGfxTexture* fruitPearTexture = nullptr;
 
 // ---------------------------------------------------------------------------
 // Flying fruit animation (harvest -> crate)
@@ -154,7 +153,6 @@ void Farm_Load()
     crossIcon = AEGfxTextureLoad("Assets/cross.png");
     lockedPlot = AEGfxTextureLoad("Assets/lockedplot.png");
     fruitAppleTexture = AEGfxTextureLoad("Assets/Fruit_Apple.png");
-    fruitPearTexture = AEGfxTextureLoad("Assets/PlotPear.png");
 
     // Load farm growth sounds
     g_farmTickSFX = AEAudioLoadSound("Assets/Tick.wav");
@@ -406,11 +404,12 @@ void Farm_Update()
                     return;
                 }
             }
-          //  continue;
-        }
-        if (g_requestRhythm && plot.waitingForRhythm)
             continue;
-            
+        }
+
+        if (g_requestRhythm)
+            continue;
+
         //  GROWTH (FIXED)
         plot.growTimer += dt;
 
@@ -444,7 +443,7 @@ void Farm_Update()
             }
         }
 
-        if (ratio >= 0.5f && ratio < 0.75f && !plot.rhythmTriggered && g_rhythmPlotIndex == -1)
+        if (ratio >= 0.5f && !plot.rhythmTriggered && g_rhythmPlotIndex == -1)
         {
             plot.rhythmTriggered = true;
             plot.waitingForRhythm = true;
@@ -539,23 +538,11 @@ void Farm_Render()
         AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
 
         // Growth stage texture
-      
-        AEGfxTexture* stageTexture = nullptr; // ONLY ONCE
-        // WITH THIS:
-        if (plot.seedType == 1) // pear
-        {
-            if (ratio < 0.25f)      stageTexture = fruitStage25;
-            else if (ratio < 0.5f)  stageTexture = fruitStage50;
-            else if (ratio < 1.0f)  stageTexture = fruitStage75;
-            else                    stageTexture = fruitStageFull;
-        }
-        else // apple
-        {
-            if (ratio < 0.25f)      stageTexture = fruitStage25;
-            else if (ratio < 0.5f)  stageTexture = fruitStage50;
-            else if (ratio < 1.0f)  stageTexture = fruitStage75;
-            else                    stageTexture = fruitStageFull;
-        }
+        AEGfxTexture* stageTexture = nullptr;
+        if (ratio < 0.25f)      stageTexture = fruitStage25;
+        else if (ratio < 0.5f)  stageTexture = fruitStage50;
+        else if (ratio < 0.75f) stageTexture = fruitStage75;
+        else                    stageTexture = fruitStageFull;
 
         // Warm tint while waiting for rhythm (first-time prompt)
         if (farmPlots[i].waitingForRhythm)
@@ -569,45 +556,21 @@ void Farm_Render()
         if (farmPlots[i].growthFrozen)
             AEGfxSetColorToMultiply(0.6f, 0.6f, 0.6f, 1.0f);
 
-        float fruitSize = 50.0f;
+        float size = 120.0f;
+
         if (farmPlots[i].isReady)
         {
-            float pulse = sinf((float)clock() * 0.006f) * 2.0f;
-            fruitSize += pulse;
+            float pulse = sinf((float)clock() * 0.006f) * 3.0f;
+            size += pulse;
         }
 
-        AEGfxTexture* baseTexture = (plot.seedType == 1) ? fruitPearTexture : fruitAppleTexture;
-
-        // draw fruit
-     // draw fruit — scale up when fully grown so it matches the full overlay
-        float drawSize = plot.isReady ? fruitSize * 2.2f : fruitSize;
-
-        AEMtx33Scale(&scale, drawSize, drawSize);
+        AEGfxTextureSet(stageTexture, 0, 0);
+        AEMtx33Scale(&scale, size, size);
         AEMtx33Trans(&trans, plotX, plotY);
         AEMtx33Concat(&transform, &trans, &scale);
         AEGfxSetTransform(transform.m);
-
-        AEGfxSetColorToMultiply(1, 1, 1, 1);
-        AEGfxTextureSet(baseTexture, 0, 0);
         AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
 
-        // WITH THIS:
-        if (stageTexture)
-        {
-            bool isFull = plot.isReady; // true only when ratio >= 1.0f
-            float overlaySize = isFull ? fruitSize * 2.8f : fruitSize * 2.0f;
-            float overlayAlpha = isFull ? 1.0f : 0.7f;
-
-            AEMtx33Scale(&scale, overlaySize, overlaySize);
-            AEMtx33Trans(&trans, plotX, plotY);
-            AEMtx33Concat(&transform, &trans, &scale);
-            AEGfxSetTransform(transform.m);
-
-            AEGfxSetTransparency(overlayAlpha);
-            AEGfxTextureSet(stageTexture, 0, 0);
-            AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
-            AEGfxSetTransparency(1.0f);
-        }
         // Leaf
         if (ratio >= 0.9f && Leaf)
         {
@@ -710,40 +673,39 @@ void Farm_Render()
     // --------------------------
     // Draw flying harvest fruits (arc animation toward crate)
     // --------------------------
-    for (int j = 0; j < MAX_FLYING; j++)
+    if (fruitAppleTexture)
     {
-        const FlyingFruit& ff = g_flyingFruits[j];
-        if (!ff.active) continue;
+        for (int j = 0; j < MAX_FLYING; j++)
+        {
+            const FlyingFruit& ff = g_flyingFruits[j];
+            if (!ff.active) continue;
 
-        AEGfxTexture* flyTex = (ff.fruitType == 1 && fruitPearTexture)
-            ? fruitPearTexture : fruitAppleTexture;
-        if (!flyTex) continue;
+            // Ease in-out: smooth t
+            float t = ff.t;
+            float easedT = t * t * (3.0f - 2.0f * t);
 
-        // Ease in-out: smooth t
-        float t = ff.t;
-        float easedT = t * t * (3.0f - 2.0f * t);
+            // Arc control point: midpoint raised by 150px
+            float midX = (ff.startX + ff.endX) * 0.5f;
+            float midY = (ff.startY + ff.endY) * 0.5f + 150.0f;
 
-        // Arc control point: midpoint raised by 150px
-        float midX = (ff.startX + ff.endX) * 0.5f;
-        float midY = (ff.startY + ff.endY) * 0.5f + 150.0f;
+            float fx = BezierX(easedT, ff.startX, midX, ff.endX);
+            float fy = BezierY(easedT, ff.startY, midY, ff.endY);
 
-        float fx = BezierX(easedT, ff.startX, midX, ff.endX);
-        float fy = BezierY(easedT, ff.startY, midY, ff.endY);
+            // Scale: shrink as it reaches the crate
+            float fruitSize = 40.0f * (1.0f - easedT * 0.6f);
+            float alpha = 1.0f - easedT * 0.3f; // slight fade
 
-        // Scale: shrink as it reaches the crate
-        float fruitSize = 40.0f * (1.0f - easedT * 0.6f);
-        float alpha = 1.0f - easedT * 0.3f; // slight fade
-
-        AEGfxSetColorToMultiply(1, 1, 1, 1);
-        AEGfxSetTransparency(alpha);
-        AEGfxTextureSet(flyTex, 0, 0);
-        AEMtx33Scale(&scale, fruitSize, fruitSize);
-        AEMtx33Trans(&trans, fx, fy);
-        AEMtx33Concat(&transform, &trans, &scale);
-        AEGfxSetTransform(transform.m);
-        AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+            AEGfxSetColorToMultiply(1, 1, 1, 1);
+            AEGfxSetTransparency(alpha);
+            AEGfxTextureSet(fruitAppleTexture, 0, 0);
+            AEMtx33Scale(&scale, fruitSize, fruitSize);
+            AEMtx33Trans(&trans, fx, fy);
+            AEMtx33Concat(&transform, &trans, &scale);
+            AEGfxSetTransform(transform.m);
+            AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+        }
+        AEGfxSetTransparency(1.0f);
     }
-    AEGfxSetTransparency(1.0f);
 
     // --------------------------
     // Draw harvest destination popup (drawn on top of everything else)
@@ -876,7 +838,6 @@ void Farm_Unload()
     if (plantedTexture) { AEGfxTextureUnload(plantedTexture);     plantedTexture = nullptr; }
     if (deleteIcon) { AEGfxTextureUnload(deleteIcon);         deleteIcon = nullptr; }
     if (fruitAppleTexture) { AEGfxTextureUnload(fruitAppleTexture);  fruitAppleTexture = nullptr; }
-    if (fruitPearTexture) { AEGfxTextureUnload(fruitPearTexture);   fruitPearTexture = nullptr; }
 
     // Unload farm audio
     if (AEAudioIsValidAudio(g_farmTickSFX))      AEAudioUnloadAudio(g_farmTickSFX);
@@ -1067,31 +1028,4 @@ int Farm_GetRhythmSeedType()
 float Farm_GetGrowTime()
 {
     return GROW_TIME;
-}
-
-// Setter: unlock or lock a farm plot and persist to profile.
-void Farm_SetPlotUnlocked(int index, bool unlocked)
-{
-    if (index < 0 || index >= (int)farmPlots.size())
-        return;
-
-    farmPlots[index].isUnlocked = unlocked;
-    Profile_SetPlotUnlocked(index, unlocked); // persist immediately
-
-    std::cout << "Farm: plot " << index << " unlocked=" << (unlocked ? "true" : "false") << "\n";
-
-    // If locking a plot, clear any active state to avoid dangling data.
-    if (!unlocked)
-    {
-        farmPlots[index].isPlanted = false;
-        farmPlots[index].isReady = false;
-        farmPlots[index].growTimer = 0.0f;
-        farmPlots[index].seedType = -1;
-        farmPlots[index].rhythmTriggered = false;
-        farmPlots[index].waitingForRhythm = false;
-        farmPlots[index].growthFrozen = false;
-        for (int m = 0; m < 4; ++m) farmPlots[index].milestoneReached[m] = false;
-
-        Profile_SetPlotData(index, false, false, 0.0f, -1);
-    }
 }
