@@ -215,14 +215,6 @@ static void DrawColorRect(float cx, float cy, float w, float h,
     AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
 }
 
-// Helper function to safely get a usable font (fallback to semibold or regular)
-static s8 GetUsableFont(s8 primary, s8 secondary, s8 fallback)
-{
-    if (primary >= 0) return primary;
-    if (secondary >= 0) return secondary;
-    return fallback;
-}
-
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------

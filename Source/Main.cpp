@@ -1,4 +1,4 @@
-﻿#include <crtdbg.h> // To check for memory leaks
+﻿#include <crtdbg.h>
 #include "AEEngine.h"
 #include "Main.h"
 #include "GameStateManager.h"
@@ -128,8 +128,6 @@ static const float PAUSE_BTN_Y1 = -60.0f;
 
 // ---------------------------------------------------------------------------
 // Status Toast System
-// Short messages that slide in from the left, display, then fade out.
-// Call Toast_Push() from anywhere in MainScreen_Update to surface feedback.
 // ---------------------------------------------------------------------------
 static const int   TOAST_MAX = 4;
 static const float TOAST_LIFETIME = 3.0f;   // seconds before fade starts
@@ -183,12 +181,8 @@ static bool  g_prevPlotReady[4] = { false, false, false, false };
 static bool  g_prevRhythmAvail = false;
 static int   g_prevCrateCount[3] = { 0, 0, 0 };
 static int   g_prevGold = -1;
-
 static float g_prevPlotTimer[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-static int   g_lastHarvestedPlot = -1;  // Track which plot was just harvested
-static float g_harvestTimer = 0.0f;      // Timer for showing harvest message
-static bool  g_showHarvestMessage = false;
-static char  g_harvestMessage[96] = "";
+static int   g_prevFruitCount = -1;
 
 // ---------------------------------------------------------------------------
 // Rhythm Reward Popup
@@ -255,6 +249,13 @@ static void GrantRhythmReward()
         }
         break;
     }
+}
+
+void MainScreen_OnHelperCollect(int amount)
+{
+    char msg[96];
+    sprintf_s(msg, "Helper collected %d apple%s!", amount, (amount > 1) ? "s" : "");
+    Toast_Push(msg, 0.4f, 0.9f, 0.4f);
 }
 
 void MainScreen_Load()
@@ -343,6 +344,9 @@ void MainScreen_Initialize()
         Crate_Initialize();
     }
 
+    // Initialize fruit count tracking after inventory is loaded
+    g_prevFruitCount = GetFruitCount();
+
     // Build crate rectangles to match the stall's current transform
     {
         float stallW = 702.0f * gScaleX;
@@ -357,8 +361,6 @@ void MainScreen_Initialize()
         OutputDebugStringA("ERROR: Failed to load 'Assets/Crayon pastel.otf'.\n");
 
     // Legend fonts — Nunito gives a clean, modern game-UI feel.
-    // Drop Nunito-SemiBold.ttf and Nunito-Regular.ttf into Assets/.
-    // Falls back to the main font if the files aren't present yet.
     g_legendFontKey = AEGfxCreateFont("Assets/Nunito-SemiBold.ttf", 28);
     if (g_legendFontKey < 0)
         g_legendFontKey = fontId;
@@ -367,8 +369,7 @@ void MainScreen_Initialize()
     if (g_legendFontDesc < 0)
         g_legendFontDesc = fontId;
 
-    // Start BGM only if we're going straight into the game (no start screen overlay).
-    // If gStartScreenActive is true, BGM will be started once the overlay dismisses.
+    // Start BGM only if we're going straight into the game
     if (!gStartScreenActive && gMusicEnabled)
         MainBGM_Start();
 
@@ -431,20 +432,19 @@ void MainScreen_Update()
         {
             gStartScreenActive = false;
             if (gMusicEnabled)
-                MainBGM_Start(); // start screen dismissed — begin BGM now
+                MainBGM_Start();
         }
-        return; // block all game input while start screen is active
+        return;
     }
 
     s32 mouseX, mouseY;
     AEInputGetCursorPosition(&mouseX, &mouseY);
 
     // ---------------------------------------------------------------
-    // Pause popup (only while in-game, not on start screen)
+    // Pause popup
     // ---------------------------------------------------------------
     if (!gStartScreenActive)
     {
-        // Debug: check what's blocking pause
         if (AEInputCheckTriggered(AEVK_ESCAPE))
         {
             if (UI_IsMenuOpen())
@@ -459,20 +459,18 @@ void MainScreen_Update()
         }
         if (g_pauseOpen)
         {
-            // Update hover using IsMouseOverRect
             g_pauseHovered = -1;
             if (IsMouseOverRect(0.0f, PAUSE_BTN_Y0, PAUSE_BTN_W, PAUSE_BTN_H)) g_pauseHovered = 0;
             else if (IsMouseOverRect(0.0f, PAUSE_BTN_Y1, PAUSE_BTN_W, PAUSE_BTN_H)) g_pauseHovered = 1;
 
-            // Handle clicks
             if (ClickedOnRect(0.0f, PAUSE_BTN_Y0, PAUSE_BTN_W, PAUSE_BTN_H))
             {
                 Profile_EndSession();
                 g_pauseOpen = false;
                 g_returnedFromPause = true;
-                MainBGM_Stop(); // going back to start screen — force stop BGM
-                StartScreen_Init();         // reset animation + buttons in place
-                gStartScreenActive = true; // show overlay without leaving GS_MAIN_SCREEN
+                MainBGM_Stop();
+                StartScreen_Init();
+                gStartScreenActive = true;
             }
             else if (ClickedOnRect(0.0f, PAUSE_BTN_Y1, PAUSE_BTN_W, PAUSE_BTN_H))
             {
@@ -480,20 +478,18 @@ void MainScreen_Update()
                 g_pauseOpen = false;
                 nextState = GS_EXIT;
             }
-
-            // Swallow all other input while paused
             return;
         }
     }
 
-    // Farm gets first pick of all clicks so its prompts aren't stolen by UI
+    // Farm gets first pick of all clicks
     Farm_Update();
 
     // Toggle key legend (H)
     if (AEInputCheckTriggered(AEVK_H))
         g_legendOpen = !g_legendOpen;
 
-    UI_Input();  // Farm_Update() already handles its own clicks before this runs
+    UI_Input();
 
     Economy_Update(dt);
     UpdateSpawnFruits(dt);
@@ -502,20 +498,9 @@ void MainScreen_Update()
     CheckForFruitClicks(mouseX, mouseY);
 
     // ---------------------------------------------------------------
-   // Status toasts — detect changes and push notifications
-   // ---------------------------------------------------------------
+    // Status toasts — update timers and detect changes
+    // ---------------------------------------------------------------
     Toast_Update(dt);
-
-    // Track harvest messages separately (show for 2 seconds)
-    if (g_showHarvestMessage)
-    {
-        g_harvestTimer += dt;
-        if (g_harvestTimer >= 2.0f)
-        {
-            g_showHarvestMessage = false;
-            g_harvestTimer = 0.0f;
-        }
-    }
 
     // Farm plot growth tracking and harvest detection
     for (int i = 0; i < 4; i++)
@@ -526,49 +511,43 @@ void MainScreen_Update()
         float growTime = Farm_GetGrowTime();
         float remainingTime = (currentTimer < growTime) ? (growTime - currentTimer) : 0.0f;
 
-        // Detect when a plot becomes ready (was planted and now ready)
+        // Detect when a plot becomes ready
         if (isReady && !g_prevPlotReady[i] && isPlanted)
         {
             char msg[96];
             sprintf_s(msg, "Plot %d is ready to harvest!", i + 1);
-            Toast_Push(msg, 0.4f, 1.0f, 0.4f);   // green
-
-            // Also show remaining time was 0
-            char timeMsg[96];
-            sprintf_s(timeMsg, "Plot %d finished growing!", i + 1);
-            Toast_Push(timeMsg, 0.4f, 1.0f, 0.4f);
+            Toast_Push(msg, 0.3f, 1.0f, 0.3f);   // Bright green
         }
 
-        // Track growth progress - show at 75%, 50%, 25% (but not if already ready)
+        // Track growth progress at milestones
         if (!isReady && isPlanted)
         {
             float ratio = currentTimer / growTime;
             int percentComplete = (int)(ratio * 100);
 
-            // Show growth updates at specific milestones
             if (percentComplete >= 75 && percentComplete < 80 && g_prevPlotTimer[i] / growTime < 0.75f)
             {
-                char msg[96];
-                FormatTime(remainingTime, msg, sizeof(msg));
+                char timeMsg[32];
+                FormatTime(remainingTime, timeMsg, sizeof(timeMsg));
                 char toastMsg[128];
-                sprintf_s(toastMsg, "Plot %d: 75%% complete - %s remaining", i + 1, msg);
-                Toast_Push(toastMsg, 0.8f, 0.9f, 0.5f);   // yellow-orange
+                sprintf_s(toastMsg, "Plot %d: 75%% complete - %s remaining", i + 1, timeMsg);
+                Toast_Push(toastMsg, 1.0f, 0.7f, 0.2f);   // Orange
             }
             else if (percentComplete >= 50 && percentComplete < 55 && g_prevPlotTimer[i] / growTime < 0.50f)
             {
-                char msg[96];
-                FormatTime(remainingTime, msg, sizeof(msg));
+                char timeMsg[32];
+                FormatTime(remainingTime, timeMsg, sizeof(timeMsg));
                 char toastMsg[128];
-                sprintf_s(toastMsg, "Plot %d: 50%% complete - %s remaining", i + 1, msg);
-                Toast_Push(toastMsg, 0.8f, 0.9f, 0.5f);
+                sprintf_s(toastMsg, "Plot %d: 50%% complete - %s remaining", i + 1, timeMsg);
+                Toast_Push(toastMsg, 1.0f, 0.7f, 0.2f);
             }
             else if (percentComplete >= 25 && percentComplete < 30 && g_prevPlotTimer[i] / growTime < 0.25f)
             {
-                char msg[96];
-                FormatTime(remainingTime, msg, sizeof(msg));
+                char timeMsg[32];
+                FormatTime(remainingTime, timeMsg, sizeof(timeMsg));
                 char toastMsg[128];
-                sprintf_s(toastMsg, "Plot %d: 25%% complete - %s remaining", i + 1, msg);
-                Toast_Push(toastMsg, 0.8f, 0.9f, 0.5f);
+                sprintf_s(toastMsg, "Plot %d: 25%% complete - %s remaining", i + 1, timeMsg);
+                Toast_Push(toastMsg, 1.0f, 0.7f, 0.2f);
             }
         }
 
@@ -576,25 +555,24 @@ void MainScreen_Update()
         g_prevPlotTimer[i] = currentTimer;
     }
 
-    // Detect when a plot is harvested (was ready, now not planted)
+    // Detect when a plot is harvested
+    static int lastHarvestedPlot = -1;
     for (int i = 0; i < 4; i++)
     {
         bool isPlanted = farmPlots[i].isPlanted;
-        // If plot was ready before and now not planted, it was harvested
         if (g_prevPlotReady[i] && !isPlanted)
         {
-            // Check if this is a new harvest (not the same as last recorded)
-            if (g_lastHarvestedPlot != i)
+            if (lastHarvestedPlot != i)
             {
-                g_lastHarvestedPlot = i;
-                g_showHarvestMessage = true;
-                g_harvestTimer = 0.0f;
+                lastHarvestedPlot = i;
 
                 int seedType = farmPlots[i].seedType;
                 const char* fruitName = (seedType == 0) ? "Apple" :
                     (seedType == 1) ? "Pear" : "Banana";
 
-                sprintf_s(g_harvestMessage, "Harvested %s from Plot %d!", fruitName, i + 1);
+                char msg[96];
+                sprintf_s(msg, "Harvested %s from Plot %d!", fruitName, i + 1);
+                Toast_Push(msg, 1.0f, 0.85f, 0.3f);  // Gold color
             }
         }
     }
@@ -602,7 +580,7 @@ void MainScreen_Update()
     // Rhythm watering-can available
     bool rhythmAvail = Farm_ShouldStartRhythm();
     if (rhythmAvail && !g_prevRhythmAvail)
-        Toast_Push("Watering can ready - play Rhythm game!", 0.4f, 0.8f, 1.0f);  // blue
+        Toast_Push("Watering can ready - play Rhythm game!", 0.3f, 0.8f, 1.0f);  // Cyan
     g_prevRhythmAvail = rhythmAvail;
 
     // Crate stocked notifications
@@ -616,7 +594,7 @@ void MainScreen_Update()
             char msg[64];
             int added = count - g_prevCrateCount[i];
             sprintf_s(msg, "+%d %s added to stall.", added, fruitNames[i]);
-            Toast_Push(msg, 1.0f, 0.85f, 0.4f);   // warm yellow
+            Toast_Push(msg, 1.0f, 0.9f, 0.2f);   // Bright yellow
         }
         g_prevCrateCount[i] = count;
     }
@@ -627,7 +605,7 @@ void MainScreen_Update()
     {
         char msg[64];
         sprintf_s(msg, "+%d gold earned!", gold - g_prevGold);
-        Toast_Push(msg, 1.0f, 0.95f, 0.3f);       // bright yellow
+        Toast_Push(msg, 1.0f, 0.95f, 0.2f);   // Gold
     }
     g_prevGold = gold;
 
@@ -636,13 +614,13 @@ void MainScreen_Update()
     {
         OutputDebugStringA("Farm requested rhythm game\n");
         Farm_ClearRhythmFlag();
-        MainBGM_Stop(); // leaving for rhythm — force stop BGM
+        MainBGM_Stop();
         nextState = GS_RHYTHM_SCREEN;
     }
 }
 
 // ---------------------------------------------------------------------------
-// Draw fruit icons + count inside each crate bin based on live Crate data
+// Draw fruit icons + count inside each crate bin
 // ---------------------------------------------------------------------------
 static void MainScreen_DrawCrateFruits()
 {
@@ -661,7 +639,6 @@ static void MainScreen_DrawCrateFruits()
         int count = Crate_GetFruitCount(i);
         if (count <= 0) continue;
 
-        // Pick texture by fruit type (matches crate index: 0=apple, 1=pear, 2=banana)
         AEGfxTexture* tex = nullptr;
         switch (i)
         {
@@ -673,10 +650,7 @@ static void MainScreen_DrawCrateFruits()
 
         const auto& b = baskets[i];
 
-        // Icon size fits inside the bin
         float iconSize = b.height * 0.65f;
-
-        // Show up to 5 icons spread horizontally across the bin
         int displayCount = (count > 5) ? 5 : count;
         float spread = b.width * 0.55f;
         float spacing = (displayCount > 1) ? spread / (displayCount - 1) : 0.0f;
@@ -696,7 +670,6 @@ static void MainScreen_DrawCrateFruits()
             AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
         }
 
-        // Count label (e.g. "x3") above the bin
         char buf[8];
         sprintf_s(buf, "x%d", count);
         float textX = (b.x - b.width * 0.05f) / 800.0f;
@@ -767,10 +740,7 @@ void MainScreen_Render()
     }
 
     UI_DrawCrateHoverTint_Yellow();
-
-    // Draw fruit icons inside crate bins based on live stock counts
     MainScreen_DrawCrateFruits();
-
     RenderSpawnFruits();
     Helper_Draw();
 
@@ -797,7 +767,6 @@ void MainScreen_Render()
 
     // ---------------------------------------------------------------
     // Key Legend — glass style, flush right border
-    // Toggle with [H]. Always hidden during pause / reward popup.
     // ---------------------------------------------------------------
     if (g_legendFontKey >= 0 && !gStartScreenActive && !g_pauseOpen && !g_rewardPopupOpen)
     {
@@ -809,7 +778,6 @@ void MainScreen_Render()
         const float PNL_X = HW - PNL_W * 0.5f;
         const float PNL_Y = 0.0f;
 
-        // Always draw the [H] hint
         AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
         AEGfxSetBlendMode(AE_GFX_BM_BLEND);
         AEGfxPrint(g_legendFontDesc, g_legendOpen ? "[H] Hide" : "[H] Controls",
@@ -819,7 +787,6 @@ void MainScreen_Render()
 
         if (g_legendOpen)
         {
-            // Frosted glass backdrop
             AEGfxSetRenderMode(AE_GFX_RM_COLOR);
             AEGfxSetBlendMode(AE_GFX_BM_BLEND);
             AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 0.25f);
@@ -836,7 +803,6 @@ void MainScreen_Render()
             const float keyX = (PNL_X - PNL_W * 0.46f) / HW;
             const float descX = (PNL_X - PNL_W * 0.02f) / HW;
 
-            // Title — SemiBold
             AEGfxPrint(g_legendFontKey, "CONTROLS",
                 (PNL_X - PNL_W * 0.40f) / HW,
                 (PNL_Y + PNL_H * 0.40f) / HH,
@@ -864,21 +830,16 @@ void MainScreen_Render()
     }
 
     // ---------------------------------------------------------------
-    // Status Toasts — TOP CENTER, centered text, no background box
-    // Uses Nunito font, larger size
+    // Status Toasts — TOP CENTER with background, all game messages
     // ---------------------------------------------------------------
     if (fontId >= 0 && !gStartScreenActive && !g_pauseOpen && !g_rewardPopupOpen)
     {
-        const float HW = 800.0f, HH = 450.0f;
-        const float TOAST_TOP_Y = 380.0f;      // Y position of first toast (top)
-        const float TOAST_ROW_SPACING = 48.0f; // Space between toasts
-        const float TOAST_TEXT_SCALE = 0.95f;  // Larger text size
+        const float HH = 450.0f;
+        const float TOAST_TOP_Y = 380.0f;
+        const float TOAST_ROW_SPACING = 58.0f;
+        const float TOAST_TEXT_SCALE = 1.0f;
 
-        // Use Nunito font for toasts (g_legendFontDesc is Nunito-Regular)
         s8 toastFont = (g_legendFontDesc >= 0) ? g_legendFontDesc : fontId;
-
-        AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
-        AEGfxSetBlendMode(AE_GFX_BM_BLEND);
 
         int row = 0;
         for (int i = 0; i < TOAST_MAX; i++)
@@ -891,59 +852,36 @@ void MainScreen_Render()
                 alpha = 1.0f - (age - TOAST_LIFETIME) / TOAST_FADETIME;
             alpha = (alpha < 0.0f) ? 0.0f : (alpha > 1.0f ? 1.0f : alpha);
 
-            // Center the text horizontally
             float worldY = TOAST_TOP_Y - row * TOAST_ROW_SPACING;
+
+            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+            AEGfxSetBlendMode(AE_GFX_BM_BLEND);
 
             float nx = 0.0f;  // Center horizontally
             float ny = worldY / HH;
 
-            // Draw toast text with Nunito font, larger size, centered
+            // Shadow for better readability
+            AEGfxPrint(toastFont, g_toasts[i].text, nx - 0.002f, ny - 0.002f,
+                TOAST_TEXT_SCALE,
+                0.0f, 0.0f, 0.0f,
+                alpha * 0.8f);
+
+            // Main text - brighter colors
             AEGfxPrint(toastFont, g_toasts[i].text, nx, ny,
                 TOAST_TEXT_SCALE,
-                g_toasts[i].r, g_toasts[i].g, g_toasts[i].b,
+                g_toasts[i].r * 1.2f, g_toasts[i].g * 1.2f, g_toasts[i].b * 1.2f,
                 alpha);
             row++;
         }
     }
 
     // ---------------------------------------------------------------
-    // Harvest Message - Shows at top center with larger text for 2 seconds
-    // ---------------------------------------------------------------
-    if (g_showHarvestMessage && fontId >= 0 && !gStartScreenActive && !g_pauseOpen && !g_rewardPopupOpen)
-    {
-        const float HW = 800.0f, HH = 450.0f;
-        const float HARVEST_Y = 330.0f;  // Slightly below toasts
-        const float HARVEST_TEXT_SCALE = 1.1f;  // Even larger for harvest message
-
-        s8 toastFont = (g_legendFontDesc >= 0) ? g_legendFontDesc : fontId;
-
-        // Calculate fade out for harvest message (2 seconds total)
-        float alpha = 1.0f;
-        if (g_harvestTimer > 1.5f)
-            alpha = 1.0f - ((g_harvestTimer - 1.5f) / 0.5f);
-        alpha = (alpha < 0.0f) ? 0.0f : (alpha > 1.0f ? 1.0f : alpha);
-
-        AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
-        AEGfxSetBlendMode(AE_GFX_BM_BLEND);
-
-        float nx = 0.0f;  // Center horizontally
-        float ny = HARVEST_Y / HH;
-
-        // Gold/yellow color for harvest message
-        AEGfxPrint(toastFont, g_harvestMessage, nx, ny,
-            HARVEST_TEXT_SCALE,
-            1.0f, 0.85f, 0.3f,  // Bright gold
-            alpha);
-    }
-
-    // ---------------------------------------------------------------
-    // Pause popup rendering (drawn last so it sits on top)
+    // Pause popup rendering
     // ---------------------------------------------------------------
     if (g_pauseOpen)
     {
         AEMtx33 pScale, pTrans, pTransform;
 
-        // 1. Dim overlay
         AEGfxSetRenderMode(AE_GFX_RM_COLOR);
         AEGfxSetBlendMode(AE_GFX_BM_BLEND);
         AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 0.6f);
@@ -953,7 +891,6 @@ void MainScreen_Render()
         AEGfxSetTransform(pTransform.m);
         AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
 
-        // 2. Panel background
         if (pTexPausePanel && pMeshPauseQuad)
         {
             AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
@@ -969,7 +906,6 @@ void MainScreen_Render()
             AEGfxMeshDraw(pMeshPauseQuad, AE_GFX_MDM_TRIANGLES);
         }
 
-        // 3. "Main Menu" button
         if (pTexPauseBtn && pMeshPauseQuad)
         {
             float tint0 = (g_pauseHovered == 0) ? 1.3f : 1.0f;
@@ -986,7 +922,6 @@ void MainScreen_Render()
             AEGfxMeshDraw(pMeshPauseQuad, AE_GFX_MDM_TRIANGLES);
         }
 
-        // 4. "Exit" button
         if (pTexPauseBtn && pMeshPauseQuad)
         {
             float tint1 = (g_pauseHovered == 1) ? 1.3f : 1.0f;
@@ -1003,7 +938,6 @@ void MainScreen_Render()
             AEGfxMeshDraw(pMeshPauseQuad, AE_GFX_MDM_TRIANGLES);
         }
 
-        // 5. Text labels
         if (fontId >= 0)
         {
             AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
@@ -1016,13 +950,12 @@ void MainScreen_Render()
     }
 
     // ---------------------------------------------------------------
-    // Rhythm Reward Popup (drawn on top of everything)
+    // Rhythm Reward Popup
     // ---------------------------------------------------------------
     if (g_rewardPopupOpen && fontId >= 0)
     {
         AEMtx33 rScale, rTrans, rTransform;
 
-        // 1. Dim overlay
         AEGfxSetRenderMode(AE_GFX_RM_COLOR);
         AEGfxSetBlendMode(AE_GFX_BM_BLEND);
         AEGfxSetColorToMultiply(0.0f, 0.0f, 0.0f, 0.55f);
@@ -1032,7 +965,6 @@ void MainScreen_Render()
         AEGfxSetTransform(rTransform.m);
         AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
 
-        // 2. Panel background (reuse pause panel texture)
         if (pTexPausePanel && pMeshPauseQuad)
         {
             AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
@@ -1048,7 +980,6 @@ void MainScreen_Render()
             AEGfxMeshDraw(pMeshPauseQuad, AE_GFX_MDM_TRIANGLES);
         }
 
-        // 3. Text — split on \n since AEGfxPrint is single-line
         AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
         AEGfxSetBlendMode(AE_GFX_BM_BLEND);
         AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
@@ -1065,7 +996,6 @@ void MainScreen_Render()
             line = strtok_s(nullptr, "\n", &ctx);
         }
 
-        // 4. Dismiss hint
         AEGfxPrint(fontId, "Click to continue", -0.16f, lineY - 0.02f,
             0.7f, 0.5f, 0.5f, 0.5f, 1.0f);
     }
@@ -1073,7 +1003,6 @@ void MainScreen_Render()
 
 void MainScreen_Free()
 {
-    // Stop and unload main BGM
     MainBGM_Stop();
     if (AEAudioIsValidAudio(g_mainBGM))
         AEAudioUnloadAudio(g_mainBGM);
@@ -1099,7 +1028,6 @@ void MainScreen_Free()
         fontId = -1;
     }
 
-    // Free legend fonts (only if they're not sharing the fallback fontId)
     if (g_legendFontKey >= 0 && g_legendFontKey != fontId)
     {
         AEGfxDestroyFont(g_legendFontKey);
@@ -1111,7 +1039,6 @@ void MainScreen_Free()
         g_legendFontDesc = -1;
     }
 
-    // Free pause popup assets
     if (pTexPausePanel) { AEGfxTextureUnload(pTexPausePanel); pTexPausePanel = nullptr; }
     if (pTexPauseBtn) { AEGfxTextureUnload(pTexPauseBtn);   pTexPauseBtn = nullptr; }
     if (pMeshPauseQuad) { AEGfxMeshFree(pMeshPauseQuad);      pMeshPauseQuad = nullptr; }
@@ -1156,7 +1083,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     {
         AESysFrameStart();
 
-        // Global ESC to exit
         if ((AEInputCheckTriggered(AEVK_ESCAPE)
             && !ProfileScreen_IsPopupActive()
             && currentState != GS_MAIN_SCREEN
@@ -1167,20 +1093,17 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             nextState = GS_EXIT;
         }
 
-        // RHYTHM GAME INPUT
         if (currentState == GS_RHYTHM_SCREEN)
         {
-            // Player completes rhythm normally
             if (AEInputCheckTriggered(AEVK_E))
             {
-                GrantRhythmReward();          // grant rewards + build popup text
+                GrantRhythmReward();
                 Farm_OnRhythmResult(true);
                 Farm_ClearRhythmRequest();
                 nextState = GS_MAIN_SCREEN;
             }
 
 #ifdef _DEBUG
-            // DEBUG: press TAB to skip rhythm (counts as success)
             if (AEInputCheckTriggered(AEVK_TAB))
             {
                 Farm_OnRhythmResult(true);
@@ -1190,7 +1113,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             }
 #endif
 
-            // Player ESCs out — pause growth and return to farm
             if (AEInputCheckTriggered(AEVK_ESCAPE))
             {
                 Farm_SetRhythmPaused(true);
@@ -1199,7 +1121,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             }
         }
 
-        // State transition
         if (nextState != currentState && !TR_IsActive())
         {
             TR_Start(currentState, nextState);
