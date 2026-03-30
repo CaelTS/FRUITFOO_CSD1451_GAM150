@@ -137,7 +137,7 @@ static const float UP_HOVER_X_OFFSET = -50.0f;  // px horizontal nudge without m
 // -------------------------
 
 // =========================
-// Inventory header icons (
+// Inventory header icons 
 // =========================
 enum InvTab { TAB_FRUITS = 0, TAB_SEEDS = 1 };
 static InvTab gActiveInvTab = TAB_FRUITS;   // default tab
@@ -1215,10 +1215,10 @@ void UI_Draw()
                             AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
                         }
 
-                        /** char cnt[8];
-                         sprintf_s(cnt, "%d", Economy_GetSeedCount());
-                         AEGfxPrint(fontId, cnt,(itemX + 40) / 800.0f, (itemY - 40) / 450.0f,0.7f, 0, 0, 0, 1);
-                         **/
+                        char cnt[8];
+                        sprintf_s(cnt, "%d", GetSeedCount());
+                        AEGfxPrint(fontId, cnt, (itemX + 20) / 800.0f, (itemY - 35) / 450.0f, 0.7f, 1, 1, 1, 1);
+
                     }
                 }
             }
