@@ -541,17 +541,20 @@ void Farm_Render()
         // Growth stage texture
       
         AEGfxTexture* stageTexture = nullptr; // ONLY ONCE
+        // WITH THIS:
         if (plot.seedType == 1) // pear
         {
             if (ratio < 0.25f)      stageTexture = fruitStage25;
             else if (ratio < 0.5f)  stageTexture = fruitStage50;
-            else                    stageTexture = fruitStage75; // covers 0.5 → 1.0
+            else if (ratio < 1.0f)  stageTexture = fruitStage75;
+            else                    stageTexture = fruitStageFull;
         }
         else // apple
         {
             if (ratio < 0.25f)      stageTexture = fruitStage25;
             else if (ratio < 0.5f)  stageTexture = fruitStage50;
-            else                    stageTexture = fruitStage75; // covers 0.5 → 1.0
+            else if (ratio < 1.0f)  stageTexture = fruitStage75;
+            else                    stageTexture = fruitStageFull;
         }
 
         // Warm tint while waiting for rhythm (first-time prompt)
@@ -576,7 +579,10 @@ void Farm_Render()
         AEGfxTexture* baseTexture = (plot.seedType == 1) ? fruitPearTexture : fruitAppleTexture;
 
         // draw fruit
-        AEMtx33Scale(&scale, fruitSize, fruitSize);
+     // draw fruit — scale up when fully grown so it matches the full overlay
+        float drawSize = plot.isReady ? fruitSize * 2.2f : fruitSize;
+
+        AEMtx33Scale(&scale, drawSize, drawSize);
         AEMtx33Trans(&trans, plotX, plotY);
         AEMtx33Concat(&transform, &trans, &scale);
         AEGfxSetTransform(transform.m);
@@ -585,16 +591,19 @@ void Farm_Render()
         AEGfxTextureSet(baseTexture, 0, 0);
         AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
 
+        // WITH THIS:
         if (stageTexture)
         {
-            float overlaySize = fruitSize * 2.0f;
+            bool isFull = plot.isReady; // true only when ratio >= 1.0f
+            float overlaySize = isFull ? fruitSize * 2.8f : fruitSize * 2.0f;
+            float overlayAlpha = isFull ? 1.0f : 0.7f;
 
             AEMtx33Scale(&scale, overlaySize, overlaySize);
             AEMtx33Trans(&trans, plotX, plotY);
             AEMtx33Concat(&transform, &trans, &scale);
             AEGfxSetTransform(transform.m);
 
-            AEGfxSetTransparency(0.7f);
+            AEGfxSetTransparency(overlayAlpha);
             AEGfxTextureSet(stageTexture, 0, 0);
             AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
             AEGfxSetTransparency(1.0f);
