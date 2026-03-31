@@ -445,6 +445,8 @@ void MainScreen_Update()
     // ---------------------------------------------------------------
     if (!gStartScreenActive)
     {
+        UI_Input();
+
         if (AEInputCheckTriggered(AEVK_ESCAPE))
         {
             if (UI_IsMenuOpen())
@@ -488,8 +490,6 @@ void MainScreen_Update()
     // Toggle key legend (H)
     if (AEInputCheckTriggered(AEVK_H))
         g_legendOpen = !g_legendOpen;
-
-    UI_Input();
 
     Economy_Update(dt);
     UpdateSpawnFruits(dt);
@@ -619,66 +619,66 @@ void MainScreen_Update()
     }
 }
 
-// ---------------------------------------------------------------------------
-// Draw fruit icons + count inside each crate bin
-// ---------------------------------------------------------------------------
-static void MainScreen_DrawCrateFruits()
-{
-    const auto& baskets = GetFruitBaskets();
-    AEMtx33 scale, trans, transform;
-
-    AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
-    AEGfxSetBlendMode(AE_GFX_BM_BLEND);
-    AEGfxSetColorToMultiply(1, 1, 1, 1);
-    AEGfxSetTransparency(1.0f);
-
-    for (int i = 0; i < (int)baskets.size(); i++)
-    {
-        if (!Crate_IsUnlocked(i)) continue;
-
-        int count = Crate_GetFruitCount(i);
-        if (count <= 0) continue;
-
-        AEGfxTexture* tex = nullptr;
-        switch (i)
-        {
-        case 0: tex = pTexFruitApple ? pTexFruitApple : pTexApple; break;
-        case 1: tex = pTexPear;   break;
-        case 2: tex = pTexBanana; break;
-        }
-        if (!tex) continue;
-
-        const auto& b = baskets[i];
-
-        float iconSize = b.height * 0.65f;
-        int displayCount = (count > 5) ? 5 : count;
-        float spread = b.width * 0.55f;
-        float spacing = (displayCount > 1) ? spread / (displayCount - 1) : 0.0f;
-        float startX = b.x - spread * 0.5f;
-
-        AEGfxTextureSet(tex, 0, 0);
-
-        for (int n = 0; n < displayCount; n++)
-        {
-            float fx = startX + n * spacing;
-            float fy = b.y;
-
-            AEMtx33Scale(&scale, iconSize, iconSize);
-            AEMtx33Trans(&trans, fx, fy);
-            AEMtx33Concat(&transform, &trans, &scale);
-            AEGfxSetTransform(transform.m);
-            AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
-        }
-
-        char buf[8];
-        sprintf_s(buf, "x%d", count);
-        float textX = (b.x - b.width * 0.05f) / 800.0f;
-        float textY = (b.y + b.height * 0.65f) / 450.0f;
-        AEGfxSetColorToMultiply(0, 0, 0, 1);
-        AEGfxPrint(fontId, buf, textX, textY, 0.7f, 0, 0, 0, 1);
-        AEGfxSetColorToMultiply(1, 1, 1, 1);
-    }
-}
+//// ---------------------------------------------------------------------------
+//// Draw fruit icons + count inside each crate bin
+//// ---------------------------------------------------------------------------
+//static void MainScreen_DrawCrateFruits()
+//{
+//    const auto& baskets = GetFruitBaskets();
+//    AEMtx33 scale, trans, transform;
+//
+//    AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+//    AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+//    AEGfxSetColorToMultiply(1, 1, 1, 1);
+//    AEGfxSetTransparency(1.0f);
+//
+//    for (int i = 0; i < (int)baskets.size(); i++)
+//    {
+//        if (!Crate_IsUnlocked(i)) continue;
+//
+//        int count = Crate_GetFruitCount(i);
+//        if (count <= 0) continue;
+//
+//        AEGfxTexture* tex = nullptr;
+//        switch (i)
+//        {
+//        case 0: tex = pTexFruitApple ? pTexFruitApple : pTexApple; break;
+//        case 1: tex = pTexPear;   break;
+//        case 2: tex = pTexBanana; break;
+//        }
+//        if (!tex) continue;
+//
+//        const auto& b = baskets[i];
+//
+//        float iconSize = b.height * 0.65f;
+//        int displayCount = (count > 5) ? 5 : count;
+//        float spread = b.width * 0.55f;
+//        float spacing = (displayCount > 1) ? spread / (displayCount - 1) : 0.0f;
+//        float startX = b.x - spread * 0.5f;
+//
+//        AEGfxTextureSet(tex, 0, 0);
+//
+//        for (int n = 0; n < displayCount; n++)
+//        {
+//            float fx = startX + n * spacing;
+//            float fy = b.y;
+//
+//            AEMtx33Scale(&scale, iconSize, iconSize);
+//            AEMtx33Trans(&trans, fx, fy);
+//            AEMtx33Concat(&transform, &trans, &scale);
+//            AEGfxSetTransform(transform.m);
+//            AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+//        }
+//
+//        char buf[8];
+//        sprintf_s(buf, "x%d", count);
+//        float textX = (b.x - b.width * 0.05f) / 800.0f;
+//        float textY = (b.y + b.height * 0.65f) / 450.0f;
+//        AEGfxSetColorToMultiply(0, 0, 0, 1);
+//        AEGfxPrint(fontId, buf, textX, textY, 0.7f, 0, 0, 0, 1);
+//        AEGfxSetColorToMultiply(1, 1, 1, 1);
+//    }
+//}
 
 void MainScreen_Render()
 {
@@ -739,8 +739,9 @@ void MainScreen_Render()
         AEGfxMeshDraw(pMeshGrass, AE_GFX_MDM_TRIANGLES);
     }
 
+    Crate_Draw();
     UI_DrawCrateHoverTint_Yellow();
-    MainScreen_DrawCrateFruits();
+    /*MainScreen_DrawCrateFruits();*/
     RenderSpawnFruits();
     Helper_Draw();
 

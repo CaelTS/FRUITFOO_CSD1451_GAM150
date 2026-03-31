@@ -16,6 +16,7 @@
 // ------------------------------------------------------------
 void Crate_Load();
 void Crate_Initialize();
+void Crate_Draw();
 void Crate_Free();
 
 // ------------------------------------------------------------
@@ -31,6 +32,12 @@ void Crate_SetUnlocked(int crateIndex, bool unlocked); // auto-saves to profile
 
 // Returns the current fruit count in the crate (-1 if invalid/locked).
 int  Crate_GetFruitCount(int crateIndex);
+
+// Returns the fruit type stored in the crate (e.g. -1 or enum; -1 if invalid/locked).
+int Crate_GetFruitType(int crateIndex);
+
+// Sets the fruit type stored in the crate (e.g. -1 or enum; -1 if invalid/locked).
+int Crate_SetFruitType(int crateIndex, int fruitType);
 
 // Adds 'amount' fruit to the crate (clamped to MAX_CRATE_STOCK).
 // Returns true if any fruit was added.

@@ -220,6 +220,9 @@ bool Upgrades_CanPurchase(const Upgrade& u, int currentMoney) {
     // Can't buy something already purchased
     if (u.purchased) return false;
     // Need enough money
+    if (currentMoney >= u.cost) {
+		Economy_SpendMoney(u.cost);
+    }
     return (currentMoney >= u.cost);
 }
 

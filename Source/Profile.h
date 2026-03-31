@@ -81,10 +81,12 @@ void Crate_LoadFromProfile(int slot);
 // Setters (auto-save on each call)
 void Profile_SetCrateUnlocked(int crateIndex, bool unlocked);
 void Profile_SetCrateFruitCount(int crateIndex, int count);
+void Profile_SetCrateFruitType(int crateIndex, int fruitType);
 
 // Getters (read from active slot)
 bool Profile_GetCrateUnlocked(int crateIndex);
 int  Profile_GetCrateFruitCount(int crateIndex);
+int  Profile_GetCrateFruitType(int crateIndex);
 
 // ---------------------------------------------------------------------------
 // Profile slot management

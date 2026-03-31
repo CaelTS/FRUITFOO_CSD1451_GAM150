@@ -435,6 +435,7 @@ void CheckForFruitClicks(s32 mouseX, s32 mouseY) {
                 // Add to inventory when clicked (can be moved to animation finish if you want it to add after animation instead of at start)
                 Inventory_AddFruit(1, 0);
                 printf("Added 1 apple to inventory. Total fruits: %d\n", Inventory_GetFruitStock());
+                printf("Inventory count: %d\n", GetAppleCount());
 
                 //20% chance to also give an apple seed when collecting an apple, can be adjusted as needed
                 if (rand_chance(20)) {

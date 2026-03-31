@@ -5,7 +5,15 @@
 #include <vector>
 #include "AEEngine.h" 
 
+enum FruitType {
+    APPLE = 0,
+    PEAR = 1,
+    BANANA = 2,
+    NILL = -1
+};
+
 struct Fruit {
+    FruitType type;
     AEGfxTexture* texture;  // The texture of the fruit (image)
     f32 x, y;             // Position of the apple on the screen
     f32 rotation;          // Current rotation angle for rolling effect

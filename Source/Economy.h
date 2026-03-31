@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <utility> // for std::pair
 #include <AETypes.h>
+#include "SpawnFruits.h"
 
 // Forward declarations of functions
 void Economy_Init();
@@ -27,6 +28,7 @@ f32 random_time(f32 min, f32 max);
 u8 random_range(u8 min, u8 max);
 std::pair<f32, f32> random_range_pair(f32 min1, f32 max1, f32 min2, f32 max2);
 
+int Economy_GetBasePrice(FruitType id); // <<-------------------------------------------------------------------- added this
 // Global variables (only if you need to expose them; otherwise, keep them static in the source file)
 extern u64 total_money;
 extern u64 max_money;

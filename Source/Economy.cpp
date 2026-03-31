@@ -13,6 +13,7 @@
 #include "Main.h"
 #include "UI.h"
 #include <algorithm> // for std::min
+#include "SpawnFruits.h"
 
 
 
@@ -203,6 +204,16 @@ void Economy_SetMultiplier(float mult) {
 void Economy_SetBasePriceApple(u8 price) {
 	base_price_apple = price;
 	Economy_SaveToProfile(Profile_GetActiveSlot());
+}
+
+int Economy_GetBasePrice(FruitType fruitID) {
+	switch (fruitID)
+	{
+	case APPLE:
+		return base_price_apple;
+	default:
+		return 0;
+	}
 }
 
 

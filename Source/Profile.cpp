@@ -36,6 +36,7 @@ typedef struct {
     unsigned long long total_money;
     unsigned long long max_money;
     float money_multiplier;
+    float base_price_apple; //   <<-------------------------------------------------------------------- added this 
     // Inventory data
     int total_fruits;   // apples + pears + bananas (cached sum)
     int total_seeds;    // seed_apple + seed_pear + seed_banana (cached sum)
@@ -53,18 +54,19 @@ typedef struct {
     // Crate 0 always unlocked; crates 1 & 2 must be purchased.
     bool crate_unlocked[MAX_CRATES];
     int  crate_fruit_count[MAX_CRATES];
+    int  crate_fruit_type[MAX_CRATES];
 } Profile;
 
 static Profile profiles[MAX_PROFILES] = {
-    { false, "", 0.0f, 0, 0ULL, 255ULL, 1.0f, /*total_fruits*/0, /*total_seeds*/0, 0, 0, 0, {0,0,0},
+    { false, "", 0.0f, 0, 0ULL, 255ULL, 1.0f, 5.0f, /*total_fruits*/0, /*total_seeds*/0, 0, 0, 0, {0,0,0}, // << -------------------------------------------------------------------- edited this
       {true,false,false,false}, {false,false,false,false}, {false,false,false,false},
       {0.0f,0.0f,0.0f,0.0f}, {-1,-1,-1,-1},
       {true,false,false}, {0,0,0} },
-    { false, "", 0.0f, 0, 0ULL, 255ULL, 1.0f, /*total_fruits*/0, /*total_seeds*/0, 0, 0, 0, {0,0,0},
+    { false, "", 0.0f, 0, 0ULL, 255ULL, 1.0f, 5.0f, /*total_fruits*/0, /*total_seeds*/0, 0, 0, 0, {0,0,0}, // << -------------------------------------------------------------------- edited this
       {true,false,false,false}, {false,false,false,false}, {false,false,false,false},
       {0.0f,0.0f,0.0f,0.0f}, {-1,-1,-1,-1},
       {true,false,false}, {0,0,0} },
-    { false, "", 0.0f, 0, 0ULL, 255ULL, 1.0f, /*total_fruits*/0, /*total_seeds*/0, 0, 0, 0, {0,0,0},
+    { false, "", 0.0f, 0, 0ULL, 255ULL, 1.0f, 5.0f,/*total_fruits*/0, /*total_seeds*/0, 0, 0, 0, {0,0,0}, // << -------------------------------------------------------------------- edited this
       {true,false,false,false}, {false,false,false,false}, {false,false,false,false},
       {0.0f,0.0f,0.0f,0.0f}, {-1,-1,-1,-1},
       {true,false,false}, {0,0,0} }
@@ -128,6 +130,7 @@ static void Profiles_Save() {
             fprintf(f, "total_money=%llu\n", profiles[i].total_money);
             fprintf(f, "max_money=%llu\n", profiles[i].max_money);
             fprintf(f, "money_multiplier=%.3f\n", profiles[i].money_multiplier);
+            fprintf(f, "base_price_apple=%.3f\n", profiles[i].base_price_apple); // <<-------------------------------------------------------------------- added this
             fprintf(f, "\n");
             fprintf(f, "[inventory]\n");
             fprintf(f, "total_fruits=%d\n", profiles[i].apples + profiles[i].pears + profiles[i].bananas);
@@ -181,6 +184,11 @@ static void Profiles_Save() {
                 profiles[i].crate_fruit_count[0],
                 profiles[i].crate_fruit_count[1],
                 profiles[i].crate_fruit_count[2]);
+            // Fruit type per crate (-1 = none)
+            fprintf(f, "crate_fruit_type=%d,%d,%d\n",
+                profiles[i].crate_fruit_type[0],
+                profiles[i].crate_fruit_type[1],
+                profiles[i].crate_fruit_type[2]);
         }
         fprintf(f, "\n");
     }
@@ -240,6 +248,8 @@ static void Profiles_Load() {
                 profiles[slotIndex].max_money = (unsigned long long)_strtoui64(value, nullptr, 10);
             else if (strcmp(key, "money_multiplier") == 0)
                 profiles[slotIndex].money_multiplier = (float)atof(value);
+            else if (strcmp(key, "base_price_apple") == 0) // <<-------------------------------------------------------------------- added this
+                profiles[slotIndex].base_price_apple = (float)atof(value);
         }
         else if (inInventory) {
             if (strcmp(key, "total_fruits") == 0) profiles[slotIndex].total_fruits = atoi(value);
@@ -307,6 +317,13 @@ static void Profiles_Load() {
                     profiles[slotIndex].crate_fruit_count[0] = v0;
                     profiles[slotIndex].crate_fruit_count[1] = v1;
                     profiles[slotIndex].crate_fruit_count[2] = v2;
+                }
+            }
+            else if (strcmp(key, "crate_fruit_type") == 0) {
+                if (sscanf_s(value, "%d,%d,%d", &v0, &v1, &v2) == 3) {
+                    profiles[slotIndex].crate_fruit_type[0] = v0;
+                    profiles[slotIndex].crate_fruit_type[1] = v1;
+                    profiles[slotIndex].crate_fruit_type[2] = v2;
                 }
             }
         }
@@ -545,6 +562,19 @@ void Profile_SetCrateFruitCount(int crateIndex, int count) {
     Profiles_Save();
 }
 
+// Set the fruit type stored in profile for a crate (call with crateIndex in [0..MAX_CRATES-1], fruitType e.g. -1 or enum)
+void Profile_SetCrateFruitType(int crateIndex, int fruitType) {
+    if (activeSlot < 0 || activeSlot >= MAX_PROFILES) return;
+    if (crateIndex < 0 || crateIndex >= MAX_CRATES) return;
+    profiles[activeSlot].crate_fruit_type[crateIndex] = fruitType;
+    Profiles_Save();
+}
+
+int Profile_GetCrateFruitType(int crateIndex) {
+    if (activeSlot < 0 || crateIndex < 0 || crateIndex >= MAX_CRATES) return -1;
+    return profiles[activeSlot].crate_fruit_type[crateIndex];
+}
+
 // Getters (read from active slot)
 bool Profile_GetCrateUnlocked(int crateIndex) {
     if (activeSlot < 0 || crateIndex < 0 || crateIndex >= MAX_CRATES) return false;
@@ -574,6 +604,7 @@ void Profile_CreateSlot(int slot, const char* name) {
     profiles[slot].total_money = 0ULL;
     profiles[slot].max_money = 255ULL;
     profiles[slot].money_multiplier = 1.0f;
+    profiles[slot].base_price_apple = 5.0f; // Default base price for apples // <<-------------------------------------------------------------------- added this
     // Default starting inventory: 10 apples and 10 apple seeds
     profiles[slot].apples = 10;
     profiles[slot].pears = 0;
@@ -598,8 +629,10 @@ void Profile_CreateSlot(int slot, const char* name) {
     profiles[slot].crate_unlocked[0] = true;
     profiles[slot].crate_unlocked[1] = false;
     profiles[slot].crate_unlocked[2] = false;
-    for (int i = 0; i < MAX_CRATES; i++)
+    for (int i = 0; i < MAX_CRATES; i++) {
         profiles[slot].crate_fruit_count[i] = 0;
+        profiles[slot].crate_fruit_type[i] = -1; // no fruit type assigned
+    }
     strncpy_s(profiles[slot].name, PROFILE_NAME_MAX_LEN, name, _TRUNCATE);
     Profiles_Save();
 }
