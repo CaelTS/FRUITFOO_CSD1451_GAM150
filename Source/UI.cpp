@@ -1,4 +1,5 @@
 ﻿#define NOMINMAX
+#define _CRT_SECURE_NO_WARNINGS
 
 #include "UI.h"
 #include "Farm.h"
@@ -409,7 +410,7 @@ static int GetFruitBasketIndexUnderMouse()
     float worldY = 450.0f - static_cast<float>(mouseY); // Invert Y axis and convert
 
     // gFruitBaskets is declared extern at top of this file
-    for (size_t i = 0; i < gFruitBaskets.size(); ++i)
+    for (int i = 0; i < (int)gFruitBaskets.size(); ++i)
     {
         const FruitBasket& b = gFruitBaskets[i];
         if (worldX >= b.x - b.width * 0.5f &&
@@ -435,8 +436,9 @@ bool gMusicEnabled = true;
 
 static bool gHoverSoundToggle = false;
 static bool gHoverMusicToggle = false;
-static bool gHoverSettingsExit = false;
-static bool gHoverSettingsClose = false;
+//static bool gHoverSettingsExit = false; removed unused variable
+//static bool gHoverSettingsClose = false; removed unused variable
+
 
 void MainBGM_SetEnabled(bool enabled);
 
@@ -574,7 +576,7 @@ void UI_Init()
     {
         for (int col = 0; col < cols; col++)
         {
-            PlotSlot slot{};
+            PlotSlot slot = {};
             slot.x = startX + col * spacing;
             slot.y = startY - row * spacing;
             slot.width = slotSize;
@@ -610,6 +612,7 @@ FruitType selectedInventoryFruitType = APPLE;
 //how do i do fruit selected based on the slider value and apple count in inventory? also need to update slider max based on inventory changes (after adding/removing fruit from crate)
 int GetSliderFruitCount(location location)
 {
+    (void)location;
     if (location == NIL) return 0; // no location, no fruit
 
     float range = maxSlider - minSlider;
@@ -675,6 +678,7 @@ void UI_Input()
     }
 
     GetFruitBasketIndexUnderMouse();
+    (void)GetFruitBasketIndexUnderMouse();
 
     if (cratePopupOpen)
     {
@@ -696,7 +700,7 @@ void UI_Input()
 
         int typeInCrate = Crate_GetFruitType(crateID);
         int countInCrate = Crate_GetFruitCount(crateID);
-        empty = countInCrate < 0;
+        empty = countInCrate == 0;
 
         if (empty == false && once == true) {
 
@@ -705,10 +709,8 @@ void UI_Input()
 
         }
 
-
         if (empty) {
             printf("Crate %d is empty!\n", crateID);
-            empty = false;
         }
 
         // Improved dragging: world-space, grab-offset, snap-to-track, clamp
@@ -906,6 +908,7 @@ void UI_UpdateButtons()
 
     bool clickThisFrame = AEInputCheckTriggered(AEVK_LBUTTON);
     bool clickConsumed = false;
+    (void)clickConsumed; //unused variable
 
     // -------------------------------------------------
     // MENU BUTTONS
@@ -1027,7 +1030,13 @@ void UI_UpdateButtons()
                 int plotToPlant = activePlotIndex;
 
                 Farm_PlantSeed(plotToPlant, currentSeedIndex);
-                Inventory_RemoveSeed(1, currentSeedIndex);
+                u8 seedIndexSafe = 0;
+
+                if (currentSeedIndex >= 0 && currentSeedIndex <= 255)
+                    seedIndexSafe = static_cast<u8>(currentSeedIndex);
+
+                Inventory_RemoveSeed(static_cast<u8>(1), seedIndexSafe);
+                
 
                 std::cout << "Planted seed type: " << currentSeedIndex
                     << " on plot: " << plotToPlant << "\n";
@@ -1045,7 +1054,7 @@ void UI_UpdateButtons()
 
     hoveredPlotIndex = -1;
 
-    for (size_t i = 0; i < plotSlots.size(); i++)
+    for (int i = 0; i < (int)plotSlots.size(); i++)
     {
         PlotSlot& slot = plotSlots[i];
 
@@ -1084,7 +1093,7 @@ void UI_UpdateButtons()
     }
 
     // DELETE SEED BUTTON (CLICK LOGIC ONLY)
-    for (size_t i = 0; i < plotSlots.size(); i++)
+    for (int i = 0; i < (int)plotSlots.size(); i++)
     {
         if (!Farm_IsPlotPlanted(static_cast<int>(i)))
             continue;
@@ -1120,7 +1129,7 @@ void UI_UpdateButtons()
     auto& upgrades = Upgrades_GetList();
 
     int shownUp = 0;
-    for (size_t i = upgradesStartIndex; i < upgrades.size() && shownUp < MAX_VISIBLE_UPGRADES; ++i)
+    for (int i = upgradesStartIndex; i < (int)upgrades.size() && shownUp < MAX_VISIBLE_UPGRADES; ++i)
     {
         auto& u = upgrades[i];
         if (u.purchased) continue;  // skip purchased upgrades
@@ -1333,7 +1342,11 @@ void UI_UpdateButtons()
             if (gSelectedInvItem == INV_ITEM_APPLE)
                 Inventory_RemoveFruit(static_cast<u8>(gInvSliderValue));
             else
-                Inventory_RemoveSeed(static_cast<u8>(gInvSliderValue), static_cast<u8>(gSelectedInvItem - INV_ITEM_APPLE_SEED));
+                Inventory_RemoveSeed(
+                    static_cast<u8>(gInvSliderValue < 0 ? 0 : (gInvSliderValue > 255 ? 255 : gInvSliderValue)),
+                    static_cast<u8>((gSelectedInvItem - INV_ITEM_APPLE_SEED) < 0 ? 0 :
+                        ((gSelectedInvItem - INV_ITEM_APPLE_SEED) > 255 ? 255 : (gSelectedInvItem - INV_ITEM_APPLE_SEED)))
+                );
 
             gInvConfirmOpen = false;
             gSelectedInvItem = INV_ITEM_NONE;
@@ -1495,7 +1508,8 @@ void UI_Draw()
             AEGfxMeshDraw(pMeshCratePanelBG, AE_GFX_MDM_TRIANGLES);  // Draw the apple as a quad
         }
         if (pMeshCrateCost) {
-            float x = 130.0f, y = 180.0f;
+            float x = 130.0f;
+            float y = 180.0f;
             // Draw crate cost
             AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
             AEGfxSetBlendMode(AE_GFX_BM_BLEND);
@@ -1525,7 +1539,7 @@ void UI_Draw()
             //float x = -530.0f / 800.0f;  // normalize X by 800.0f
             //float y = 350.0f / 450.0f;  // normalize Y by 450.0f
             float xOf = x;
-            float yOf = y - 9;
+            float yOf = static_cast<float>(y) - 9.0f;
             const float halfW = 800.0f;
             const float halfH = 450.0f;
             float xNorm = xOf / halfW;
@@ -1544,15 +1558,16 @@ void UI_Draw()
 
         if (CrateAppleButton.mesh && Crate_GetFruitType(crateID) == 0) {
             AEGfxTexture* textureApple = nullptr;
-            int scaleAppleX, scaleAppleY;
+            float scaleAppleX = 0.0f;
+            float scaleAppleY = 0.0f;
             float AppleX = CrateAppleButton.x, AppleY = CrateAppleButton.y;
 
             if (Crate_GetFruitCount(crateID) > 0) {
                 textureApple = CrateAppleButton.unselectedTex;
                 scaleAppleX = CrateAppleButton.unselectedScaleX;
                 scaleAppleY = CrateAppleButton.unselectedScaleY;
-                AppleX = CrateAppleButton.x + 8.1;
-                AppleY = CrateAppleButton.y - 7.8;
+                AppleX = CrateAppleButton.x + 8.1f;
+                AppleY = CrateAppleButton.y - 7.8f;
 
 
                 if (AEInputCheckTriggered(AEVK_LBUTTON) && isButtonHovered(CrateAppleButton.x, CrateAppleButton.y, CrateAppleButton.unselectedScaleX, CrateAppleButton.unselectedScaleY)) {
@@ -1602,7 +1617,7 @@ void UI_Draw()
 
                 //float x = -530.0f / 800.0f;  // normalize X by 800.0f
                 //float y = 350.0f / 450.0f;  // normalize Y by 450.0f
-                float xOf;
+                float xOf = 0.0f;
                 if (qty_apple <= 9) {
                     xOf = -112;
                     if (textureApple == CrateAppleButton.selectedTex) {
@@ -1633,9 +1648,11 @@ void UI_Draw()
             }
 
             if (InvAppleButton.mesh) {
-                AEGfxTexture* textureApple = nullptr;
-                int scaleAppleX, scaleAppleY;
-                float AppleX = InvAppleButton.x, AppleY = InvAppleButton.y;
+                textureApple = nullptr;
+                scaleAppleX = 0;
+                scaleAppleY = 0;
+                AppleX = InvAppleButton.x;
+                AppleY = InvAppleButton.y;
 
                 if (AEInputCheckTriggered(AEVK_LBUTTON) && isButtonHovered(InvAppleButton.x, InvAppleButton.y, InvAppleButton.unselectedScaleX, InvAppleButton.unselectedScaleY)) {
                     isSelected_apple = true;
@@ -1681,7 +1698,7 @@ void UI_Draw()
 
                 //float x = -530.0f / 800.0f;  // normalize X by 800.0f
                 //float y = 350.0f / 450.0f;  // normalize Y by 450.0f
-                float xOf;
+                float xOf = 0.0f;
                 if (qty_apple <= 9) {
                     xOf = -111;
                     if (textureApple == InvAppleButton.selectedTex) {
@@ -1712,7 +1729,7 @@ void UI_Draw()
             }
 
             if (pMeshCrateInfo) {
-                if (Crate_GetFruitType(crateID) == 0) {
+                if (Crate_GetFruitType(crateID) == APPLE) {
                     AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
                     AEGfxSetBlendMode(AE_GFX_BM_BLEND);
                     AEGfxSetColorToMultiply(1, 1, 1, 1);
@@ -1803,7 +1820,7 @@ void UI_Draw()
 
             if (Store_Crate.mesh && selectedLocation != NIL) {
                 AEGfxTexture* tex = nullptr;
-                int scaleX, scaleY;
+                float scaleX, scaleY;
                 float X = Store_Crate.x, Y = Store_Crate.y;
 
                 if (selectedLocation == INVENTORY) {
@@ -2670,7 +2687,7 @@ void UI_Draw()
     AEGfxSetColorToMultiply(1, 1, 1, 1);
     AEGfxTextureSet(plotSlotTexture, 0, 0);
 
-    for (size_t i = 0; i < plotSlots.size(); i++)
+    for (int i = 0; i < (int)plotSlots.size(); i++)
     {
         PlotSlot& slot = plotSlots[i];
 
@@ -2938,7 +2955,7 @@ void UI_DrawPlotTooltips()
     extern std::vector<FarmPlot> farmPlots;
 
     // Check each plot slot
-    for (size_t i = 0; i < plotSlots.size(); i++)
+    for (int i = 0; i < (int)plotSlots.size(); i++)
     {
         const PlotSlot& slot = plotSlots[i];
 
