@@ -860,7 +860,7 @@ void UI_Input()
                         int availableToMove = GetAppleCount();
                         int toMove = std::min(sliderValue, availableToMove);
                         if (toMove > 0) {
-                            Inventory_RemoveFruit(toMove);
+                            Inventory_RemoveFruit(static_cast<u8>(toMove));
                             Crate_AddFruit(crateID, toMove);
                             Crate_SetFruitType(crateID, APPLE);
                             printf("Moved %d apples from inventory to crate %d\n", toMove, crateID);
@@ -872,7 +872,7 @@ void UI_Input()
                         int toMove = std::min(sliderValue, availableToMove);
                         if (toMove > 0) {
                             Crate_RemoveFruitAmount(crateID, toMove);
-                            Inventory_AddFruit(toMove, APPLE);
+                            Inventory_AddFruit(static_cast<u8>(toMove), APPLE);
                             printf("Moved %d apples from crate %d back to inventory\n", toMove, crateID);
                         }
                     }
@@ -1711,7 +1711,7 @@ void UI_Draw()
                         xOf = -111;
                     }
                 }
-                float yOf = -83 + shiftUP;
+                float yOf = -83.0f + shiftUP;
                 const float halfW = 800.0f;
                 const float halfH = 450.0f;
                 float xNorm = xOf / halfW;
@@ -3186,7 +3186,7 @@ float UI_GetCrateSlotX(int index)
     // Crate slots are positioned on the stall — adjust these values to match your layout
     const float crateBaseX = -300.0f;
     const float crateSpacing = 100.0f;
-    return crateBaseX + index * crateSpacing;
+    return crateBaseX + (float)index * crateSpacing;
 }
 
 float UI_GetCrateSlotY(int index)
