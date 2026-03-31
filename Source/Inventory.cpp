@@ -282,6 +282,17 @@ void Inventory_SaveToProfile(int slot) {
 		static_cast<int>(seed_banana));
 }
 
+int Inventory_GetSeedCount(int seedType)
+{
+	switch (seedType)
+	{
+	case 0: return GetSeedCount(); // Apple
+	case 1: return GetPearSeedCount(); // Pear (if exists)
+	case 2: return GetBananaSeedCount(); // optional
+	default: return 0;
+	}
+}
+
 // Load inventory state from profile slot
 void Inventory_LoadFromProfile(int slot) {
 
