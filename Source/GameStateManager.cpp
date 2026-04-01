@@ -1,10 +1,11 @@
-#include "GameStateManager.h"
+ï»¿#include "GameStateManager.h"
 #include "AEEngine.h"
 #include "Main.h"
 #include "Profile.h"
 #include "Farm.h"
 #include "Rhythm.h"
 #include "StartScreen.h"
+#include "Splash.h"
 #include <iostream>
 
 
@@ -41,7 +42,7 @@ static void StartScreen_GSM_Update()
     {
         if (nextState == currentState) // nothing chosen yet
             nextState = GS_MAIN_SCREEN;
-        // else: Continue set GS_NEXT_SCREEN, New Game set GS_MAIN_SCREEN, etc. — keep it
+        // else: Continue set GS_NEXT_SCREEN, New Game set GS_MAIN_SCREEN, etc. ï¿½ keep it
     }
 }
 static void StartScreen_GSM_Render() { StartScreen_Draw(); }
@@ -54,6 +55,15 @@ void GSM_Update()
     std::cout << "Current state: " << currentState << "\n";
     switch (currentState)
     {
+    case GS_SPLASH:
+        fpLoad = Splash_Load;
+        fpInitialize = Splash_Initialize;
+        fpUpdate = Splash_Update;
+        fpDraw = Splash_Draw;
+        fpFree = Splash_Free;
+        fpUnload = Splash_Unload;
+        break;
+
     case GS_START_SCREEN:
         /*fpLoad = StartScreen_GSM_Load;*/
         fpInitialize = StartScreen_GSM_Initialize;
