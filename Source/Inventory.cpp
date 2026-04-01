@@ -93,7 +93,7 @@ void SetInventoryLimit(int limit)
 	{
 		int toRemove = total - g_inventoryCapacity;
 
-		int rem = std::min<int>(toRemove, static_cast<int>(apples));
+		int rem = std::min<int>(toRemove, static_cast<int>(bananas));
 		bananas = static_cast<u8>(bananas - rem);
 		toRemove -= rem;
 
@@ -101,7 +101,7 @@ void SetInventoryLimit(int limit)
 		pears = static_cast<u8>(pears - rem);
 		toRemove -= rem;
 
-		rem = std::min<int>(toRemove, static_cast<int>(bananas));
+		rem = std::min<int>(toRemove, static_cast<int>(apples));
 		apples = static_cast<u8>(apples - rem);
 		toRemove -= rem;
 
@@ -180,23 +180,20 @@ void Inventory_AddFruit(u8 amount, u8 fruitType) {
 	// Update totals
 	total_fruits = apples + pears + bananas;
 
-	// Clamp to capacity
+	// Clamp to capacity — trim from lowest priority first (bananas -> pears -> apples)
 	if (total_fruits > g_inventoryCapacity)
 	{
-		int overflow = total_fruits - g_inventoryCapacity;
-		// remove overflow from the same fruitType we just added (best-effort)
-		switch (fruitType) {
-		case 2:
-			bananas = static_cast<u8>((bananas >= overflow) ? bananas - overflow : 0);
-			break;
-		case 1:
-			pears = static_cast<u8>((pears >= overflow) ? pears - overflow : 0);
-			break;
-		default:
-			apples = static_cast<u8>((apples >= overflow) ? apples - overflow : 0);
-			break;
-		}
-		// recalc totals
+		int toRemove = total_fruits - g_inventoryCapacity;
+
+		int rem = std::min<int>(toRemove, static_cast<int>(bananas));
+		bananas = static_cast<u8>(bananas - rem); toRemove -= rem;
+
+		rem = std::min<int>(toRemove, static_cast<int>(pears));
+		pears = static_cast<u8>(pears - rem); toRemove -= rem;
+
+		rem = std::min<int>(toRemove, static_cast<int>(apples));
+		apples = static_cast<u8>(apples - rem);
+
 		total_fruits = apples + pears + bananas;
 	}
 
