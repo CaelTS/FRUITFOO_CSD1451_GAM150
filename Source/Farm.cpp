@@ -52,6 +52,7 @@ static AEGfxTexture* crossIcon = nullptr;
 static AEGfxTexture* lockedPlot = nullptr;
 static AEGfxTexture* fruitAppleTexture = nullptr;
 static AEGfxTexture* fruitPearTexture = nullptr;
+static AEGfxTexture* fruitBananaTexture = nullptr;
 
 // ---------------------------------------------------------------------------
 // Flying fruit animation (harvest -> crate)
@@ -137,6 +138,7 @@ void Farm_Load()
     lockedPlot = AEGfxTextureLoad("Assets/lockedplot.png");
     fruitAppleTexture = AEGfxTextureLoad("Assets/Fruit_Apple.png");
     fruitPearTexture = AEGfxTextureLoad("Assets/PlotPear.png");
+    fruitBananaTexture = AEGfxTextureLoad("Assets/PlotBanana.png");
 
     g_farmTickSFX = AEAudioLoadSound("Assets/Tick.wav");
     g_farmTickGroup = AEAudioCreateGroup();
@@ -498,24 +500,13 @@ void Farm_Render()
         AEGfxSetTransform(transform.m);
         AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
 
-        // --------------------------
-        // Growth stage overlay texture (FIX 1: clean pear branch, no stray {})
-        // --------------------------
+        // Growth stage overlay — apple only
         AEGfxTexture* stageTexture = nullptr;
-        if (plot.seedType == 1) // pear
-        {
-            if (ratio < 0.25f)      stageTexture = fruitStage25;
-            else if (ratio < 0.5f)  stageTexture = fruitStage50;
-            else if (ratio < 1.0f)  stageTexture = fruitStage75;
-            else                    stageTexture = fruitStageFull;
-        }
-        else // apple (and any other seed type)
-        {
-            if (ratio < 0.25f)      stageTexture = fruitStage25;
-            else if (ratio < 0.5f)  stageTexture = fruitStage50;
-            else if (ratio < 1.0f)  stageTexture = fruitStage75;
-            else                    stageTexture = fruitStageFull;
-        }
+
+        if (ratio < 0.25f)      stageTexture = fruitStage25;
+        else if (ratio < 0.5f)  stageTexture = fruitStage50;
+        else if (ratio < 1.0f)  stageTexture = fruitStage75;
+        else                    stageTexture = fruitStageFull;
 
         // Tints for rhythm states
         if (farmPlots[i].waitingForRhythm)
@@ -535,7 +526,9 @@ void Farm_Render()
             fruitSize += pulse;
         }
 
-        AEGfxTexture* baseTexture = (plot.seedType == 1) ? fruitPearTexture : fruitAppleTexture;
+        AEGfxTexture* baseTexture = (plot.seedType == SEED_PEAR) ? fruitPearTexture :
+            (plot.seedType == SEED_BANANA) ? fruitBananaTexture :
+            fruitAppleTexture;
 
         // --------------------------
         // FIX 2: Draw fruit larger when fully grown, normal size otherwise
@@ -828,6 +821,7 @@ void Farm_Unload()
     if (deleteIcon) { AEGfxTextureUnload(deleteIcon);        deleteIcon = nullptr; }
     if (fruitAppleTexture) { AEGfxTextureUnload(fruitAppleTexture); fruitAppleTexture = nullptr; }
     if (fruitPearTexture) { AEGfxTextureUnload(fruitPearTexture);  fruitPearTexture = nullptr; }
+    if (fruitBananaTexture) { AEGfxTextureUnload(fruitBananaTexture); fruitBananaTexture = nullptr; }
 
     if (AEAudioIsValidAudio(g_farmTickSFX))      AEAudioUnloadAudio(g_farmTickSFX);
     if (AEAudioIsValidGroup(g_farmTickGroup))     AEAudioUnloadAudioGroup(g_farmTickGroup);
