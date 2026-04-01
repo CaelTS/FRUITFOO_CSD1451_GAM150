@@ -68,9 +68,12 @@ static AEGfxTexture* settingsOff = nullptr;
 
 static AEGfxTexture* appleSeedIcon = nullptr;
 static AEGfxTexture* pearSeedIcon = nullptr;
+static AEGfxTexture* bananaSeedIcon = nullptr;
 static AEGfxTexture* appleSeedInfo = nullptr;
 static AEGfxTexture* leftArrowTexture = nullptr;
 static AEGfxTexture* rightArrowTexture = nullptr;
+static AEGfxTexture* plotSlotPearTexture = nullptr;
+static AEGfxTexture* plotSlotBananaTexture = nullptr;
 
 
 enum ButtonType
@@ -80,13 +83,6 @@ enum ButtonType
     BUTTON_SETTINGS
 };
 
-enum SeedType
-{
-    SEED_APPLE = 0,
-    SEED_PEAR,
-    SEED_BANANA,
-    SEED_COUNT
-};
 
 struct MenuButton
 {
@@ -493,6 +489,9 @@ void UI_Init()
 
     appleSeedIcon = AEGfxTextureLoad("Assets/AppleSeed.png");
     pearSeedIcon = AEGfxTextureLoad("Assets/PearSeed.png");
+    bananaSeedIcon = AEGfxTextureLoad("Assets/BananaSeed.png");
+    plotSlotPearTexture = AEGfxTextureLoad("Assets/PlotPear.png");
+    plotSlotBananaTexture = AEGfxTextureLoad("Assets/PlotBanana.png");
     appleSeedInfo = AEGfxTextureLoad("Assets/AppleSeedInfo.png");
     plotSlotTexture = AEGfxTextureLoad("Assets/Plot1.png");
     leftArrowTexture = AEGfxTextureLoad("Assets/ArrowLeft.png");
@@ -606,7 +605,7 @@ enum location { INVENTORY, CRATE, NIL };
 location selectedLocation = NIL; // where the fruit is coming from (inventory) or going to (crate)
 
 FruitType selectedFruit = NILL; // future proofing for more fruit types, but for now just apple
-FruitType selectedInventoryFruitType = APPLE; 
+FruitType selectedInventoryFruitType = APPLE;
 
 
 //how do i do fruit selected based on the slider value and apple count in inventory? also need to update slider max based on inventory changes (after adding/removing fruit from crate)
@@ -956,7 +955,6 @@ void UI_UpdateButtons()
         if (!seedsPopupOpen)
             selectedSeed = -1;
     }
-
     // -------------------------------------------------
     // SEED SELECTION (ONLY IF PANEL OPEN)
     // -------------------------------------------------
@@ -968,11 +966,21 @@ void UI_UpdateButtons()
         float seedW = 100.0f;
         float seedH = 100.0f;
 
-        bool overSeed =
-            worldX >= panelX - seedW * 0.5f &&
-            worldX <= panelX + seedW * 0.5f &&
-            worldY >= seedY - seedH * 0.5f &&
-            worldY <= seedY + seedH * 0.5f;
+        // Close when clicking outside
+        if (AEInputCheckTriggered(AEVK_LBUTTON))
+        {
+            bool clickInside =
+                worldX >= panelX - 200.0f &&
+                worldX <= panelX + 200.0f &&
+                worldY >= panelY - 275.0f &&
+                worldY <= panelY + 275.0f;
+
+            if (!clickInside)
+            {
+                seedsPopupOpen = false;
+                selectedSeed = -1;
+            }
+        }
 
         // ---- ARROW HIT DETECTION ----
         float arrowOffsetX = 150.0f;
@@ -1016,6 +1024,12 @@ void UI_UpdateButtons()
         }
 
 
+        bool overSeed =
+            worldX >= panelX - seedW * 0.5f &&
+            worldX <= panelX + seedW * 0.5f &&
+            worldY >= seedY - seedH * 0.5f &&
+            worldY <= seedY + seedH * 0.5f;
+
         // Hover detection
         if (overSeed)
             hoveredSeed = currentSeedIndex;
@@ -1036,7 +1050,7 @@ void UI_UpdateButtons()
                     seedIndexSafe = static_cast<u8>(currentSeedIndex);
 
                 Inventory_RemoveSeed(static_cast<u8>(1), seedIndexSafe);
-                
+
 
                 std::cout << "Planted seed type: " << currentSeedIndex
                     << " on plot: " << plotToPlant << "\n";
@@ -1530,7 +1544,7 @@ void UI_Draw()
 
             if (Crate_GetFruitCount(crateID) == 0) {
                 price_apple = 0;
-			}
+            }
 
             char appleText[32];
             sprintf_s(appleText, "%d", price_apple);
@@ -2336,7 +2350,7 @@ void UI_Draw()
             AEGfxSetColorToMultiply(1, 1, 1, 1);
             AEGfxTextureSet(settingsBG, 0, 0);
 
-            AEMtx33Scale(&scale, SET_PANEL_W* ScaleX, SET_PANEL_H* ScaleY);
+            AEMtx33Scale(&scale, SET_PANEL_W * ScaleX, SET_PANEL_H * ScaleY);
             AEMtx33Trans(&trans, SET_PANEL_X, SET_PANEL_Y);
             AEMtx33Concat(&transform, &trans, &scale);
             AEGfxSetTransform(transform.m);
@@ -2346,7 +2360,7 @@ void UI_Draw()
             AEGfxSetColorToMultiply(1, gHoverSoundToggle ? 0.85f : 1, gHoverSoundToggle ? 0.85f : 1, 1);
             AEGfxTextureSet(gSoundEnabled ? settingsOn : settingsOff, 0, 0);
 
-            AEMtx33Scale(&scale, SET_TOGGLE_W* ScaleX, SET_TOGGLE_H* ScaleY);
+            AEMtx33Scale(&scale, SET_TOGGLE_W * ScaleX, SET_TOGGLE_H * ScaleY);
             AEMtx33Trans(&trans, SET_TOGGLE_X + SET_PANEL_X, SET_SOUND_Y + SET_PANEL_Y + 45.0f);
             AEMtx33Concat(&transform, &trans, &scale);
             AEGfxSetTransform(transform.m);
@@ -2356,7 +2370,7 @@ void UI_Draw()
             AEGfxSetColorToMultiply(1, gHoverMusicToggle ? 0.85f : 1, gHoverMusicToggle ? 0.85f : 1, 1);
             AEGfxTextureSet(gMusicEnabled ? settingsOn : settingsOff, 0, 0);
 
-            AEMtx33Scale(&scale, SET_TOGGLE_W* ScaleX, SET_TOGGLE_H* ScaleY);
+            AEMtx33Scale(&scale, SET_TOGGLE_W * ScaleX, SET_TOGGLE_H * ScaleY);
             AEMtx33Trans(&trans, SET_TOGGLE_X + SET_PANEL_X, SET_MUSIC_Y + SET_PANEL_Y + 5.0f);
             AEMtx33Concat(&transform, &trans, &scale);
             AEGfxSetTransform(transform.m);
@@ -2679,6 +2693,113 @@ void UI_Draw()
                 descX, (descBoxTop - lineH * 2.5f) / 450.0f, descScale, tr, tg, tb, 1);
         }
         // else: empty slot — nothing drawn on top of the panel background
+
+
+        //BANANA
+        if (currentSeedIndex == SEED_BANANA)
+        {
+            // Hover highlight
+            if (hoveredSeed == SEED_BANANA)
+            {
+                AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+                AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+                AEGfxSetColorToMultiply(1.0f, 0.85f, 0.0f, 0.9f);
+
+                AEMtx33Scale(&scale, 112, 112);
+                AEMtx33Trans(&trans, seedspanelX, seedY);
+                AEMtx33Concat(&transform, &trans, &scale);
+                AEGfxSetTransform(transform.m);
+                AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+                AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+                AEGfxSetColorToMultiply(1, 1, 1, 1);
+            }
+
+            // Seed icon
+            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+            AEGfxSetColorToMultiply(1, 1, 1, 1);
+            AEGfxTextureSet(bananaSeedIcon, 0, 0);
+
+            AEMtx33Scale(&scale, 100, 100);
+            AEMtx33Trans(&trans, seedspanelX, seedY);
+            AEMtx33Concat(&transform, &trans, &scale);
+            AEGfxSetTransform(transform.m);
+            AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+            // Seed count badge
+            int bananaSeedCount = Inventory_GetSeedCount(SEED_BANANA);
+            char bananaSeedCountText[8];
+            sprintf_s(bananaSeedCountText, "%d", bananaSeedCount);
+
+            float badgeX = seedspanelX + 35.0f;
+            float badgeY = seedY - 30.0f;
+            float textBadgeX = badgeX - ((bananaSeedCount < 10) ? 4.0f : 8.0f);
+
+            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+            AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+            AEGfxSetColorToMultiply(1, 1, 1, 1);
+            AEGfxPrint(fontId, bananaSeedCountText, textBadgeX / 800.0f, badgeY / 450.0f, 0.7f, 1, 1, 1, 1);
+
+            // Info text
+            const float panelLeft = seedspanelX - 200.0f;
+            const float panelTop = seedspanelY + 275.0f;
+            const float scaleTexX = 400.0f / 616.0f;
+            const float scaleTexY = 550.0f / 662.0f;
+
+            const float coinCx = panelLeft + 118.0f * scaleTexX;
+            const float coinCy = panelTop - 462.0f * scaleTexY;
+            const float waterCx = panelLeft + 398.0f * scaleTexX;
+            const float waterCy = coinCy;
+            const float clockCx = coinCx;
+            const float clockCy = panelTop - 525.0f * scaleTexY;
+            const float tOff = 21.0f;
+            const float tr = 0.25f, tg = 0.13f, tb = 0.02f;
+            const float brownBoxCx = panelLeft + 308.0f * scaleTexX;
+            const float brownBoxCy = panelTop - 385.0f * scaleTexY;
+
+            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+            AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+            AEGfxSetColorToMultiply(1, 1, 1, 1);
+
+            SeedData& data = seedDatabase[SEED_BANANA];
+
+            char costText[32];
+            sprintf_s(costText, "%d / min", data.cost);
+
+            char waterText[32];
+            sprintf_s(waterText, "%d", data.waterNeeded);
+
+            char growText[32];
+            sprintf_s(growText, "%.0f mins", data.growTime);
+
+            AEGfxPrint(fontId, data.name,
+                (brownBoxCx - 80.0f) / 800.0f, brownBoxCy / 450.0f,
+                1.1f, tr, tg, tb, 1);
+
+            AEGfxPrint(fontId, costText,
+                (coinCx + tOff) / 800.0f, coinCy / 450.0f,
+                1.0f, tr, tg, tb, 1);
+
+            AEGfxPrint(fontId, waterText,
+                (waterCx + tOff) / 800.0f, waterCy / 450.0f,
+                1.0f, tr, tg, tb, 1);
+
+            AEGfxPrint(fontId, growText,
+                (clockCx + tOff) / 800.0f, clockCy / 450.0f,
+                1.0f, tr, tg, tb, 1);
+
+            const float descBoxTop = panelTop - 585.0f * scaleTexY + 10.0f;
+            const float descScale = 0.5f;
+            const float lineH = 13.0f;
+            const float descX = (panelLeft + 68.0f) / 800.0f;
+
+            AEGfxPrint(fontId, "The banana seed -- tropical and fast-growing.",
+                descX, (descBoxTop - lineH * 0.5f) / 450.0f, descScale, tr, tg, tb, 1);
+            AEGfxPrint(fontId, "Bright yellow fruit with a natural sweetness.",
+                descX, (descBoxTop - lineH * 1.5f) / 450.0f, descScale, tr, tg, tb, 1);
+            AEGfxPrint(fontId, "A crowd favourite at the stall.",
+                descX, (descBoxTop - lineH * 2.5f) / 450.0f, descScale, tr, tg, tb, 1);
+        }
     }
 
     //Plot Slots
@@ -2691,12 +2812,22 @@ void UI_Draw()
     {
         PlotSlot& slot = plotSlots[i];
 
+        // Pick texture based on planted seed type
+        AEGfxTexture* slotTex = plotSlotTexture; // default = apple/empty
+        if (Farm_IsPlotPlanted(i) && farmPlots[i].seedType == SEED_PEAR)
+            slotTex = plotSlotPearTexture;
+
+        AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+        AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+        AEGfxSetColorToMultiply(1, 1, 1, 1);
+        AEGfxTextureSet(slotTex, 0, 0);  // <-- was hardcoded plotSlotTexture
+
         AEMtx33Scale(&scale, slot.width, slot.height);
         AEMtx33Trans(&trans, slot.x, slot.y);
         AEMtx33Concat(&transform, &trans, &scale);
         AEGfxSetTransform(transform.m);
         AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
-
+        // Hover tint
         if ((int)i == hoveredPlotIndex)
         {
             AEGfxSetRenderMode(AE_GFX_RM_COLOR);
@@ -2713,7 +2844,7 @@ void UI_Draw()
             AEGfxSetColorToMultiply(1, 1, 1, 1);
         }
     }
- 
+
 }
 
 bool UI_IsMenuOpen()
@@ -2846,7 +2977,7 @@ static void DrawTooltipClampedAt(float cx, float cy, const char* text,
 
 void UI_DrawFruitBasketTooltips()
 {
-	if (cratePopupOpen) return; // hide tooltips if crate panel is open
+    if (cratePopupOpen) return; // hide tooltips if crate panel is open
 
     UI_EnsureCrateCfg();
     const auto& C = UI_GetCrateLayoutConfig();
@@ -3125,7 +3256,7 @@ void UI_DrawPlotTooltips()
 
 void UI_DrawCrateHoverTint_Yellow()
 {
-	if (cratePopupOpen) return; // hide hover tint if crate panel is open
+    if (cratePopupOpen) return; // hide hover tint if crate panel is open
 
     AEMtx33 scale, trans, transform;
     const auto& baskets = GetFruitBaskets();
@@ -3225,8 +3356,10 @@ void UI_Exit()
 
     AEGfxTextureUnload(appleSeedIcon);
     AEGfxTextureUnload(pearSeedIcon);
+    AEGfxTextureUnload(bananaSeedIcon);
     AEGfxTextureUnload(appleSeedInfo);
     AEGfxTextureUnload(plotSlotTexture);
+    AEGfxTextureUnload(plotSlotBananaTexture);
     AEGfxTextureUnload(leftArrowTexture);
     AEGfxTextureUnload(rightArrowTexture);
 
