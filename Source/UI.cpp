@@ -699,7 +699,7 @@ void UI_Input()
 
         int typeInCrate = Crate_GetFruitType(crateID);
         int countInCrate = Crate_GetFruitCount(crateID);
-        empty = countInCrate == 0;
+        empty = countInCrate < 0;
 
         if (empty == false && once == true) {
 
