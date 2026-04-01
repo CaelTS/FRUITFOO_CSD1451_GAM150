@@ -1,12 +1,13 @@
 #pragma once
 
 enum GameState {
-    GS_START_SCREEN = 0,
-    GS_MAIN_SCREEN = 1,
-    GS_FARM_SCREEN = 2,
-    GS_NEXT_SCREEN = 3,
-    GS_RHYTHM_SCREEN = 4,
-    GS_EXIT = 5
+    GS_SPLASH = 0,
+    GS_START_SCREEN = 1,
+    GS_MAIN_SCREEN = 2,
+    GS_FARM_SCREEN = 3,
+    GS_NEXT_SCREEN = 4,
+    GS_RHYTHM_SCREEN = 5,
+    GS_EXIT = 6
 };
 
 // Function pointer type
