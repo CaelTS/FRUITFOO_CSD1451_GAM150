@@ -550,7 +550,7 @@ void Farm_Render()
         {
             bool isFull = plot.isReady; // true only at ratio >= 1.0f
             float overlaySize = isFull ? fruitSize * 2.2f : fruitSize * 2.0f;
-            float overlayAlpha = isFull ? 0.0f : 0.7f; // hide overlay when fully grown
+            float overlayAlpha = 0.7f; // hide overlay when fully grown
 
             if (overlayAlpha > 0.0f)
             {
