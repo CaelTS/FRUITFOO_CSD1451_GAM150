@@ -15,8 +15,8 @@ u8 bananas = 0;
 
 // Separate seed types
 u8 seed_apple = 10;
-u8 seed_pear = 0;
-u8 seed_banana = 0;
+u8 seed_pear = 10;
+u8 seed_banana = 10;
 
 // Runtime-configurable inventory capacity (default 10)
 static int g_inventoryCapacity = 10;
@@ -286,7 +286,7 @@ int Inventory_GetSeedCount(int seedType)
 {
 	switch (seedType)
 	{
-	case 0: return GetSeedCount(); // Apple
+	case 0: return GetAppleSeedCount();
 	case 1: return GetPearSeedCount(); // Pear (if exists)
 	case 2: return GetBananaSeedCount(); // optional
 	default: return 0;
