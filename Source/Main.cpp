@@ -344,6 +344,9 @@ void MainScreen_Initialize()
         Crate_Initialize();
     }
 
+    // Load per-type fruit/seed counts from the active profile
+    Inventory_LoadFromProfile(Profile_GetActiveSlot());
+
     // Initialize fruit count tracking after inventory is loaded
     g_prevFruitCount = GetFruitCount();
 

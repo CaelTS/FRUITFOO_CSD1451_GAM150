@@ -53,6 +53,8 @@ static AEGfxTexture* invSeedHighlight = nullptr;
 static AEGfxTexture* invSliderKnob = nullptr;
 static AEGfxTexture* invSliderFill = nullptr;
 static AEGfxTexture* appleIcon = nullptr;
+static AEGfxTexture* pearIcon = nullptr;
+static AEGfxTexture* bananaIcon = nullptr;
 static AEGfxTexture* trashIcon = nullptr;
 static AEGfxTexture* confirmBG = nullptr;
 static AEGfxTexture* confirmYes = nullptr;
@@ -472,6 +474,8 @@ void UI_Init()
     invSliderKnob = AEGfxTextureLoad("Assets/InvSliderKnob.png");
     invSliderFill = AEGfxTextureLoad("Assets/InvSliderFill.png");
     appleIcon = AEGfxTextureLoad("Assets/HarvestApple.png");
+    pearIcon = AEGfxTextureLoad("Assets/PlotPear.png");
+    bananaIcon = AEGfxTextureLoad("Assets/PlotBanana.png");
     trashIcon = AEGfxTextureLoad("Assets/Trash.png");
 
     confirmBG = AEGfxTextureLoad("Assets/ConfirmBG.png");
@@ -699,7 +703,7 @@ void UI_Input()
 
         int typeInCrate = Crate_GetFruitType(crateID);
         int countInCrate = Crate_GetFruitCount(crateID);
-        empty = countInCrate < 0;
+        empty = countInCrate == 0;
 
         if (empty == false && once == true) {
 
@@ -2177,81 +2181,78 @@ void UI_Draw()
 
                 if (gActiveInvTab == TAB_FRUITS)
                 {
-                    if (GetFruitCount() > 0)
+                    // Draw each fruit type that has stock, side by side
+                    const float iconSpacing = 100.0f;
+                    AEGfxTexture* fruitIcons[3] = { appleIcon, pearIcon, bananaIcon };
+                    int fruitCounts[3] = { GetAppleCount(), GetPearCount(), GetBananaCount() };
+
+                    int col = 0;
+                    for (int f = 0; f < 3; f++)
                     {
+                        if (fruitCounts[f] <= 0) continue;
+
+                        float iconX = itemX + col * iconSpacing;
+                        float iconY = itemY;
 
                         AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
                         AEGfxSetBlendMode(AE_GFX_BM_BLEND);
                         AEGfxSetColorToMultiply(1, 1, 1, 1);
-                        AEGfxTextureSet(appleIcon, 0, 0);
+                        AEGfxTextureSet(fruitIcons[f], 0, 0);
 
                         AEMtx33Scale(&scale, iconSize, iconSize);
-                        AEMtx33Trans(&trans, itemX, itemY);
+                        AEMtx33Trans(&trans, iconX, iconY);
                         AEMtx33Concat(&transform, &trans, &scale);
                         AEGfxSetTransform(transform.m);
                         AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
 
-                        if (gSelectedInvItem == INV_ITEM_APPLE)
-                        {
-                            // Semi‑transparent yellow/orange tint overlay
-                            AEGfxSetRenderMode(AE_GFX_RM_COLOR);
-                            AEGfxSetBlendMode(AE_GFX_BM_BLEND);
-                            AEGfxSetColorToMultiply(1.0f, 0.75f, 0.2f, 0.4f);
-
-                            AEMtx33Scale(&scale, iconSize + 10.0f, iconSize + 10.0f);
-                            AEMtx33Trans(&trans, itemX, itemY);
-                            AEMtx33Concat(&transform, &trans, &scale);
-                            AEGfxSetTransform(transform.m);
-                            AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
-
-                            // Reset render mode
-                            AEGfxSetColorToMultiply(1, 1, 1, 1);
-                            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
-                        }
-
-                        // Count
+                        // Count below icon
                         char cnt[8];
-                        sprintf_s(cnt, "%d", GetFruitCount());
-                        AEGfxPrint(fontId, cnt, (itemX + 40) / 800.0f, (itemY - 40) / 450.0f, 0.7f, 0, 0, 0, 1);
+                        sprintf_s(cnt, "%d", fruitCounts[f]);
+                        AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+                        AEGfxSetColorToMultiply(0, 0, 0, 1);
+                        AEGfxPrint(fontId, cnt, (iconX + 40) / 800.0f, (iconY - 40) / 450.0f, 0.7f, 0, 0, 0, 1);
+
+                        col++;
                     }
                 }
                 else // SEEDS
                 {
-                    if (Inventory_GetSeedCount(SEED_APPLE) > 0)
+                    // Draw each seed type that has stock, side by side
+                    const float iconSpacing = 100.0f;
+                    AEGfxTexture* seedIcons[3] = { appleSeedIcon, pearSeedIcon, bananaSeedIcon };
+                    int seedCounts[3] = {
+                        Inventory_GetSeedCount(SEED_APPLE),
+                        Inventory_GetSeedCount(SEED_PEAR),
+                        Inventory_GetSeedCount(SEED_BANANA)
+                    };
+
+                    int col = 0;
+                    for (int s = 0; s < 3; s++)
                     {
+                        if (seedCounts[s] <= 0) continue;
+
+                        float iconX = itemX + col * iconSpacing;
+                        float iconY = itemY;
+
                         AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
                         AEGfxSetBlendMode(AE_GFX_BM_BLEND);
                         AEGfxSetColorToMultiply(1, 1, 1, 1);
-                        AEGfxTextureSet(appleSeedIcon, 0, 0);
+                        AEGfxTextureSet(seedIcons[s], 0, 0);
 
                         AEMtx33Scale(&scale, iconSize, iconSize);
-                        AEMtx33Trans(&trans, itemX, itemY);
+                        AEMtx33Trans(&trans, iconX, iconY);
                         AEMtx33Concat(&transform, &trans, &scale);
                         AEGfxSetTransform(transform.m);
                         AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
 
-                        if (gSelectedInvItem == INV_ITEM_APPLE_SEED)
-                        {
-                            // Soft green tint to distinguish seed selection
-                            AEGfxSetRenderMode(AE_GFX_RM_COLOR);
-                            AEGfxSetBlendMode(AE_GFX_BM_BLEND);
-                            AEGfxSetColorToMultiply(0.3f, 1.0f, 0.4f, 0.4f);
-
-                            AEMtx33Scale(&scale, iconSize + 10.0f, iconSize + 10.0f);
-                            AEMtx33Trans(&trans, itemX, itemY);
-                            AEMtx33Concat(&transform, &trans, &scale);
-                            AEGfxSetTransform(transform.m);
-                            AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
-
-                            // Reset state
-                            AEGfxSetColorToMultiply(1, 1, 1, 1);
-                            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
-                        }
-
+                        // Count below icon
                         char cnt[8];
-                        sprintf_s(cnt, "%d", Inventory_GetSeedCount(SEED_APPLE));
-                        AEGfxPrint(fontId, cnt, (itemX + 20) / 800.0f, (itemY - 35) / 450.0f, 0.7f, 1, 1, 1, 1);
+                        sprintf_s(cnt, "%d", seedCounts[s]);
+                        AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+                        AEGfxSetColorToMultiply(0, 0, 0, 1);
+                        AEGfxPrint(fontId, cnt, (iconX + 40) / 800.0f, (iconY - 40) / 450.0f, 0.7f, 0, 0, 0, 1);
 
+                        col++;
                     }
                 }
             }
@@ -3345,6 +3346,8 @@ void UI_Exit()
     AEGfxTextureUnload(confirmYes);
     AEGfxTextureUnload(confirmNo);
     AEGfxTextureUnload(appleIcon);
+    AEGfxTextureUnload(pearIcon);
+    AEGfxTextureUnload(bananaIcon);
 
     AEGfxTextureUnload(collectionIcon);
     AEGfxTextureUnload(collectionBG);
