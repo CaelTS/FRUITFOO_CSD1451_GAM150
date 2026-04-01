@@ -106,6 +106,7 @@ xcopy "$(SolutionDir)Extern\AlphaEngine\lib\fmod.dll" "$(OutDir)" /s /r /y /q</C
     <ClCompile Include="..\Source\Profile.cpp" />
     <ClCompile Include="..\Source\Rhythm.cpp" />
     <ClCompile Include="..\Source\SpawnFruits.cpp" />
+    <ClCompile Include="..\Source\Splash.cpp" />
     <ClCompile Include="..\Source\StartScreen.cpp" />
     <ClCompile Include="..\Source\Transition.cpp" />
     <ClCompile Include="..\Source\Tutorial.cpp" />
@@ -125,6 +126,7 @@ xcopy "$(SolutionDir)Extern\AlphaEngine\lib\fmod.dll" "$(OutDir)" /s /r /y /q</C
     <ClInclude Include="..\Source\Profile.h" />
     <ClInclude Include="..\Source\Rhythm.h" />
     <ClInclude Include="..\Source\SpawnFruits.h" />
+    <ClInclude Include="..\Source\Splash.h" />
     <ClInclude Include="..\Source\StartScreen.h" />
     <ClInclude Include="..\Source\Transition.h" />
     <ClInclude Include="..\Source\Tutorial.h" />
