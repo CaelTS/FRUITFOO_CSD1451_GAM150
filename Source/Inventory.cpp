@@ -18,8 +18,8 @@ u8 seed_apple = 10;
 u8 seed_pear = 10;
 u8 seed_banana = 10;
 
-// Runtime-configurable inventory capacity (default 10)
-static int g_inventoryCapacity = 10;
+// Runtime-configurable inventory capacity 
+static int g_inventoryCapacity = 30;
 
 //placeholder inventory stock function
 u8 Inventory_GetFruitStock() {
