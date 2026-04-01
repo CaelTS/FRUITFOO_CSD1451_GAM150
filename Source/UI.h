@@ -16,6 +16,15 @@ enum fruitType
     FRUIT_BANANA = 2
 };
 
+// Add this to UI.h
+enum SeedType
+{
+    SEED_APPLE = 0,
+    SEED_PEAR,
+    SEED_BANANA,
+    SEED_COUNT
+};
+
 struct FruitBasket
 {
     int fruitType;        // 0 Apple, 1 Pear, 2 Banana
