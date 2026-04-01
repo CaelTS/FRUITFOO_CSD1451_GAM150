@@ -676,8 +676,10 @@ void Farm_Render()
         const FlyingFruit& ff = g_flyingFruits[j];
         if (!ff.active) continue;
 
-        AEGfxTexture* flyTex = (ff.fruitType == 1 && fruitPearTexture)
-            ? fruitPearTexture : fruitAppleTexture;
+        AEGfxTexture* flyTex =
+            (ff.fruitType == 1) ? fruitPearTexture :
+            (ff.fruitType == 2) ? fruitBananaTexture :
+            fruitAppleTexture;
         if (!flyTex) continue;
 
         float t = ff.t;
