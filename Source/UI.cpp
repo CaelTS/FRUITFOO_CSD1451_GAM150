@@ -622,10 +622,10 @@ int GetSliderFruitCount(location location)
             maxFruitCount = GetAppleCount();
         }
         if (selectedInventoryFruitType == PEAR) {
-            // maxFruitCount = GetPearCount(); // Implement this function in Inventory when you add pears
+            maxFruitCount = GetPearCount(); // Implement this function in Inventory when you add pears
         }
         if (selectedInventoryFruitType == BANANA) {
-            // maxFruitCount = GetBananaCount(); // Implement this function in Inventory when you add bananas
+            maxFruitCount = GetBananaCount(); // Implement this function in Inventory when you add bananas
         }
     }
     else if (location == CRATE) {
@@ -873,6 +873,41 @@ void UI_Input()
                             Crate_RemoveFruitAmount(crateID, toMove);
                             Inventory_AddFruit(static_cast<u8>(toMove), APPLE);
                             printf("Moved %d apples from crate %d back to inventory\n", toMove, crateID);
+                        }
+                    }
+
+                    else if (selectedLocation == INVENTORY && selectedInventoryFruitType == PEAR) {
+                        int availableToMove = GetPearCount();
+                        int toMove = std::min(sliderValue, availableToMove);
+                        if (toMove > 0) {
+                            Inventory_RemoveFruitTyped(static_cast<u8>(toMove), 1); // 1 = pear
+                            Crate_AddFruit(crateID, toMove);
+                            Crate_SetFruitType(crateID, PEAR);
+                        }
+                    }
+                    else if (selectedLocation == CRATE && selectedFruit == PEAR) {
+                        int availableToMove = Crate_GetFruitCount(crateID);
+                        int toMove = std::min(sliderValue, availableToMove);
+                        if (toMove > 0) {
+                            Crate_RemoveFruitAmount(crateID, toMove);
+                            Inventory_AddFruit(static_cast<u8>(toMove), 1); // 1 = pear
+                        }
+                    }
+                    else if (selectedLocation == INVENTORY && selectedInventoryFruitType == BANANA) {
+                        int availableToMove = GetBananaCount();
+                        int toMove = std::min(sliderValue, availableToMove);
+                        if (toMove > 0) {
+                            Inventory_RemoveFruitTyped(static_cast<u8>(toMove), 2); // 2 = banana
+                            Crate_AddFruit(crateID, toMove);
+                            Crate_SetFruitType(crateID, BANANA);
+                        }
+                    }
+                    else if (selectedLocation == CRATE && selectedFruit == BANANA) {
+                        int availableToMove = Crate_GetFruitCount(crateID);
+                        int toMove = std::min(sliderValue, availableToMove);
+                        if (toMove > 0) {
+                            Crate_RemoveFruitAmount(crateID, toMove);
+                            Inventory_AddFruit(static_cast<u8>(toMove), 2); // 2 = banana
                         }
                     }
 
