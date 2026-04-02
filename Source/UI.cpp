@@ -105,8 +105,8 @@ struct SeedData
 static SeedData seedDatabase[SEED_COUNT] =
 {
     { 10, 5.0f, 1, "Apple Seed" },
-    { 15, 7.0f, 2, "Pear Seed" },   // <-- NEW
-    { 20, 9.0f, 3, "Banana Seed" }  // optional
+    { 15, 7.0f, 2, "Pear Seed" },   
+    { 20, 9.0f, 3, "Banana Seed" }  
 };
 
 // The current seed page shown in the panel
@@ -190,7 +190,7 @@ static const float INV_SEED_HL_H = 72.0f;
 // ---------- Slider label & value positions ----------
 static const float INV_SLD_LABEL_LEFT_XPAD = -10.0f;  // + = move min label right
 static const float INV_SLD_LABEL_RIGHT_XPAD = 6.0f;  // + = move max label left
-static const float INV_SLD_LABEL_Y_OFFSET = -20.0f;  //-+ = move labels DOWN 
+static const float INV_SLD_LABEL_Y_OFFSET = -30.0f;  //-+ = move labels DOWN 
 
 static const float INV_SLD_VALUE_Y_OFFSET = 30.0f;  // distance ABOVE the knob
 static const float INV_SLD_VALUE_SCALE = 0.5f;   // size of the number above the knob
@@ -205,7 +205,7 @@ static const float INV_SLD_FILL_H = 14.0f;
 static const float INV_SLD_KNOB_W = 35.0f;
 static const float INV_SLD_KNOB_H = 48.0f;
 
-// Slider state (you already declared similar variables; if so, reuse)
+// Slider state 
 static int  gInvSliderValue = 1;     // selection
 static bool gInvSliderDragging = false; // dragging flag
 
@@ -401,16 +401,13 @@ static inline void GetWorldMouse(float& worldX, float& worldY)
 static int gSelectedBasketIndex = -1;
 
 // Return index of basket under mouse or -1 if none.
-// Uses the same AABB test as IsMouseOverBasket to keep behaviour consistent.
 static int GetFruitBasketIndexUnderMouse()
 {
-    // Use the same conversion helper
     int mouseX, mouseY;
     AEInputGetCursorPosition(&mouseX, &mouseY);
     float worldX = static_cast<float>(mouseX) - 800.0f; // Convert to world coordinates
     float worldY = 450.0f - static_cast<float>(mouseY); // Invert Y axis and convert
 
-    // gFruitBaskets is declared extern at top of this file
     for (int i = 0; i < (int)gFruitBaskets.size(); ++i)
     {
         const FruitBasket& b = gFruitBaskets[i];
@@ -437,9 +434,6 @@ bool gMusicEnabled = true;
 
 static bool gHoverSoundToggle = false;
 static bool gHoverMusicToggle = false;
-//static bool gHoverSettingsExit = false; removed unused variable
-//static bool gHoverSettingsClose = false; removed unused variable
-
 
 void MainBGM_SetEnabled(bool enabled);
 
@@ -568,8 +562,8 @@ void UI_Init()
     int rows = 2;
 
     // Center of the Plot panel
-    float panelCenterX = -510.0f;   // tweak slightly if needed
-    float panelCenterY = 150.0f;    // tweak slightly if needed
+    float panelCenterX = -510.0f;   
+    float panelCenterY = 150.0f;    
     float totalWidth = (cols - 1) * spacing + slotSize;
     float totalHeight = (rows - 1) * spacing + slotSize;
 
@@ -611,11 +605,10 @@ float maxSlider = 132.0f, minSlider = -200.0f;
 enum location { INVENTORY, CRATE, NIL };
 location selectedLocation = NIL; // where the fruit is coming from (inventory) or going to (crate)
 
-FruitType selectedFruit = NILL; // future proofing for more fruit types, but for now just apple
+FruitType selectedFruit = NILL; 
 FruitType selectedInventoryFruitType = APPLE;
 
-
-//how do i do fruit selected based on the slider value and apple count in inventory? also need to update slider max based on inventory changes (after adding/removing fruit from crate)
+// Get the max fruit count for the slider based on the current location and selected fruit type
 static int GetSliderFruitCount(location location)
 {
     (void)location;
@@ -629,10 +622,10 @@ static int GetSliderFruitCount(location location)
             maxFruitCount = GetAppleCount();
         }
         if (selectedInventoryFruitType == PEAR) {
-          //  maxFruitCount = GetPearCount(); // Implement this function in Inventory when you add pears
+            maxFruitCount = GetPearCount(); 
         }
         if (selectedInventoryFruitType == BANANA) {
-           // maxFruitCount = GetBananaCount(); // Implement this function in Inventory when you add bananas
+            maxFruitCount = GetBananaCount(); 
         }
     }
     else if (location == CRATE) {
@@ -665,7 +658,7 @@ void UI_Input()
 
     if (AEInputCheckTriggered(AEVK_C)) {
         Crate_AddFruit(0, 1);
-        Crate_SetFruitType(0, 0); // Set to apple type for testing
+        Crate_SetFruitType(0, 0); 
         printf("Added apple to crate %d, now has %d apples:fruitID %d\n", 0, Crate_GetFruitCount(0), Crate_GetFruitType(0));
     }
 
@@ -946,7 +939,6 @@ void UI_UpdateButtons()
 
     bool clickThisFrame = AEInputCheckTriggered(AEVK_LBUTTON);
     bool clickConsumed = false;
-    (void)clickConsumed; //unused variable
 
     // -------------------------------------------------
     // MENU BUTTONS
@@ -1170,6 +1162,9 @@ void UI_UpdateButtons()
             break;
         }
     }
+
+    // Upgrades panel input
+
     float upgradesPanelW = UPGRADES_PANEL_W;
 
     float panelX = UPGRADES_PANEL_X;
@@ -1206,7 +1201,6 @@ void UI_UpdateButtons()
             }
             else
             {
-                // optional feedback: not enough funds (console for now)
                 std::cout << "Cannot afford upgrade " << static_cast<int>(u.id)
                     << " (cost=" << u.cost << ", money=" << Economy_GetTotalMoney() << ")\n";
             }
@@ -1228,7 +1222,7 @@ void UI_UpdateButtons()
         const float slotW = INV_FRUIT_W;
         const float slotH = INV_FRUIT_H;
 
-        // Compute centers from the same paddings you use in UI_Draw()
+        // Compute centers 
         const float fruitCx = leftEdge + INV_TAB_LEFT_PAD + slotW * 0.5f;
         const float fruitCy = topEdge - INV_TAB_TOP_PAD - slotH * 0.5f;
 
@@ -1344,7 +1338,7 @@ void UI_UpdateButtons()
 
         const float invpanelX = 0.0f;
         const float invpanelY = 0.0f;
-        const float spacing = 100.0f; // must match draw section
+        const float spacing = 100.0f; 
 
         float itemX = invpanelX + INV_ITEM_X;
         float itemY = invpanelY + INV_ITEM_Y;
@@ -1579,7 +1573,6 @@ void UI_Draw()
     //============== Crate Panel =====================
     if (cratePopupOpen) {
         // Draw crate background
-        // Use nearest sampling for crisp UI
         if (pMeshCratePanelBG) {
             AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
             AEGfxSetBlendMode(AE_GFX_BM_BLEND);
@@ -1991,7 +1984,7 @@ void UI_Draw()
         }
     }
 
-    // THEN menu stuff
+    // menu 
     if (!menuOpen)
         return;
 
@@ -2077,7 +2070,7 @@ void UI_Draw()
                 const float slotW = INV_FRUIT_W;
                 const float slotH = INV_FRUIT_H;
 
-                // Centers computed from padding (so it's aligned to the left under the title)
+                // Centers computed from padding 
                 const float fruitCx = leftEdge + INV_TAB_LEFT_PAD + slotW * 0.5f;
                 const float fruitCy = topEdge - INV_TAB_TOP_PAD - slotH * 0.5f;
 
@@ -2094,7 +2087,7 @@ void UI_Draw()
 
                     AEGfxTextureSet(fruitActive ? invFruitHighlight : invFruit, 0, 0);
                     AEMtx33Scale(&scale, w, h);
-                    AEMtx33Trans(&trans, fruitCx, fruitCy); // same center
+                    AEMtx33Trans(&trans, fruitCx, fruitCy); 
                     AEMtx33Concat(&transform, &trans, &scale);
                     AEGfxSetTransform(transform.m);
                     AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
@@ -2121,13 +2114,11 @@ void UI_Draw()
             char capText[16];
             sprintf_s(capText, "%d/%d", invcur, invmax);
 
-            // Position inside the small rounded header box on your PNG.
-            // Nudge the multipliers a little if it’s off by a few pixels.
             float textX = (panelX + panelW * 0.24f) / 800.0f;
             float textY = (panelY + panelH * 0.41f) / 450.0f;
 
             AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
-            AEGfxSetColorToMultiply(0, 0, 0, 1); // dark text to match your PNG style
+            AEGfxSetColorToMultiply(0, 0, 0, 1); 
             AEGfxPrint(fontId, capText, textX, textY, 0.9f, 0, 0, 0, 1);
 
             // --- Slider fill + knob + min/max labels (single scope) ---
@@ -2156,7 +2147,7 @@ void UI_Draw()
                     : gSelectedInvItem == INV_ITEM_BANANA_SEED ? Inventory_GetSeedCount(SEED_BANANA)
                     : Inventory_GetSeedCount(SEED_APPLE));
 
-            const int minVal = (curCount > 0) ? 1 : 0;   // set to 0 if you prefer [0..N]
+            const int minVal = (curCount > 0) ? 1 : 0;   
             const int maxVal = curCount;
 
             gInvSliderValue = (std::max)(minVal, (std::min)(maxVal, gInvSliderValue));
@@ -2176,7 +2167,7 @@ void UI_Draw()
                 AEGfxSetBlendMode(AE_GFX_BM_BLEND);
                 if (invSliderFill) {
                     AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
-                    AEGfxSetColorToMultiply(1.00f, 0.95f, 0.80f, 1.0f); // optional warm tint
+                    AEGfxSetColorToMultiply(1.00f, 0.95f, 0.80f, 1.0f); 
                     AEGfxTextureSet(invSliderFill, 0, 0);
                 }
                 else {
@@ -2235,7 +2226,7 @@ void UI_Draw()
                 const float textWorldX = knobX + INV_SLD_TEXT_X_OFFSET;
                 const float textWorldY = knobY + INV_SLD_KNOB_ANCHOR_Y + INV_SLD_TEXT_FROM_PNG_CENTER_Y;
 
-                // Approx width per character in normalized coordinates (tweak if needed)
+                // Approx width per character in normalized coordinates 
                 float charWidth = 0.012f; // ~1.2% of screen width per character
                 int len = static_cast<int>(strlen(valTxt));
                 float adjX = textWorldX / vhalfW - charWidth * (len - 1) * 0.5f;
@@ -2465,8 +2456,7 @@ void UI_Draw()
     }
 
     // --- Upgrades Panel ---
-
-
+    AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
 
     // Draw upgrades text & hover highlight
 
@@ -2709,7 +2699,7 @@ void UI_Draw()
             AEGfxSetColorToMultiply(1, 1, 1, 1);
             AEGfxPrint(fontId, pearSeedCountText, textBadgeX / 800.0f, badgeY / 450.0f, 0.7f, 1, 1, 1, 1);
 
-            // Info text — same layout as apple block
+            // Info text 
             const float panelLeft = seedspanelX - 200.0f;
             const float panelTop = seedspanelY + 275.0f;
             const float scaleTexX = 400.0f / 616.0f;
@@ -2932,9 +2922,6 @@ bool UI_IsMenuOpen()
 // ============================
 // Crate hover + tints
 // ============================
-
-// Build crate hover rectangles so they align with the wooden bins on the stall.
-// Uses the SAME transform in MainScreen_Render() for the stall image.
 
 static void UI_ResetCrateConfigToDefaults()
 {
