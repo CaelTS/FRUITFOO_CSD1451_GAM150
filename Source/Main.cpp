@@ -617,6 +617,7 @@ void MainScreen_Update()
     {
         OutputDebugStringA("Farm requested rhythm game\n");
         Farm_ClearRhythmFlag();
+        Rhythm_SetSeedType(Farm_GetRhythmSeedType());
         MainBGM_Stop();
         nextState = GS_RHYTHM_SCREEN;
     }
