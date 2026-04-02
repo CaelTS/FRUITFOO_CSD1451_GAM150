@@ -940,6 +940,62 @@ void UI_UpdateButtons()
     bool clickThisFrame = AEInputCheckTriggered(AEVK_LBUTTON);
     bool clickConsumed = false;
 
+    // ==================== INVENTORY CONFIRM MODAL ====================
+    if (gInvConfirmOpen)
+    {
+        float worldX, worldY;
+        GetWorldMouse(worldX, worldY);
+
+        // Button layout 
+        const float YES_X = -60.0f;
+        const float NO_X = 60.0f;
+        const float BTN_Y = -40.0f;
+        const float HW = 40.0f;
+        const float HH = 20.0f;
+
+        // ----- HOVER -----
+        gHoverYes =
+            worldX >= YES_X - HW && worldX <= YES_X + HW &&
+            worldY >= BTN_Y - HH && worldY <= BTN_Y + HH;
+
+        gHoverNo =
+            worldX >= NO_X - HW && worldX <= NO_X + HW &&
+            worldY >= BTN_Y - HH && worldY <= BTN_Y + HH;
+
+        // ----- CLICK -----
+        if (AEInputCheckTriggered(AEVK_LBUTTON))
+        {
+            if (gHoverYes)
+            {
+                // ================= DELETE LOGIC =================
+                if (gSelectedInvItem == INV_ITEM_APPLE)
+                    Inventory_RemoveFruitTyped((u8)gInvSliderValue, 0);
+                else if (gSelectedInvItem == INV_ITEM_PEAR)
+                    Inventory_RemoveFruitTyped((u8)gInvSliderValue, 1);
+                else if (gSelectedInvItem == INV_ITEM_BANANA)
+                    Inventory_RemoveFruitTyped((u8)gInvSliderValue, 2);
+                else if (gSelectedInvItem == INV_ITEM_APPLE_SEED)
+                    Inventory_RemoveSeed((u8)gInvSliderValue, SEED_APPLE);
+                else if (gSelectedInvItem == INV_ITEM_PEAR_SEED)
+                    Inventory_RemoveSeed((u8)gInvSliderValue, SEED_PEAR);
+                else if (gSelectedInvItem == INV_ITEM_BANANA_SEED)
+                    Inventory_RemoveSeed((u8)gInvSliderValue, SEED_BANANA);
+
+                // Reset selection
+                gSelectedInvItem = INV_ITEM_NONE;
+                gInvSliderValue = 1;
+
+                // Close confirm
+                gInvConfirmOpen = false;
+            }
+            else if (gHoverNo)
+            {
+                gInvConfirmOpen = false;
+            }
+        }
+// 🔒 BLOCK ALL OTHER UI INPUT THIS FRAME
+    }
+
     // -------------------------------------------------
     // MENU BUTTONS
     // -------------------------------------------------
@@ -1389,80 +1445,13 @@ void UI_UpdateButtons()
             worldY >= ty - INV_TRASH_SIZE * 0.5f &&
             worldY <= ty + INV_TRASH_SIZE * 0.5f;
 
-        if (gHoverTrash && AEInputCheckTriggered(AEVK_LBUTTON))
+
+        if (!gInvConfirmOpen && gHoverTrash && AEInputCheckTriggered(AEVK_LBUTTON))
         {
             if (gSelectedInvItem != INV_ITEM_NONE)
                 gInvConfirmOpen = true;
         }
     }
-
-    //Confirmation
-    if (gInvConfirmOpen)
-    {
-        auto Btn = [&](float x, float y)
-            {
-                return worldX >= x - 40 && worldX <= x + 40 &&
-                    worldY >= y - 20 && worldY <= y + 20;
-            };
-
-        // YES
-        if (Btn(-60, -40) && AEInputCheckTriggered(AEVK_LBUTTON))
-        {
-            if (gSelectedInvItem == INV_ITEM_APPLE)
-                Inventory_RemoveFruitTyped(static_cast<u8>(gInvSliderValue), 0); // 0 = Apple
-            else if (gSelectedInvItem == INV_ITEM_PEAR)
-                Inventory_RemoveFruitTyped(static_cast<u8>(gInvSliderValue), 1); // 1 = Pear
-            else if (gSelectedInvItem == INV_ITEM_BANANA)
-                Inventory_RemoveFruitTyped(static_cast<u8>(gInvSliderValue), 2); // 2 = Banana
-
-            else
-            {
-                // Seeds: map item enum to seed type
-                u8 seedType = 0;
-                if (gSelectedInvItem == INV_ITEM_APPLE_SEED)  seedType = SEED_APPLE;
-                else if (gSelectedInvItem == INV_ITEM_PEAR_SEED)   seedType = SEED_PEAR;
-                else if (gSelectedInvItem == INV_ITEM_BANANA_SEED) seedType = SEED_BANANA;
-
-                Inventory_RemoveSeed(
-                    static_cast<u8>(gInvSliderValue < 0 ? 0 : (gInvSliderValue > 255 ? 255 : gInvSliderValue)),
-                    seedType
-
-                );
-
-                gInvConfirmOpen = false;
-                gSelectedInvItem = INV_ITEM_NONE;
-            }
-
-            // NO
-            if (Btn(60, -40) && AEInputCheckTriggered(AEVK_LBUTTON))
-            {
-                gInvConfirmOpen = false;
-            }
-
-            // ================= Confirm buttons hover =================
-
-            const float btnW = 80.0f;
-            const float btnH = 40.0f;
-
-            const float yesX = -60.0f;
-            const float yesY = -40.0f;
-
-            const float noX = 60.0f;
-            const float noY = -40.0f;
-
-            gHoverYes =
-                worldX >= yesX - btnW * 0.5f &&
-                worldX <= yesX + btnW * 0.5f &&
-                worldY >= yesY - btnH * 0.5f &&
-                worldY <= yesY + btnH * 0.5f;
-
-            gHoverNo =
-                worldX >= noX - btnW * 0.5f &&
-                worldX <= noX + btnW * 0.5f &&
-                worldY >= noY - btnH * 0.5f &&
-                worldY <= noY + btnH * 0.5f;
-
-        }
 
         // ================= Settings input =================
         if (popupOpen && activePopupIndex == BUTTON_SETTINGS)
@@ -1497,11 +1486,11 @@ void UI_UpdateButtons()
             }
         }
 
-    }
-    // -------------------------------------------------
+    
+        // -------------------------------------------------
         // CLOSE POPUP WHEN CLICKING OUTSIDE
         // -------------------------------------------------
-    if (popupOpen && AEInputCheckTriggered(AEVK_LBUTTON) && !clickConsumed)
+    if (popupOpen && !gInvConfirmOpen && AEInputCheckTriggered(AEVK_LBUTTON) && !clickConsumed)
     {
         bool clickInside = false;
 
