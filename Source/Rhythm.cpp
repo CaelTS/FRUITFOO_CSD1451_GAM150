@@ -6,6 +6,7 @@
 #include <cstring>
 #include <cstdlib>  // For rand()
 #include <ctime>    // For time()
+#include "Farm.h"   // For Farm_GetRhythmSeedType() in Rhythm_Initialize
 
 // ================= CONSTANTS =================
 
@@ -293,7 +294,7 @@ void Rhythm_Load() {
     g_pTexSeedNotes[1] = AEGfxTextureLoad("Assets/pearseed.png");
     g_pTexSeedNotes[2] = AEGfxTextureLoad("Assets/bananaseed.png");
 
-    // Default to apple until Rhythm_SetSeedType() is called
+    // Default to apple until Rhythm_Initialize() applies the correct seed type
     g_pTexNormalNote = g_pTexFruitNotes[0];
     g_pTexPremiumNote = g_pTexSeedNotes[0];
 
@@ -350,6 +351,18 @@ void Rhythm_Initialize() {
     g_wateringCanRotation = 0.0f;
     g_wateringCanAnimTimer = 0.0f;
     g_wateringCanIsAnimating = false;
+
+    // FIX: Apply the correct fruit/seed textures here, AFTER Rhythm_Load() has
+    // finished loading all texture arrays. Calling Rhythm_SetSeedType() before
+    // the state transition meant Rhythm_Load() would overwrite it with apple.
+    int seedType = Farm_GetRhythmSeedType();
+    if (seedType < 0 || seedType > 2) seedType = 0;
+    g_pTexNormalNote = g_pTexFruitNotes[seedType];
+    g_pTexPremiumNote = g_pTexSeedNotes[seedType];
+    printf("Rhythm_Initialize: applied seedType=%d — normal=%s, premium=%s\n",
+        seedType,
+        g_pTexNormalNote ? "OK" : "NULL",
+        g_pTexPremiumNote ? "OK" : "NULL");
 }
 
 // Called internally once the player has chosen a difficulty.
@@ -466,12 +479,12 @@ void Rhythm_Update() {
         if (g_wateringCanAnimTimer <= halfDuration) {
             progress = g_wateringCanAnimTimer / halfDuration;
             progress = progress * (2.0f - progress);
-            g_wateringCanRotation = 45.0f * progress;
+            g_wateringCanRotation = 75.0f * progress;          // FIX: was 45.0f
         }
         else if (g_wateringCanAnimTimer <= WATERING_CAN_ANIM_DURATION) {
             progress = (g_wateringCanAnimTimer - halfDuration) / halfDuration;
             progress = progress * progress;
-            g_wateringCanRotation = 45.0f * (1.0f - progress);
+            g_wateringCanRotation = 75.0f * (1.0f - progress); // FIX: was 45.0f
         }
         else {
             g_wateringCanRotation = 0.0f;
