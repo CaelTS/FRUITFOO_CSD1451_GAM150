@@ -480,7 +480,7 @@ void UI_Init()
     confirmNo = AEGfxTextureLoad("Assets/No.png");
 
     collectionIcon = AEGfxTextureLoad("Assets/Collection.png");
-    collectionBG = AEGfxTextureLoad("Assets/collectionBG.png");
+    collectionBG = AEGfxTextureLoad("Assets/Collection_bunny.png");
 
     settingsIcon = AEGfxTextureLoad("Assets/Settings.png");
     settingsBG = AEGfxTextureLoad("Assets/Settings_BG.png");
@@ -943,7 +943,7 @@ void UI_UpdateButtons()
     // ==================== INVENTORY CONFIRM MODAL ====================
     if (gInvConfirmOpen)
     {
-        float worldX, worldY;
+        
         GetWorldMouse(worldX, worldY);
 
         // Button layout 
