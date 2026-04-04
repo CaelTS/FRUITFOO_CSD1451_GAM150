@@ -211,7 +211,8 @@ enum ButtonID
     BUTTON_NEW_GAME = 0,
     BUTTON_CONTINUE,
     BUTTON_SETTINGS,
-    BUTTON_EXIT
+    BUTTON_EXIT,
+    BUTTON_CREDITS
 };
 
 struct Button
@@ -242,6 +243,7 @@ Button continueButton;
 Button profileButton;
 Button exitButton;
 Button tutorialButton;
+Button creditsButton;
 
 static bool hasSave = false; //placeholder until we implement profile system
 static f32 logoPosX = -520.0;
@@ -293,6 +295,8 @@ AEGfxVertexList* pMeshExitButton = nullptr;
 AEGfxVertexList* pMeshExitButton_Selected = nullptr;
 AEGfxVertexList* pMeshTutorialButton = nullptr;
 AEGfxVertexList* pMeshTutorialButton_Selected = nullptr;
+AEGfxVertexList* pMeshCreditsButton = nullptr;
+AEGfxVertexList* pMeshCreditsButton_Selected = nullptr;
 AEGfxVertexList* pMeshGradientBlur = nullptr;
 
 // Animation variables - now static inside the file scope
@@ -518,7 +522,7 @@ void StartScreen_Init()
     exitButton.x_selected = exitButton.x; // slide left on hover
     exitButton.y_selected = exitButton.y;
     exitButton.x_save = exitButton.x; // no slide when save exists
-    exitButton.y_save = exitButton.y - (100.0f - 45.0f);
+    exitButton.y_save = exitButton.y - 110.0f;
     exitButton.x_selected_save = exitButton.x - 1; // no slide when save exists
     exitButton.y_selected_save = exitButton.y_save;
 
@@ -559,8 +563,8 @@ void StartScreen_Init()
     Tutorial_Load();
 
     // Initialize "Tutorial" button
-    if (!tutorialButton.normal) tutorialButton.normal = AEGfxTextureLoad("Assets/Tutorial.png");
-    if (!tutorialButton.hover)  tutorialButton.hover = AEGfxTextureLoad("Assets/Tutorial_selected.png");
+    if (!tutorialButton.normal) tutorialButton.normal = AEGfxTextureLoad("Assets/StartScreen_Tutorial.png");
+    if (!tutorialButton.hover)  tutorialButton.hover = AEGfxTextureLoad("Assets/StartScreen_Tutorial_selected.png");
     if (!pMeshTutorialButton)          pMeshTutorialButton = createMesh();
     if (!pMeshTutorialButton_Selected) pMeshTutorialButton_Selected = createMesh();
     tutorialButton.x = logoPosX - 50.0f;  // aligned with continueButton
@@ -571,6 +575,21 @@ void StartScreen_Init()
     tutorialButton.y_save = 55.0f;
     tutorialButton.x_selected_save = logoPosX - 50.0f;
     tutorialButton.y_selected_save = 55.0f;
+
+    // Initialize "Credits" button — same texture style as Exit, positioned below it
+    if (!creditsButton.normal) creditsButton.normal = AEGfxTextureLoad("Assets/StartScreen_Credits.png");
+    if (!creditsButton.hover)  creditsButton.hover = AEGfxTextureLoad("Assets/StartScreen_Credits_Selected.png");
+    if (!pMeshCreditsButton)          pMeshCreditsButton = createMesh();
+    if (!pMeshCreditsButton_Selected) pMeshCreditsButton_Selected = createMesh();
+    // Positioned directly below the Exit button (exit is at y=-55, credits sit 55px lower)
+    creditsButton.x = continueButton.x;
+    creditsButton.y = exitButton.y + 55.0f;
+    creditsButton.x_selected = continueButton.x_selected;
+    creditsButton.y_selected = exitButton.y_selected + 55.0f;
+    creditsButton.x_save = continueButton.x_save;
+    creditsButton.y_save = profileButton.y_save - 55.0f;
+    creditsButton.x_selected_save = continueButton.x_selected_save;
+    creditsButton.y_selected_save = profileButton.y_selected_save - 55.0f;
 
     // Reset animation state
     isExiting = false;
@@ -594,6 +613,7 @@ void StartScreen_Update(float dt)
     profileButton.hovered = false;
     exitButton.hovered = false;
     tutorialButton.hovered = false;
+    creditsButton.hovered = false;
 
     // ----------------------------------------------------------
     // Popup open: intercept all keyboard input for name entry
@@ -704,6 +724,8 @@ void StartScreen_Update(float dt)
                 profileButton.hovered = true;
             else if (IsButtonHovered(exitButton, 68.0f, 39.0f))
                 exitButton.hovered = true;
+            else if (IsButtonHovered(creditsButton, 190.0f, 41.0f))
+                creditsButton.hovered = true;
 
         }
         else
@@ -720,21 +742,25 @@ void StartScreen_Update(float dt)
                     OpenNewGamePopup();
                 }
             }
-            // No save: check NewGame + Exit
+            // No save: check NewGame + Exit + Credits
             if (IsButtonHovered(newGameButton, 234.0f, 35.0f))
                 newGameButton.hovered = true;
             else if (IsButtonHovered(exitButton, 68.0f, 39.0f))
                 exitButton.hovered = true;
+            else if (IsButtonHovered(creditsButton, 190.0f, 41.0f))
+                creditsButton.hovered = true;
 
         }
 
         if (IsButtonClicked(exitButton, 68.0f, 39.0f))
         {
             nextState = GS_EXIT;
+        }
 
-            //// Force-stop start screen music the moment we leave this state
-            //if (AEAudioIsValidGroup(g_startMusicGroup))
-            //    AEAudioStopGroup(g_startMusicGroup);
+        if (IsButtonClicked(creditsButton, 190.0f, 41.0f))
+        {
+            nextState = GS_CREDITS;
+            startScreenActive = false;
         }
 
         // Tutorial button (always visible, both layouts)
@@ -820,6 +846,14 @@ void StartScreen_Draw()
         {
             DrawButton(exitButton, pMeshExitButton_Selected, 89.0f, 60.0f, slideOffset);
         }
+    }
+
+    //Credits Button (same dimensions as Continue button)
+    if (pMeshCreditsButton) {
+        if (!creditsButton.hovered)
+            DrawButton(creditsButton, pMeshCreditsButton, 190.0f, 41.0f, slideOffset);
+        else
+            DrawButton(creditsButton, pMeshCreditsButton_Selected, 211.0f, 61.0f, slideOffset);
     }
 
     // Not new user, has save file
@@ -952,10 +986,10 @@ void StartScreen_Unload()
         AEAudioUnloadAudio(g_startMusic);
     if (AEAudioIsValidGroup(g_startMusicGroup))
         AEAudioUnloadAudioGroup(g_startMusicGroup);
- /*   ResetAudio(g_startMusic);
-    ResetAudioGroup(g_startMusicGroup);*/
+    /*   ResetAudio(g_startMusic);
+       ResetAudioGroup(g_startMusicGroup);*/
 
-    // Free popup resources
+       // Free popup resources
     if (pMeshPopup) { AEGfxMeshFree(pMeshPopup); pMeshPopup = nullptr; }
     if (pTexInputRect) { AEGfxTextureUnload(pTexInputRect); pTexInputRect = nullptr; }
 
@@ -979,6 +1013,8 @@ void StartScreen_Unload()
     if (pMeshExitButton_Selected) { AEGfxMeshFree(pMeshExitButton_Selected); pMeshExitButton_Selected = nullptr; }
     if (pMeshTutorialButton) { AEGfxMeshFree(pMeshTutorialButton); pMeshTutorialButton = nullptr; }
     if (pMeshTutorialButton_Selected) { AEGfxMeshFree(pMeshTutorialButton_Selected); pMeshTutorialButton_Selected = nullptr; }
+    if (pMeshCreditsButton) { AEGfxMeshFree(pMeshCreditsButton); pMeshCreditsButton = nullptr; }
+    if (pMeshCreditsButton_Selected) { AEGfxMeshFree(pMeshCreditsButton_Selected); pMeshCreditsButton_Selected = nullptr; }
 
     // Unload button textures (guard against null)
     if (newGameButton.normal) { AEGfxTextureUnload(newGameButton.normal); newGameButton.normal = nullptr; }
@@ -995,6 +1031,9 @@ void StartScreen_Unload()
 
     if (tutorialButton.normal) { AEGfxTextureUnload(tutorialButton.normal); tutorialButton.normal = nullptr; }
     if (tutorialButton.hover && tutorialButton.hover != tutorialButton.normal) { AEGfxTextureUnload(tutorialButton.hover); tutorialButton.hover = nullptr; }
+
+    if (creditsButton.normal) { AEGfxTextureUnload(creditsButton.normal); creditsButton.normal = nullptr; }
+    if (creditsButton.hover && creditsButton.hover != creditsButton.normal) { AEGfxTextureUnload(creditsButton.hover); creditsButton.hover = nullptr; }
 
     // Clear any remaining state
     popupOpen = false;

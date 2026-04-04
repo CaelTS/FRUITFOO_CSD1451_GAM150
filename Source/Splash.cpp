@@ -16,21 +16,22 @@ static AEGfxTexture* g_splashLogo = nullptr;
 // Timing
 // ---------------------------------------------------------------
 static const float FADE_DURATION = 1.0f;   // seconds to fade in / fade out
-static const float DISPLAY_DURATION = 4.0f;   // total stage duration (matches your old splash)
+static const float DISPLAY_DURATION = 4.0f;   // total stage duration
 
 static float g_timer = 0.0f;
 static float g_alpha = 0.0f;
 
 // ---------------------------------------------------------------
-// GSM: Load  (textures only — called once per state entry)
+// GSM: Load  (textures only - called once per state entry)
 // ---------------------------------------------------------------
 void Splash_Load()
 {
-    g_splashLogo = AEGfxTextureLoad("Assets/digipen_logo.png");
+    // Updated to use the new DigiPen Singapore splash screen
+    g_splashLogo = AEGfxTextureLoad("Assets/digipen_splash.png");
 }
 
 // ---------------------------------------------------------------
-// GSM: Initialize  (reset state — called after Load)
+// GSM: Initialize  (reset state - called after Load)
 // ---------------------------------------------------------------
 void Splash_Initialize()
 {
@@ -86,13 +87,13 @@ void Splash_Update()
 // ---------------------------------------------------------------
 void Splash_Draw()
 {
-    // Black background
+    // Black background (image already has black bg, this is a safety net)
     AEGfxSetBackgroundColor(0.0f, 0.0f, 0.0f);
 
     if (!g_splashLogo || !g_pMeshFullScreen)
         return;
 
-    // Image is 1600x900 — same as the window, drawn fullscreen
+    // Image is 1600x900 - same as the window, drawn fullscreen
     float normalizedAlpha = g_alpha / 255.0f;
 
     AEMtx33 scale, trans, transform;

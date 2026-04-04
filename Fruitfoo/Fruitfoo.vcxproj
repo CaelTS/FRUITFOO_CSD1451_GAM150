@@ -97,6 +97,7 @@ xcopy "$(SolutionDir)Extern\AlphaEngine\lib\fmod.dll" "$(OutDir)" /s /r /y /q</C
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\Source\Crate.cpp" />
+    <ClCompile Include="..\Source\Credits.cpp" />
     <ClCompile Include="..\Source\Economy.cpp" />
     <ClCompile Include="..\Source\Farm.cpp" />
     <ClCompile Include="..\Source\GameStateManager.cpp" />
@@ -117,6 +118,7 @@ xcopy "$(SolutionDir)Extern\AlphaEngine\lib\fmod.dll" "$(OutDir)" /s /r /y /q</C
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Source\Crate.h" />
+    <ClInclude Include="..\Source\Credits.h" />
     <ClInclude Include="..\Source\Economy.h" />
     <ClInclude Include="..\Source\Farm.h" />
     <ClInclude Include="..\Source\GameStateManager.h" />

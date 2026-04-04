@@ -436,8 +436,6 @@ bool gMusicEnabled = true;
 static bool gHoverSoundToggle = false;
 static bool gHoverMusicToggle = false;
 
-void MainBGM_SetEnabled(bool enabled);
-
 
 // -------------------------
 // Settings layout

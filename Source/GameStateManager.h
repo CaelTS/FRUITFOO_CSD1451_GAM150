@@ -7,7 +7,8 @@ enum GameState {
     GS_FARM_SCREEN = 3,
     GS_NEXT_SCREEN = 4,
     GS_RHYTHM_SCREEN = 5,
-    GS_EXIT = 6
+    GS_EXIT = 6,
+    GS_CREDITS = 7
 };
 
 // Function pointer type
