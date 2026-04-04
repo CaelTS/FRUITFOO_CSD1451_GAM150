@@ -148,7 +148,7 @@ void Upgrades_Purchase(UpgradeID id) {
                     break;
 
                 case UPGRADE_UNLOCK_PLOT2:
-                    Farm_SetPlotUnlocked(1, true);
+                    Profile_SetPlotUnlocked(1, true);
                     printf("Plot 2 unlocked!\n");
                     break;
 
@@ -178,7 +178,7 @@ void Upgrades_Purchase(UpgradeID id) {
                     break;
 
                 case UPGRADE_UNLOCK_PLOT3:
-                    Farm_SetPlotUnlocked(2, true);
+                    Profile_SetPlotUnlocked(2, true);
                     printf("Plot 3 unlocked!\n");
                     break;
 
@@ -202,7 +202,7 @@ void Upgrades_Purchase(UpgradeID id) {
                     break;
 
                 case UPGRADE_UNLOCK_PLOT4:
-                    Farm_SetPlotUnlocked(3, true);
+                    Profile_SetPlotUnlocked(3, true);
                     printf("Plot 4 unlocked!\n");
                     break;
 
@@ -221,7 +221,7 @@ bool Upgrades_CanPurchase(const Upgrade& u, int currentMoney) {
     if (u.purchased) return false;
     // Need enough money
     if (currentMoney >= u.cost) {
-        Economy_SpendMoney(u.cost);
+		Economy_SpendMoney(u.cost);
     }
     return (currentMoney >= u.cost);
 }
