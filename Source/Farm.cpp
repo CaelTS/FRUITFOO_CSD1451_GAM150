@@ -383,7 +383,7 @@ void Farm_Update()
                 }
             }
         }
-        if (g_requestRhythm && plot.waitingForRhythm)
+        if (plot.waitingForRhythm)
             continue;
 
         // GROWTH
