@@ -6,6 +6,7 @@
 #include <cstring>
 #include <cstdlib>  // For rand()
 #include <ctime>    // For time()
+#include "Farm.h"   // For Farm_GetRhythmSeedType() in Rhythm_Initialize
 
 // ================= CONSTANTS =================
 
@@ -26,71 +27,61 @@ static const float VERTICAL_OFFSET = 200.0f;
 // ================= DIFFICULTY CONFIG =================
 // Each row corresponds to DIFFICULTY_EASY / MEDIUM / HARD.
 // Adjust these values freely to tune the feel of each tier.
+
 static const RhythmDifficultyConfig DIFFICULTY_CONFIGS[3] = {
-    // EASY   noteSpeed  minSpawn  maxSpawn  doubleChance  premiumChance
-    {  400.0f,  0.8f,    1.4f,     0.05f,    0.15f },
+    // EASY
+    // noteSpeed  minSpawn  maxSpawn  doubleChance  premiumChance  audioFile                        backgroundFile
+    {  400.0f,    0.8f,     1.4f,     0.05f,        0.15f,         "Assets/TETR-NCS1.wav",          "Assets/bg_diff.png" },
+
     // MEDIUM
-    {  500.0f,  0.4f,    1.0f,     0.15f,    0.25f },
+    {  500.0f,    0.4f,     1.0f,     0.15f,        0.25f,         "Assets/SAVJP-NCS2.wav",         "Assets/bg_diff.png" },
+
     // HARD
-    {  600.0f,  0.2f,   0.8f,    0.30f,    0.40f },
+    {  600.0f,    0.2f,     0.8f,     0.30f,        0.40f,         "Assets/WDYS-NCS3.wav",         "Assets/bg_diff.png" },
 };
 
 static RhythmDifficulty        g_difficulty = DIFFICULTY_MEDIUM;
 static RhythmDifficultyConfig  g_difficultyConfig = DIFFICULTY_CONFIGS[DIFFICULTY_MEDIUM];
 
 // ================= PHASE =================
-// Controls which screen is active within the rhythm game state.
 enum RhythmPhase {
-    PHASE_DIFFICULTY_SELECT,  // Player picks Easy / Medium / Hard
-    PHASE_PLAYING,            // Song is running
-    PHASE_FINISHED            // Song complete, waiting for E to exit
+    PHASE_DIFFICULTY_SELECT,
+    PHASE_PLAYING,
+    PHASE_FINISHED
 };
 static RhythmPhase g_phase = PHASE_DIFFICULTY_SELECT;
 
-// Difficulty select UI – which button is hovered (0=Easy,1=Med,2=Hard,-1=none)
 static int g_diffSelectHovered = -1;
 
 // ================= TEXT POSITION CONSTANTS =================
-// Each text has its own X and Y position (normalized coordinates: -1.0 to 1.0)
 
-// Score display (top left)
 static const float SCORE_TEXT_X = -0.95f;
 static const float SCORE_TEXT_Y = 0.85f;
 
-// Combo number (center area)
 static const float COMBO_NUM_X = -0.10f;
 static const float COMBO_NUM_Y = 0.75f;
 
-// Combo label
 static const float COMBO_LABEL_X = 0.0f;
 static const float COMBO_LABEL_Y = 0.75f;
 
-// Hit feedback (PERFECT/GOOD/MISS)
 static const float FEEDBACK_TEXT_X = -0.15f;
 static const float FEEDBACK_TEXT_Y = 0.05f;
 
-// Stats (Perfect/Good/Miss count) - bottom left
 static const float STATS_TEXT_X = -0.95f;
 static const float STATS_TEXT_Y = -0.85f;
 
-// Song complete title
 static const float COMPLETE_TEXT_X = -0.3f;
 static const float COMPLETE_TEXT_Y = 0.20f;
 
-// Final score
 static const float FINAL_SCORE_X = -0.25f;
 static const float FINAL_SCORE_Y = 0.05f;
 
-// Return prompt
 static const float RETURN_TEXT_X = -0.25f;
 static const float RETURN_TEXT_Y = -0.05f;
 
-
-// Countdown
 static const float COUNTDOWN_TEXT_X = -0.3f;
 static const float COUNTDOWN_TEXT_Y = 0.20f;
 
-// Difficulty select screen positions
 static const float DIFF_TITLE_X = -0.30f;
 static const float DIFF_TITLE_Y = 0.55f;
 static const float DIFF_EASY_X = -0.45f;
@@ -129,26 +120,39 @@ static HitRating g_lastHitRating = HIT_NONE;
 
 static int g_nextSpawnIndex = 0;
 
-// Random seed initialization flag
 static bool g_randomInitialized = false;
 
 // Texture handles for notes
+// g_pTexNormalNote / g_pTexPremiumNote point into the arrays below
 static AEGfxTexture* g_pTexNormalNote = nullptr;
 static AEGfxTexture* g_pTexPremiumNote = nullptr;
-static AEGfxTexture* g_pTexBackground = nullptr;
 static AEGfxTexture* g_pTexWateringCan = nullptr;
 
+// Per-fruit note textures  [0]=Apple  [1]=Pear  [2]=Banana
+// Normal note  = the grown fruit image
+// Premium note = the seed packet image
+static AEGfxTexture* g_pTexFruitNotes[3] = { nullptr, nullptr, nullptr };
+static AEGfxTexture* g_pTexSeedNotes[3] = { nullptr, nullptr, nullptr };
+
+// ---------------------------------------------------------------
+// Per-difficulty background textures
+// Index 0 = Easy, 1 = Medium, 2 = Hard
+// ---------------------------------------------------------------
+static AEGfxTexture* g_pTexGameplayBg[3] = { nullptr, nullptr, nullptr };
+static const char* DIFFICULTY_SELECT_BG_PATH = "Assets/bg_diff.png";
+static AEGfxTexture* g_pTexDiffSelectBg = nullptr;
+
 // Watering can state
-static float g_wateringCanRotation = 0.0f;  // Current rotation
-static float g_wateringCanAnimTimer = 0.0f;  // Animation timer
-static const float WATERING_CAN_ANIM_DURATION = 0.3f;  // Total animation time (up and back)
-static bool g_wateringCanIsAnimating = false;  // Whether animation is active
+static float g_wateringCanRotation = 0.0f;
+static float g_wateringCanAnimTimer = 0.0f;
+static const float WATERING_CAN_ANIM_DURATION = 0.3f;
+static bool g_wateringCanIsAnimating = false;
 
 static bool gMusicEnabled = true;
 
 // ================= HELPERS =================
 
-static void StartGameplay();  // Forward declaration – defined after Rhythm_Initialize
+static void StartGameplay();  // Forward declaration
 
 static s32 IsValidAudio(AEAudio audio) {
     return AEAudioIsValidAudio(audio);
@@ -175,7 +179,6 @@ static void UpdateScore(HitRating rating) {
         g_score.perfectHits++;
         g_score.combo++;
         g_score.totalScore += SCORE_PERFECT + (g_score.combo * 10);
-        // Trigger watering can animation
         g_wateringCanIsAnimating = true;
         g_wateringCanAnimTimer = 0.0f;
         break;
@@ -183,7 +186,6 @@ static void UpdateScore(HitRating rating) {
         g_score.goodHits++;
         g_score.combo++;
         g_score.totalScore += SCORE_GOOD + (g_score.combo * 5);
-        // Trigger watering can animation
         g_wateringCanIsAnimating = true;
         g_wateringCanAnimTimer = 0.0f;
         break;
@@ -200,12 +202,10 @@ static void UpdateScore(HitRating rating) {
     }
 }
 
-// Helper function to get random float between min and max
 static float RandomFloat(float min, float max) {
     return min + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (max - min)));
 }
 
-// Create randomized chart for the song duration
 static void CreateRandomChart(float totalDuration) {
     g_notes.clear();
     g_nextSpawnIndex = 0;
@@ -214,12 +214,9 @@ static void CreateRandomChart(float totalDuration) {
 
     float currentTime = g_audioOffset;
 
-    // Continue spawning notes until we reach near the end of the song
     while (currentTime < totalDuration - 2.0f) {
-        // Random interval until next note (driven by difficulty config)
         float interval = RandomFloat(cfg.minSpawnInterval, cfg.maxSpawnInterval);
 
-        // Create the main note
         RhythmNote note = {};
         note.type = (RandomFloat(0.0f, 1.0f) < cfg.premiumNoteChance) ? NOTE_PREMIUM : NOTE_NORMAL;
         note.hitTime = currentTime;
@@ -229,18 +226,15 @@ static void CreateRandomChart(float totalDuration) {
         note.rating = HIT_NONE;
         g_notes.push_back(note);
 
-        // Chance to spawn a double note (quick second note)
         if (RandomFloat(0.0f, 1.0f) < cfg.doubleNoteChance) {
             RhythmNote doubleNote = {};
-            doubleNote.type = NOTE_NORMAL; // Double notes are always normal
-            doubleNote.hitTime = currentTime + 0.15f; // 150ms after first note
+            doubleNote.type = NOTE_NORMAL;
+            doubleNote.hitTime = currentTime + 0.15f;
             doubleNote.xPosition = SPAWN_X;
             doubleNote.hit = false;
             doubleNote.missed = false;
             doubleNote.rating = HIT_NONE;
             g_notes.push_back(doubleNote);
-
-            // Add extra time after double note to prevent overcrowding
             interval += 0.3f;
         }
 
@@ -254,7 +248,6 @@ static void CreateRandomChart(float totalDuration) {
 // ================= LIFECYCLE =================
 
 void Rhythm_Load() {
-    // Initialize random seed once
     if (!g_randomInitialized) {
         srand(static_cast<unsigned int>(time(NULL)));
         g_randomInitialized = true;
@@ -268,17 +261,17 @@ void Rhythm_Load() {
         printf("WARNING: Failed to create audio group!\n");
     }
 
-    // Create a simple square mesh for sprites (UV mapped)
+    // Square mesh (UV mapped)
     AEGfxMeshStart();
-    AEGfxTriAdd(-0.5f, -0.5f, 0xFFFFFFFF, 0.0f, 1.0f,  // Bottom-left
-        0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f,   // Bottom-right
-        -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);  // Top-left
-    AEGfxTriAdd(0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f,   // Bottom-right
-        0.5f, 0.5f, 0xFFFFFFFF, 1.0f, 0.0f,    // Top-right
-        -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);  // Top-left
+    AEGfxTriAdd(-0.5f, -0.5f, 0xFFFFFFFF, 0.0f, 1.0f,
+        0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f,
+        -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
+    AEGfxTriAdd(0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f,
+        0.5f, 0.5f, 0xFFFFFFFF, 1.0f, 0.0f,
+        -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
     g_pMeshNote = AEGfxMeshEnd();
 
-    // Judgment line mesh (unchanged)
+    // Judgment line mesh
     AEGfxMeshStart();
     AEGfxTriAdd(-4.0f, -60.0f, 0xFFFFFFFF, 0, 0,
         4.0f, -60.0f, 0xFFFFFFFF, 1, 0,
@@ -288,35 +281,63 @@ void Rhythm_Load() {
         -4.0f, 60.0f, 0xFFFFFFFF, 0, 1);
     g_pMeshLine = AEGfxMeshEnd();
 
-    // NOTE SPRITES
-    g_pTexNormalNote = AEGfxTextureLoad("Assets/normal_note.png");
-    g_pTexPremiumNote = AEGfxTextureLoad("Assets/premium_note.png");
-    g_pTexBackground = AEGfxTextureLoad("Assets/background.png");
-    g_pTexWateringCan = AEGfxTextureLoad("Assets/watering_can.png");
+    // ---------------------------------------------------------------
+    // NOTE SPRITES — per-fruit/seed textures
+    // Normal note  = the grown fruit  (fruit_apple.png, plotpear.png, plotbanana.png)
+    // Premium note = the seed packet  (appleseed.png,   pearseed.png,  bananaseed.png)
+    // !! MODIFY paths here if your filenames differ !!
+    g_pTexFruitNotes[0] = AEGfxTextureLoad("Assets/fruit_apple.png");
+    g_pTexFruitNotes[1] = AEGfxTextureLoad("Assets/plotpear.png");
+    g_pTexFruitNotes[2] = AEGfxTextureLoad("Assets/plotbanana.png");
 
-    if (!g_pTexNormalNote) {
-        printf("ERROR: Failed to load normal note texture!\n");
+    g_pTexSeedNotes[0] = AEGfxTextureLoad("Assets/appleseed.png");
+    g_pTexSeedNotes[1] = AEGfxTextureLoad("Assets/pearseed.png");
+    g_pTexSeedNotes[2] = AEGfxTextureLoad("Assets/bananaseed.png");
+
+    // Default to apple until Rhythm_Initialize() applies the correct seed type
+    g_pTexNormalNote = g_pTexFruitNotes[0];
+    g_pTexPremiumNote = g_pTexSeedNotes[0];
+
+    g_pTexWateringCan = AEGfxTextureLoad("Assets/watering_can.png");
+    // !! END MODIFY !!
+    // ---------------------------------------------------------------
+
+    for (int i = 0; i < 3; i++) {
+        if (!g_pTexFruitNotes[i])
+            printf("ERROR: Failed to load fruit note texture [%d]!\n", i);
+        if (!g_pTexSeedNotes[i])
+            printf("ERROR: Failed to load seed note texture [%d]!\n", i);
     }
-    if (!g_pTexPremiumNote) {
-        printf("ERROR: Failed to load premium note texture!\n");
+    if (!g_pTexWateringCan) printf("ERROR: Failed to load watering can texture!\n");
+
+    // ---------------------------------------------------------------
+    // Load per-difficulty gameplay backgrounds from the config table
+    // (no changes needed here — edit the paths in DIFFICULTY_CONFIGS above)
+    // ---------------------------------------------------------------
+    for (int i = 0; i < 3; i++) {
+        g_pTexGameplayBg[i] = AEGfxTextureLoad(DIFFICULTY_CONFIGS[i].backgroundFile);
+        if (!g_pTexGameplayBg[i]) {
+            printf("WARNING: Failed to load gameplay background for difficulty %d: %s\n",
+                i, DIFFICULTY_CONFIGS[i].backgroundFile);
+        }
     }
-    if (!g_pTexBackground) {
-        printf("WARNING: Failed to load background texture!\n");
-    }
-    if (!g_pTexWateringCan) {
-        printf("ERROR: Failed to load watering can texture!\n");
+
+    // Load difficulty-select screen background
+    // (no changes needed here — edit DIFFICULTY_SELECT_BG_PATH above)
+    g_pTexDiffSelectBg = AEGfxTextureLoad(DIFFICULTY_SELECT_BG_PATH);
+    if (!g_pTexDiffSelectBg) {
+        printf("WARNING: Failed to load difficulty select background: %s\n",
+            DIFFICULTY_SELECT_BG_PATH);
     }
 
     g_fontId = AEGfxCreateFont("Assets/liberation-mono.ttf", 24);
 }
 
 void Rhythm_Initialize() {
-    // Show the difficulty select screen first; the actual game
-    // starts once the player picks a difficulty (see Rhythm_Update).
     g_phase = PHASE_DIFFICULTY_SELECT;
     g_diffSelectHovered = -1;
 
-    g_isPlaying = true;   // keeps Update/Render running while on select screen
+    g_isPlaying = true;
     g_songTime = 0.0f;
     g_songFinished = false;
     g_score = { 0, 0, 0, 0, 0, 0 };
@@ -327,23 +348,45 @@ void Rhythm_Initialize() {
     g_audioStarted = false;
     g_preSongTimer = 0.0f;
 
-    // Reset watering can
     g_wateringCanRotation = 0.0f;
     g_wateringCanAnimTimer = 0.0f;
     g_wateringCanIsAnimating = false;
+
+    // FIX: Apply the correct fruit/seed textures here, AFTER Rhythm_Load() has
+    // finished loading all texture arrays. Calling Rhythm_SetSeedType() before
+    // the state transition meant Rhythm_Load() would overwrite it with apple.
+    int seedType = Farm_GetRhythmSeedType();
+    if (seedType < 0 || seedType > 2) seedType = 0;
+    g_pTexNormalNote = g_pTexFruitNotes[seedType];
+    g_pTexPremiumNote = g_pTexSeedNotes[seedType];
+    printf("Rhythm_Initialize: applied seedType=%d — normal=%s, premium=%s\n",
+        seedType,
+        g_pTexNormalNote ? "OK" : "NULL",
+        g_pTexPremiumNote ? "OK" : "NULL");
 }
 
 // Called internally once the player has chosen a difficulty.
 static void StartGameplay() {
     g_phase = PHASE_PLAYING;
 
-    // SET SONG PARAMETERS HERE
     g_audioOffset = 2.0f;
-    g_songDuration = 75.0f;
+    g_songDuration = 65.0f;
 
     CreateRandomChart(g_songDuration);
 
-    g_currentSong = AEAudioLoadMusic("Assets/nakkentangkudasai.wav");
+    // Unload any previously loaded song before loading the new one
+    if (IsValidAudio(g_currentSong)) {
+        AEAudioUnloadAudio(g_currentSong);
+        ResetAudio(g_currentSong);
+    }
+
+    // Load the audio file specified for the selected difficulty
+    // (no changes needed here — edit the paths in DIFFICULTY_CONFIGS above)
+    g_currentSong = AEAudioLoadMusic(g_difficultyConfig.audioFile);
+    if (!IsValidAudio(g_currentSong)) {
+        printf("ERROR: Failed to load audio for difficulty %d: %s\n",
+            (int)g_difficulty, g_difficultyConfig.audioFile);
+    }
 }
 
 void Rhythm_Update() {
@@ -353,7 +396,6 @@ void Rhythm_Update() {
 
     // ---- DIFFICULTY SELECT PHASE ----
     if (g_phase == PHASE_DIFFICULTY_SELECT) {
-        // Press 1 / 2 / 3 to pick difficulty and start
         if (AEInputCheckTriggered(AEVK_1)) {
             Rhythm_SetDifficulty(DIFFICULTY_EASY);
             StartGameplay();
@@ -366,17 +408,15 @@ void Rhythm_Update() {
             Rhythm_SetDifficulty(DIFFICULTY_HARD);
             StartGameplay();
         }
-        return;  // Skip all gameplay logic while on select screen
+        return;
     }
 
     // ---- GAMEPLAY PHASE ----
 
-    // Handle hit input
     if (AEInputCheckTriggered(AEVK_W)) {
         Rhythm_Hit();
     }
 
-    // Handle countdown
     if (!g_audioStarted) {
         g_preSongTimer += dt;
         if (g_preSongTimer >= g_audioOffset) {
@@ -429,7 +469,7 @@ void Rhythm_Update() {
         }
     }
 
-    // Update watering can rotation animation
+    // Update watering can animation
     if (g_wateringCanIsAnimating) {
         g_wateringCanAnimTimer += dt;
 
@@ -438,13 +478,13 @@ void Rhythm_Update() {
 
         if (g_wateringCanAnimTimer <= halfDuration) {
             progress = g_wateringCanAnimTimer / halfDuration;
-            progress = progress * (2.0f - progress);  // Ease out
-            g_wateringCanRotation = 45.0f * progress;
+            progress = progress * (2.0f - progress);
+            g_wateringCanRotation = 75.0f * progress;          // FIX: was 45.0f
         }
         else if (g_wateringCanAnimTimer <= WATERING_CAN_ANIM_DURATION) {
             progress = (g_wateringCanAnimTimer - halfDuration) / halfDuration;
-            progress = progress * progress;  // Ease in
-            g_wateringCanRotation = 45.0f * (1.0f - progress);
+            progress = progress * progress;
+            g_wateringCanRotation = 75.0f * (1.0f - progress); // FIX: was 45.0f
         }
         else {
             g_wateringCanRotation = 0.0f;
@@ -453,7 +493,6 @@ void Rhythm_Update() {
         }
     }
 
-    // Song ends when time exceeds duration and all notes processed
     if (g_audioStarted && g_songTime >= g_songDuration && g_activeNotes.empty()) {
         if (!g_songFinished) {
             g_songFinished = true;
@@ -464,6 +503,26 @@ void Rhythm_Update() {
     }
 }
 
+// ---------------------------------------------------------------
+// Helper: draw a full-screen background texture with brightness control.
+// brightness: 0.0 = black, 1.0 = original colours. Values like 0.5 halve
+// the brightness without changing the image tint.
+// ---------------------------------------------------------------
+static void DrawFullscreenTexture(AEGfxTexture* pTex, AEGfxVertexList* pMesh, float brightness = 1.0f)
+{
+    if (!pTex) return;
+    AEMtx33 scale, trans, transform;
+    AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+    AEGfxSetColorToMultiply(brightness, brightness, brightness, 1.0f);
+    AEGfxSetBlendMode(AE_GFX_BM_NONE);
+    AEGfxTextureSet(pTex, 0, 0);
+    AEMtx33Scale(&scale, 1600.0f, 900.0f);
+    AEMtx33Trans(&trans, 0.0f, 0.0f);
+    AEMtx33Concat(&transform, &trans, &scale);
+    AEGfxSetTransform(transform.m);
+    AEGfxMeshDraw(pMesh, AE_GFX_MDM_TRIANGLES);
+}
+
 void Rhythm_Render() {
     if (!g_isPlaying) return;
 
@@ -472,57 +531,61 @@ void Rhythm_Render() {
 
     // ================= DIFFICULTY SELECT SCREEN =================
     if (g_phase == PHASE_DIFFICULTY_SELECT) {
-        if (g_fontId >= 0) {
-            // Title
-            AEGfxPrint(g_fontId, "SELECT DIFFICULTY",
-                DIFF_TITLE_X, DIFF_TITLE_Y, 1.5f, 1.0f, 1.0f, 0.2f, 1.0f);
 
-            // Easy   – green
-            AEGfxPrint(g_fontId, "[1]  EASY   - Slow notes, relaxed spacing",
-                DIFF_EASY_X, DIFF_EASY_Y, 1.0f, 0.3f, 1.0f, 0.3f, 1.0f);
+        // Draw difficulty select background at reduced brightness so text is readable
+        // !! MODIFY: adjust the 0.5f value (0.0 = black, 1.0 = full brightness) !!
+        DrawFullscreenTexture(g_pTexDiffSelectBg, g_pMeshNote, 0.9f);
 
-            // Medium – yellow
-            AEGfxPrint(g_fontId, "[2]  MEDIUM - Moderate speed and density",
-                DIFF_MED_X, DIFF_MED_Y, 1.0f, 1.0f, 0.85f, 0.2f, 1.0f);
-
-            // Hard   – red
-            AEGfxPrint(g_fontId, "[3]  HARD   - Fast notes, tight spacing",
-                DIFF_HARD_X, DIFF_HARD_Y, 1.0f, 1.0f, 0.3f, 0.3f, 1.0f);
-
-            // Hint
-            AEGfxPrint(g_fontId, "Press 1 / 2 / 3 to choose and start",
-                DIFF_HINT_X, DIFF_HINT_Y, 0.8f, 0.7f, 0.7f, 0.7f, 1.0f);
-        }
-        return;  // Don't draw the gameplay scene yet
-    }
-
-    // ================= DRAW BACKGROUND FIRST =================
-    if (g_pTexBackground) {
-        AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
-        AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);  // Full color, no tint
-        AEGfxSetBlendMode(AE_GFX_BM_NONE);  // No blending for opaque background
-        AEGfxTextureSet(g_pTexBackground, 0, 0);
-
-        // Scale to fill the screen (adjust 1600x900 to your resolution)
-        AEMtx33Scale(&scale, 1600.0f, 900.0f);
-        AEMtx33Trans(&trans, 0.0f, 0.0f);  // Center of screen
+        // ---------------------------------------------------------------
+        // Semi-transparent dark panel behind the difficulty text block.
+        // Draws a rounded-ish dark rectangle centred on screen.
+        // Tune panel width/height and alpha to taste.
+        // ---------------------------------------------------------------
+        AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+        AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+        AEGfxSetTransparency(0.55f);
+        AEGfxSetColorToMultiply(0.05f, 0.08f, 0.12f, 0.55f); // dark blue-black tint
+        AEMtx33Scale(&scale, 900.0f, 550.0f);   // panel width x height in pixels
+        AEMtx33Trans(&trans, 0.0f, 0.0f);        // centred on screen
         AEMtx33Concat(&transform, &trans, &scale);
         AEGfxSetTransform(transform.m);
         AEGfxMeshDraw(g_pMeshNote, AE_GFX_MDM_TRIANGLES);
+        // ---------------------------------------------------------------
+
+        if (g_fontId >= 0) {
+            AEGfxPrint(g_fontId, "SELECT DIFFICULTY",
+                DIFF_TITLE_X, DIFF_TITLE_Y, 1.5f, 1.0f, 1.0f, 0.2f, 1.0f);
+
+            AEGfxPrint(g_fontId, "[1]  EASY   - Slow notes, relaxed spacing",
+                DIFF_EASY_X, DIFF_EASY_Y, 1.0f, 0.3f, 1.0f, 0.3f, 1.0f);
+
+            AEGfxPrint(g_fontId, "[2]  MEDIUM - Moderate speed and density",
+                DIFF_MED_X, DIFF_MED_Y, 1.0f, 1.0f, 0.85f, 0.2f, 1.0f);
+
+            AEGfxPrint(g_fontId, "[3]  HARD   - Fast notes, tight spacing",
+                DIFF_HARD_X, DIFF_HARD_Y, 1.0f, 1.0f, 0.3f, 0.3f, 1.0f);
+
+            AEGfxPrint(g_fontId, "Press 1 / 2 / 3 to choose and start",
+                DIFF_HINT_X, DIFF_HINT_Y, 0.8f, 0.7f, 0.7f, 0.7f, 1.0f);
+        }
+        return;
     }
+
+    // ================= DRAW GAMEPLAY BACKGROUND =================
+    // Uses the background matching the selected difficulty, also dimmed
+    // !! MODIFY: adjust the 0.5f value below to change gameplay bg brightness !!
+    DrawFullscreenTexture(g_pTexGameplayBg[(int)g_difficulty], g_pMeshNote, 0.7f);
 
     // ================= DRAW WATERING CAN =================
     if (g_pTexWateringCan)
     {
         AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
-        AEGfxSetBlendMode(AE_GFX_BM_BLEND);   // important
+        AEGfxSetBlendMode(AE_GFX_BM_BLEND);
         AEGfxSetTransparency(1.0f);
         AEGfxSetColorToMultiply(1, 1, 1, 1);
-
         AEGfxTextureSet(g_pTexWateringCan, 0, 0);
 
         float canSize = 80.0f;
-
         float canX = JUDGMENT_LINE_X;
         float canY = VERTICAL_OFFSET + 120.0f;
 
@@ -530,10 +593,8 @@ void Rhythm_Render() {
         AEMtx33Scale(&canScale, canSize, canSize);
         AEMtx33RotDeg(&canRot, g_wateringCanRotation);
         AEMtx33Trans(&canTrans, canX, canY);
-
         AEMtx33Concat(&canTemp, &canRot, &canScale);
         AEMtx33Concat(&canTransform, &canTrans, &canTemp);
-
         AEGfxSetTransform(canTransform.m);
         AEGfxMeshDraw(g_pMeshNote, AE_GFX_MDM_TRIANGLES);
     }
@@ -569,7 +630,7 @@ void Rhythm_Render() {
     AEGfxSetTransform(transform.m);
     AEGfxMeshDraw(g_pMeshNote, AE_GFX_MDM_TRIANGLES);
 
-    // Draw notes (shifted up)
+    // Draw notes
     for (const auto& note : g_activeNotes) {
         if (note.hit) continue;
 
@@ -578,7 +639,6 @@ void Rhythm_Render() {
         float alpha = 1.0f;
         float tintR = 1.0f, tintG = 1.0f, tintB = 1.0f;
 
-        // Select texture based on note type
         switch (note.type) {
         case NOTE_NORMAL:
             pTex = g_pTexNormalNote;
@@ -591,13 +651,11 @@ void Rhythm_Render() {
             break;
         }
 
-        // Handle missed notes (grayed out)
         if (note.missed) {
             alpha = 0.3f;
             tintR = tintG = tintB = 0.5f;
         }
 
-        // Draw the sprite
         if (pTex) {
             AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
             AEGfxSetColorToMultiply(tintR, tintG, tintB, alpha);
@@ -606,7 +664,6 @@ void Rhythm_Render() {
             AEGfxTextureSet(pTex, 0, 0);
         }
         else {
-            // Fallback to colored square if texture failed to load
             AEGfxSetRenderMode(AE_GFX_RM_COLOR);
             AEGfxSetColorToMultiply(tintR, tintG, tintB, alpha);
         }
@@ -620,11 +677,9 @@ void Rhythm_Render() {
 
     // UI
     if (g_fontId >= 0) {
-        // Score
         sprintf_s(buffer, "Score: %d", g_score.totalScore);
         AEGfxPrint(g_fontId, buffer, SCORE_TEXT_X, SCORE_TEXT_Y, 1.0f, 1, 1, 1, 1);
 
-        // Combo
         if (g_score.combo > 0) {
             sprintf_s(buffer, "%d", g_score.combo);
             float pulse = 1.0f + (g_hitFeedbackTimer * 0.5f);
@@ -632,25 +687,22 @@ void Rhythm_Render() {
             AEGfxPrint(g_fontId, "COMBO", COMBO_LABEL_X, COMBO_LABEL_Y, 1.5f, 1, 0.9f, 0.3f, 1);
         }
 
-        // Hit feedback
         if (g_hitFeedbackTimer > 0) {
             const char* text = "";
             float tr = 1, tg = 1, tb = 1;
             switch (g_lastHitRating) {
             case HIT_PERFECT: text = "PERFECT!"; tr = 1; tg = 0.8f; tb = 0.2f; break;
-            case HIT_GOOD: text = "GOOD"; tr = 0.3f; tg = 1; tb = 0.3f; break;
-            case HIT_MISS: text = "MISS"; tr = 1; tg = 0.3f; tb = 0.3f; break;
+            case HIT_GOOD:    text = "GOOD";     tr = 0.3f; tg = 1; tb = 0.3f; break;
+            case HIT_MISS:    text = "MISS";     tr = 1; tg = 0.3f; tb = 0.3f; break;
             default: break;
             }
             AEGfxPrint(g_fontId, text, FEEDBACK_TEXT_X, FEEDBACK_TEXT_Y, 1.2f, tr, tg, tb, 1);
         }
 
-        // Stats
         sprintf_s(buffer, "Perfect: %d  Good: %d  Miss: %d",
             g_score.perfectHits, g_score.goodHits, g_score.misses);
         AEGfxPrint(g_fontId, buffer, STATS_TEXT_X, STATS_TEXT_Y, 0.7f, 0.8f, 0.8f, 0.8f, 1);
 
-        // Song finished
         if (g_songFinished) {
             AEGfxPrint(g_fontId, "SONG COMPLETE!", COMPLETE_TEXT_X, COMPLETE_TEXT_Y, 2.0f, 0.2f, 1.0f, 0.2f, 1);
             sprintf_s(buffer, "Final Score: %d", g_score.totalScore);
@@ -658,7 +710,6 @@ void Rhythm_Render() {
             AEGfxPrint(g_fontId, "Press E to return", RETURN_TEXT_X, RETURN_TEXT_Y, 0.8f, 0.8f, 0.8f, 0.8f, 1);
         }
 
-        // Countdown
         if (!g_audioStarted && !g_songFinished) {
             int countdown = (int)(g_audioOffset - g_preSongTimer) + 1;
             sprintf_s(buffer, "Starting in: %d", countdown);
@@ -676,15 +727,27 @@ void Rhythm_Free() {
 
 void Rhythm_Unload() {
 
-    // Free textures
-    if (g_pTexNormalNote) AEGfxTextureUnload(g_pTexNormalNote);
-    if (g_pTexPremiumNote) AEGfxTextureUnload(g_pTexPremiumNote);
-    if (g_pTexBackground) AEGfxTextureUnload(g_pTexBackground);
-    if (g_pTexWateringCan) AEGfxTextureUnload(g_pTexWateringCan);
+    // Free note and UI textures
+    for (int i = 0; i < 3; i++) {
+        if (g_pTexFruitNotes[i])  AEGfxTextureUnload(g_pTexFruitNotes[i]);
+        if (g_pTexSeedNotes[i])   AEGfxTextureUnload(g_pTexSeedNotes[i]);
+        g_pTexFruitNotes[i] = nullptr;
+        g_pTexSeedNotes[i] = nullptr;
+    }
+    // These are aliases into the arrays above — do NOT double-free them
     g_pTexNormalNote = nullptr;
     g_pTexPremiumNote = nullptr;
-    g_pTexBackground = nullptr;
+
+    if (g_pTexWateringCan) AEGfxTextureUnload(g_pTexWateringCan);
+    if (g_pTexDiffSelectBg) AEGfxTextureUnload(g_pTexDiffSelectBg);
     g_pTexWateringCan = nullptr;
+    g_pTexDiffSelectBg = nullptr;
+
+    // Free per-difficulty gameplay backgrounds
+    for (int i = 0; i < 3; i++) {
+        if (g_pTexGameplayBg[i]) AEGfxTextureUnload(g_pTexGameplayBg[i]);
+        g_pTexGameplayBg[i] = nullptr;
+    }
 
     if (g_pMeshNote) AEGfxMeshFree(g_pMeshNote);
     if (g_pMeshLine) AEGfxMeshFree(g_pMeshLine);
@@ -810,4 +873,16 @@ void Rhythm_SetMusicEnabled(bool enabled)
         AEAudioResumeGroup(g_musicGroup);
     else
         AEAudioPauseGroup(g_musicGroup);
+}
+
+void Rhythm_SetSeedType(int seedType)
+{
+    // Clamp to valid range  0=Apple  1=Pear  2=Banana
+    if (seedType < 0 || seedType > 2) seedType = 0;
+    g_pTexNormalNote = g_pTexFruitNotes[seedType];
+    g_pTexPremiumNote = g_pTexSeedNotes[seedType];
+    printf("Rhythm_SetSeedType: seedType=%d — normal=%s, premium=%s\n",
+        seedType,
+        g_pTexNormalNote ? "OK" : "NULL",
+        g_pTexPremiumNote ? "OK" : "NULL");
 }

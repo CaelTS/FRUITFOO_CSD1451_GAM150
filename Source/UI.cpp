@@ -34,6 +34,9 @@ static int hoveredSeed = -1;   // purely for highlight
 static int infoSeed = -1;         // which seed info panel is showing
 static int hoveredPlotIndex = -1;
 static int activePlotIndex = -1;
+static char  gUpgradeMsg[64] = "";
+static float gUpgradeMsgTimer = 0.0f;
+static const float UPGRADE_MSG_DURATION = 2.0f;
 
 float UI_GetPlotCenterX();
 float UI_GetPlotCenterY();
@@ -53,13 +56,14 @@ static AEGfxTexture* invSeedHighlight = nullptr;
 static AEGfxTexture* invSliderKnob = nullptr;
 static AEGfxTexture* invSliderFill = nullptr;
 static AEGfxTexture* appleIcon = nullptr;
+static AEGfxTexture* pearIcon = nullptr;
+static AEGfxTexture* bananaIcon = nullptr;
 static AEGfxTexture* trashIcon = nullptr;
 static AEGfxTexture* confirmBG = nullptr;
 static AEGfxTexture* confirmYes = nullptr;
 static AEGfxTexture* confirmNo = nullptr;
 
-static AEGfxTexture* collectionIcon = nullptr;
-static AEGfxTexture* collectionBG = nullptr;
+
 
 static AEGfxTexture* settingsIcon = nullptr;
 static AEGfxTexture* settingsBG = nullptr;
@@ -79,7 +83,6 @@ static AEGfxTexture* plotSlotBananaTexture = nullptr;
 enum ButtonType
 {
     BUTTON_INVENTORY,
-    BUTTON_COLLECTION,
     BUTTON_SETTINGS
 };
 
@@ -103,8 +106,8 @@ struct SeedData
 static SeedData seedDatabase[SEED_COUNT] =
 {
     { 10, 5.0f, 1, "Apple Seed" },
-    { 15, 7.0f, 2, "Pear Seed" },   // <-- NEW
-    { 20, 9.0f, 3, "Banana Seed" }  // optional
+    { 15, 7.0f, 2, "Pear Seed" },
+    { 20, 9.0f, 3, "Banana Seed" }
 };
 
 // The current seed page shown in the panel
@@ -188,7 +191,7 @@ static const float INV_SEED_HL_H = 72.0f;
 // ---------- Slider label & value positions ----------
 static const float INV_SLD_LABEL_LEFT_XPAD = -10.0f;  // + = move min label right
 static const float INV_SLD_LABEL_RIGHT_XPAD = 6.0f;  // + = move max label left
-static const float INV_SLD_LABEL_Y_OFFSET = -20.0f;  //-+ = move labels DOWN 
+static const float INV_SLD_LABEL_Y_OFFSET = -30.0f;  //-+ = move labels DOWN 
 
 static const float INV_SLD_VALUE_Y_OFFSET = 30.0f;  // distance ABOVE the knob
 static const float INV_SLD_VALUE_SCALE = 0.5f;   // size of the number above the knob
@@ -203,7 +206,7 @@ static const float INV_SLD_FILL_H = 14.0f;
 static const float INV_SLD_KNOB_W = 35.0f;
 static const float INV_SLD_KNOB_H = 48.0f;
 
-// Slider state (you already declared similar variables; if so, reuse)
+// Slider state 
 static int  gInvSliderValue = 1;     // selection
 static bool gInvSliderDragging = false; // dragging flag
 
@@ -222,7 +225,11 @@ enum InvItem
 {
     INV_ITEM_NONE = -1,
     INV_ITEM_APPLE = 0,
-    INV_ITEM_APPLE_SEED = 1
+    INV_ITEM_PEAR = 1,
+    INV_ITEM_BANANA = 2,
+    INV_ITEM_APPLE_SEED = 3,
+    INV_ITEM_PEAR_SEED = 4,
+    INV_ITEM_BANANA_SEED = 5
 };
 
 static int gSelectedInvItem = INV_ITEM_NONE;
@@ -236,6 +243,7 @@ static bool gHoverTrash = false;
 static const float INV_ITEM_X = -180.0f;
 static const float INV_ITEM_Y = 90.0f;
 static const float INV_ITEM_SIZE = 90.0f;
+
 
 // Trash button
 static const float INV_TRASH_X = 180.0f;
@@ -282,8 +290,6 @@ AEGfxVertexList* pMeshCrateInfo = NULL;
 AEGfxVertexList* pMeshCrateSliderCircle = NULL;
 AEGfxVertexList* pMeshCrateSliderFILL = NULL;
 
-
-
 //Textures
 AEGfxTexture* pCratePanelBGTexture = nullptr;
 AEGfxTexture* pCrateCostTexture = nullptr;
@@ -292,7 +298,7 @@ AEGfxTexture* pCrateInfoATexture = nullptr;
 AEGfxTexture* pCrateSliderCircleTexture = nullptr;
 AEGfxTexture* pCrateSliderFillTexture = nullptr;
 
-//Slider idk man
+//Slider
 static int InvAppleCount = 0; //to read current apples in inventory (for slider max)
 static int crateAppleCount = 0; //to read current apples in crate (for slider max)
 
@@ -305,7 +311,7 @@ static int CrateSliderValue = 0; //current slider value
 static bool CrateSliderDragging = false;
 
 //Helper to create mesh
-AEGfxVertexList* CreateMesh()
+static AEGfxVertexList* CreateMesh()
 {
     AEGfxMeshStart();
     AEGfxTriAdd(-0.5f, -0.5f, 0xFFFFFFFF, 0.0f, 1.0f, 0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f, -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
@@ -315,11 +321,11 @@ AEGfxVertexList* CreateMesh()
 }
 
 //Helper function to create crate panel buttons
-CButton CreateCrateButton(AEGfxTexture* availableTex = nullptr, AEGfxTexture* unselectedTex = nullptr, AEGfxTexture* selectedTex = nullptr,
+static CButton CreateCrateButton(AEGfxTexture* availableTex = nullptr, AEGfxTexture* unselectedTex = nullptr, AEGfxTexture* selectedTex = nullptr,
     float availableScaleX = 0, float availableScaleY = 0, float unselectedScaleX = 0, float unselectedScaleY = 0, float selectedScaleX = 0, float selectedScaleY = 0,
     float x = 0, float y = 0)
 {
-    CButton button;
+    CButton button{};
     button.mesh = CreateMesh();
     button.availableTex = availableTex;
     button.unselectedTex = unselectedTex;
@@ -336,11 +342,11 @@ CButton CreateCrateButton(AEGfxTexture* availableTex = nullptr, AEGfxTexture* un
     return button;
 }
 
-RButton CreateCrateRButton(AEGfxTexture* normalTex = nullptr, AEGfxTexture* altTex = nullptr,
+static RButton CreateCrateRButton(AEGfxTexture* normalTex = nullptr, AEGfxTexture* altTex = nullptr,
     float normalScaleX = 0, float normalScaleY = 0, float altScaleX = 0, float altScaleY = 0,
     float x = 0, float y = 0)
 {
-    RButton button;
+    RButton button{};
     button.mesh = CreateMesh();
     button.normalTex = normalTex;
     button.altTex = altTex;
@@ -354,7 +360,7 @@ RButton CreateCrateRButton(AEGfxTexture* normalTex = nullptr, AEGfxTexture* altT
     return button;
 }
 
-AEGfxTexture* TextureLoad(const char* address) {
+static AEGfxTexture* TextureLoad(const char* address) {
     return AEGfxTextureLoad(address);
 }
 
@@ -362,12 +368,12 @@ CButton InvAppleButton;
 CButton CrateAppleButton;
 RButton Store_Crate;
 
-bool isButtonHovered(float btnX, float btnY, float btnW, float btnH)
+static bool isButtonHovered(float btnX, float btnY, float btnW, float btnH)
 {
     return IsMouseOverRect(btnX, btnY, btnW, btnH);
 }
 
-bool isButtonClicked(float btnX, float btnY, float btnW, float btnH)
+static bool isButtonClicked(float btnX, float btnY, float btnW, float btnH)
 {
     return ClickedOnRect(btnX, btnY, btnW, btnH);
 }
@@ -396,16 +402,13 @@ static inline void GetWorldMouse(float& worldX, float& worldY)
 static int gSelectedBasketIndex = -1;
 
 // Return index of basket under mouse or -1 if none.
-// Uses the same AABB test as IsMouseOverBasket to keep behaviour consistent.
 static int GetFruitBasketIndexUnderMouse()
 {
-    // Use the same conversion helper
     int mouseX, mouseY;
     AEInputGetCursorPosition(&mouseX, &mouseY);
     float worldX = static_cast<float>(mouseX) - 800.0f; // Convert to world coordinates
     float worldY = 450.0f - static_cast<float>(mouseY); // Invert Y axis and convert
 
-    // gFruitBaskets is declared extern at top of this file
     for (int i = 0; i < (int)gFruitBaskets.size(); ++i)
     {
         const FruitBasket& b = gFruitBaskets[i];
@@ -432,9 +435,6 @@ bool gMusicEnabled = true;
 
 static bool gHoverSoundToggle = false;
 static bool gHoverMusicToggle = false;
-//static bool gHoverSettingsExit = false; removed unused variable
-//static bool gHoverSettingsClose = false; removed unused variable
-
 
 void MainBGM_SetEnabled(bool enabled);
 
@@ -471,15 +471,16 @@ void UI_Init()
     invSeedHighlight = AEGfxTextureLoad("Assets/InvSeedHighlight.png");
     invSliderKnob = AEGfxTextureLoad("Assets/InvSliderKnob.png");
     invSliderFill = AEGfxTextureLoad("Assets/InvSliderFill.png");
-    appleIcon = AEGfxTextureLoad("Assets/HarvestApple.png");
+    appleIcon = AEGfxTextureLoad("Assets/Fruit_Apple.png");
+    pearIcon = AEGfxTextureLoad("Assets/PlotPear.png");
+    bananaIcon = AEGfxTextureLoad("Assets/PlotBanana.png");
     trashIcon = AEGfxTextureLoad("Assets/Trash.png");
 
     confirmBG = AEGfxTextureLoad("Assets/ConfirmBG.png");
     confirmYes = AEGfxTextureLoad("Assets/Yes.png");
     confirmNo = AEGfxTextureLoad("Assets/No.png");
 
-    collectionIcon = AEGfxTextureLoad("Assets/Collection.png");
-    collectionBG = AEGfxTextureLoad("Assets/collectionBG.png");
+
 
     settingsIcon = AEGfxTextureLoad("Assets/Settings.png");
     settingsBG = AEGfxTextureLoad("Assets/Settings_BG.png");
@@ -541,10 +542,11 @@ void UI_Init()
     float buttonSpacing = 140.0f;
     float buttonY = -360.0f;
 
-    ButtonType buttonOrder[] = { BUTTON_INVENTORY, BUTTON_COLLECTION, BUTTON_SETTINGS };
+    ButtonType buttonOrder[] = { BUTTON_INVENTORY, BUTTON_SETTINGS };
     for (int i = 0; i < 3; ++i)
     {
-        menuButtons.push_back({ menuCenterX + (i - 1) * buttonSpacing, buttonY, buttonSize, buttonSize, false, buttonOrder[i] });
+        menuButtons.push_back({ menuCenterX - buttonSpacing * 0.5f, buttonY, buttonSize, buttonSize, false, buttonOrder[0] });
+        menuButtons.push_back({ menuCenterX + buttonSpacing * 0.5f, buttonY, buttonSize, buttonSize, false, buttonOrder[1] });
     }
 
 
@@ -561,8 +563,8 @@ void UI_Init()
     int rows = 2;
 
     // Center of the Plot panel
-    float panelCenterX = -510.0f;   // tweak slightly if needed
-    float panelCenterY = 150.0f;    // tweak slightly if needed
+    float panelCenterX = -510.0f;
+    float panelCenterY = 150.0f;
     float totalWidth = (cols - 1) * spacing + slotSize;
     float totalHeight = (rows - 1) * spacing + slotSize;
 
@@ -604,12 +606,11 @@ float maxSlider = 132.0f, minSlider = -200.0f;
 enum location { INVENTORY, CRATE, NIL };
 location selectedLocation = NIL; // where the fruit is coming from (inventory) or going to (crate)
 
-FruitType selectedFruit = NILL; // future proofing for more fruit types, but for now just apple
+FruitType selectedFruit = NILL;
 FruitType selectedInventoryFruitType = APPLE;
 
-
-//how do i do fruit selected based on the slider value and apple count in inventory? also need to update slider max based on inventory changes (after adding/removing fruit from crate)
-int GetSliderFruitCount(location location)
+// Get the max fruit count for the slider based on the current location and selected fruit type
+static int GetSliderFruitCount(location location)
 {
     (void)location;
     if (location == NIL) return 0; // no location, no fruit
@@ -622,10 +623,10 @@ int GetSliderFruitCount(location location)
             maxFruitCount = GetAppleCount();
         }
         if (selectedInventoryFruitType == PEAR) {
-            // maxFruitCount = GetPearCount(); // Implement this function in Inventory when you add pears
+            maxFruitCount = GetPearCount();
         }
         if (selectedInventoryFruitType == BANANA) {
-            // maxFruitCount = GetBananaCount(); // Implement this function in Inventory when you add bananas
+            maxFruitCount = GetBananaCount();
         }
     }
     else if (location == CRATE) {
@@ -658,7 +659,7 @@ void UI_Input()
 
     if (AEInputCheckTriggered(AEVK_C)) {
         Crate_AddFruit(0, 1);
-        Crate_SetFruitType(0, 0); // Set to apple type for testing
+        Crate_SetFruitType(0, 0);
         printf("Added apple to crate %d, now has %d apples:fruitID %d\n", 0, Crate_GetFruitCount(0), Crate_GetFruitType(0));
     }
 
@@ -699,7 +700,7 @@ void UI_Input()
 
         int typeInCrate = Crate_GetFruitType(crateID);
         int countInCrate = Crate_GetFruitCount(crateID);
-        empty = countInCrate == 0;
+        empty = countInCrate < 0;
 
         if (empty == false && once == true) {
 
@@ -876,6 +877,41 @@ void UI_Input()
                         }
                     }
 
+                    else if (selectedLocation == INVENTORY && selectedInventoryFruitType == PEAR) {
+                        int availableToMove = GetPearCount();
+                        int toMove = std::min(sliderValue, availableToMove);
+                        if (toMove > 0) {
+                            Inventory_RemoveFruitTyped(static_cast<u8>(toMove), 1); // 1 = pear
+                            Crate_AddFruit(crateID, toMove);
+                            Crate_SetFruitType(crateID, PEAR);
+                        }
+                    }
+                    else if (selectedLocation == CRATE && selectedFruit == PEAR) {
+                        int availableToMove = Crate_GetFruitCount(crateID);
+                        int toMove = std::min(sliderValue, availableToMove);
+                        if (toMove > 0) {
+                            Crate_RemoveFruitAmount(crateID, toMove);
+                            Inventory_AddFruit(static_cast<u8>(toMove), 1); // 1 = pear
+                        }
+                    }
+                    else if (selectedLocation == INVENTORY && selectedInventoryFruitType == BANANA) {
+                        int availableToMove = GetBananaCount();
+                        int toMove = std::min(sliderValue, availableToMove);
+                        if (toMove > 0) {
+                            Inventory_RemoveFruitTyped(static_cast<u8>(toMove), 2); // 2 = banana
+                            Crate_AddFruit(crateID, toMove);
+                            Crate_SetFruitType(crateID, BANANA);
+                        }
+                    }
+                    else if (selectedLocation == CRATE && selectedFruit == BANANA) {
+                        int availableToMove = Crate_GetFruitCount(crateID);
+                        int toMove = std::min(sliderValue, availableToMove);
+                        if (toMove > 0) {
+                            Crate_RemoveFruitAmount(crateID, toMove);
+                            Inventory_AddFruit(static_cast<u8>(toMove), 2); // 2 = banana
+                        }
+                    }
+
                     // close dialog after action
                     gInvConfirmOpen = false;
                 }
@@ -887,10 +923,7 @@ void UI_Input()
                     gInvConfirmOpen = false;
                 }
 
-
             }
-
-
 
         }
 
@@ -907,7 +940,62 @@ void UI_UpdateButtons()
 
     bool clickThisFrame = AEInputCheckTriggered(AEVK_LBUTTON);
     bool clickConsumed = false;
-    (void)clickConsumed; //unused variable
+
+    // ==================== INVENTORY CONFIRM MODAL ====================
+    if (gInvConfirmOpen)
+    {
+
+        GetWorldMouse(worldX, worldY);
+
+        // Button layout 
+        const float YES_X = -60.0f;
+        const float NO_X = 60.0f;
+        const float BTN_Y = -40.0f;
+        const float HW = 40.0f;
+        const float HH = 20.0f;
+
+        // ----- HOVER -----
+        gHoverYes =
+            worldX >= YES_X - HW && worldX <= YES_X + HW &&
+            worldY >= BTN_Y - HH && worldY <= BTN_Y + HH;
+
+        gHoverNo =
+            worldX >= NO_X - HW && worldX <= NO_X + HW &&
+            worldY >= BTN_Y - HH && worldY <= BTN_Y + HH;
+
+        // ----- CLICK -----
+        if (AEInputCheckTriggered(AEVK_LBUTTON))
+        {
+            if (gHoverYes)
+            {
+                // ================= DELETE LOGIC =================
+                if (gSelectedInvItem == INV_ITEM_APPLE)
+                    Inventory_RemoveFruitTyped((u8)gInvSliderValue, 0);
+                else if (gSelectedInvItem == INV_ITEM_PEAR)
+                    Inventory_RemoveFruitTyped((u8)gInvSliderValue, 1);
+                else if (gSelectedInvItem == INV_ITEM_BANANA)
+                    Inventory_RemoveFruitTyped((u8)gInvSliderValue, 2);
+                else if (gSelectedInvItem == INV_ITEM_APPLE_SEED)
+                    Inventory_RemoveSeed((u8)gInvSliderValue, SEED_APPLE);
+                else if (gSelectedInvItem == INV_ITEM_PEAR_SEED)
+                    Inventory_RemoveSeed((u8)gInvSliderValue, SEED_PEAR);
+                else if (gSelectedInvItem == INV_ITEM_BANANA_SEED)
+                    Inventory_RemoveSeed((u8)gInvSliderValue, SEED_BANANA);
+
+                // Reset selection
+                gSelectedInvItem = INV_ITEM_NONE;
+                gInvSliderValue = 1;
+
+                // Close confirm
+                gInvConfirmOpen = false;
+            }
+            else if (gHoverNo)
+            {
+                gInvConfirmOpen = false;
+            }
+        }
+        // 🔒 BLOCK ALL OTHER UI INPUT THIS FRAME
+    }
 
     // -------------------------------------------------
     // MENU BUTTONS
@@ -1082,7 +1170,6 @@ void UI_UpdateButtons()
         {
             hoveredPlotIndex = static_cast<int>(i);
 
-            // ❗ NEW: BLOCK LOCKED PLOTS
             if (Farm_IsPlotLocked(static_cast<int>(i)))
                 break;
 
@@ -1132,6 +1219,9 @@ void UI_UpdateButtons()
             break;
         }
     }
+
+    // Upgrades panel input
+
     float upgradesPanelW = UPGRADES_PANEL_W;
 
     float panelX = UPGRADES_PANEL_X;
@@ -1146,10 +1236,9 @@ void UI_UpdateButtons()
     for (int i = upgradesStartIndex; i < (int)upgrades.size() && shownUp < MAX_VISIBLE_UPGRADES; ++i)
     {
         auto& u = upgrades[i];
-        if (u.purchased) continue;  // skip purchased upgrades
+        if (u.purchased) continue;
 
         float y = startYUp - shownUp * spacingUp;
-
         float boxW = upgradesPanelW - 40.0f;
         float boxH = 50.0f;
 
@@ -1161,21 +1250,21 @@ void UI_UpdateButtons()
 
         if (over && AEInputCheckTriggered(AEVK_LBUTTON))
         {
-            // Check affordability using current money from Economy
-            if (Upgrades_CanPurchase(u, Economy_GetTotalMoney()))
+            if (Upgrades_CanPurchase(u, Economy_GetTotalMoney())) //check affordability from Economy
             {
                 Upgrades_Purchase(u.id);
+                sprintf_s(gUpgradeMsg, "Purchased!"); //when purchasing upgrade
             }
             else
             {
-                // optional feedback: not enough funds (console for now)
-                std::cout << "Cannot afford upgrade " << static_cast<int>(u.id)
-                    << " (cost=" << u.cost << ", money=" << Economy_GetTotalMoney() << ")\n";
+                int need = u.cost - Economy_GetTotalMoney();
+                sprintf_s(gUpgradeMsg, "Need %d more coins!", need);
             }
-            break;
+            gUpgradeMsgTimer = UPGRADE_MSG_DURATION;
+            break; // break is fine here — only fires on an actual click
         }
 
-        ++shownUp;
+        ++shownUp; // must increment AFTER the hit-test so row Y matches draw Y
     }
 
     // ================= Inventory header icons input =================
@@ -1190,7 +1279,7 @@ void UI_UpdateButtons()
         const float slotW = INV_FRUIT_W;
         const float slotH = INV_FRUIT_H;
 
-        // Compute centers from the same paddings you use in UI_Draw()
+        // Compute centers 
         const float fruitCx = leftEdge + INV_TAB_LEFT_PAD + slotW * 0.5f;
         const float fruitCy = topEdge - INV_TAB_TOP_PAD - slotH * 0.5f;
 
@@ -1239,8 +1328,13 @@ void UI_UpdateButtons()
 
         // Active tab stock -> range
         const int curCount = (gActiveInvTab == TAB_FRUITS)
-            ? GetFruitCount()
-            : GetSeedCount();
+            ? (gSelectedInvItem == INV_ITEM_PEAR ? GetPearCount()
+                : gSelectedInvItem == INV_ITEM_BANANA ? GetBananaCount()
+                : GetAppleCount())
+            : (gSelectedInvItem == INV_ITEM_PEAR_SEED ? Inventory_GetSeedCount(SEED_PEAR)
+                : gSelectedInvItem == INV_ITEM_BANANA_SEED ? Inventory_GetSeedCount(SEED_BANANA)
+                : Inventory_GetSeedCount(SEED_APPLE));
+
 
 
         const int minVal = (curCount > 0) ? 1 : 0;
@@ -1301,9 +1395,17 @@ void UI_UpdateButtons()
 
         const float invpanelX = 0.0f;
         const float invpanelY = 0.0f;
+        const float spacing = 100.0f;
 
         float itemX = invpanelX + INV_ITEM_X;
         float itemY = invpanelY + INV_ITEM_Y;
+
+        auto HitTest = [&](float cx, float cy) -> bool {
+            return worldX >= cx - INV_ITEM_SIZE * 0.5f &&
+                worldX <= cx + INV_ITEM_SIZE * 0.5f &&
+                worldY >= cy - INV_ITEM_SIZE * 0.5f &&
+                worldY <= cy + INV_ITEM_SIZE * 0.5f;
+            };
 
         gHoverApple =
             worldX >= itemX - INV_ITEM_SIZE * 0.5f &&
@@ -1311,11 +1413,21 @@ void UI_UpdateButtons()
             worldY >= itemY - INV_ITEM_SIZE * 0.5f &&
             worldY <= itemY + INV_ITEM_SIZE * 0.5f;
 
-        if (gHoverApple && AEInputCheckTriggered(AEVK_LBUTTON))
+        if (AEInputCheckTriggered(AEVK_LBUTTON))
         {
-            gSelectedInvItem = (gActiveInvTab == TAB_FRUITS) ? INV_ITEM_APPLE : INV_ITEM_APPLE_SEED;
+            if (gActiveInvTab == TAB_FRUITS)
+            {
+                if (HitTest(itemX, itemY)) { gSelectedInvItem = INV_ITEM_APPLE;  gInvSliderValue = 1; }
+                else if (HitTest(itemX + spacing, itemY)) { gSelectedInvItem = INV_ITEM_PEAR;   gInvSliderValue = 1; }
+                else if (HitTest(itemX + spacing * 2, itemY)) { gSelectedInvItem = INV_ITEM_BANANA; gInvSliderValue = 1; }
+            }
+            else // TAB_SEEDS
+            {
+                if (HitTest(itemX, itemY)) { gSelectedInvItem = INV_ITEM_APPLE_SEED;  gInvSliderValue = 1; }
+                else if (HitTest(itemX + spacing, itemY)) { gSelectedInvItem = INV_ITEM_PEAR_SEED;   gInvSliderValue = 1; }
+                else if (HitTest(itemX + spacing * 2, itemY)) { gSelectedInvItem = INV_ITEM_BANANA_SEED; gInvSliderValue = 1; }
+            }
 
-            gInvSliderValue = 1;
         }
 
     }
@@ -1334,67 +1446,12 @@ void UI_UpdateButtons()
             worldY >= ty - INV_TRASH_SIZE * 0.5f &&
             worldY <= ty + INV_TRASH_SIZE * 0.5f;
 
-        if (gHoverTrash && AEInputCheckTriggered(AEVK_LBUTTON))
+
+        if (!gInvConfirmOpen && gHoverTrash && AEInputCheckTriggered(AEVK_LBUTTON))
         {
             if (gSelectedInvItem != INV_ITEM_NONE)
                 gInvConfirmOpen = true;
         }
-    }
-
-    //Confirmation
-    if (gInvConfirmOpen)
-    {
-        auto Btn = [&](float x, float y)
-            {
-                return worldX >= x - 40 && worldX <= x + 40 &&
-                    worldY >= y - 20 && worldY <= y + 20;
-            };
-
-        // YES
-        if (Btn(-60, -40) && AEInputCheckTriggered(AEVK_LBUTTON))
-        {
-            if (gSelectedInvItem == INV_ITEM_APPLE)
-                Inventory_RemoveFruit(static_cast<u8>(gInvSliderValue));
-            else
-                Inventory_RemoveSeed(
-                    static_cast<u8>(gInvSliderValue < 0 ? 0 : (gInvSliderValue > 255 ? 255 : gInvSliderValue)),
-                    static_cast<u8>((gSelectedInvItem - INV_ITEM_APPLE_SEED) < 0 ? 0 :
-                        ((gSelectedInvItem - INV_ITEM_APPLE_SEED) > 255 ? 255 : (gSelectedInvItem - INV_ITEM_APPLE_SEED)))
-                );
-
-            gInvConfirmOpen = false;
-            gSelectedInvItem = INV_ITEM_NONE;
-        }
-
-        // NO
-        if (Btn(60, -40) && AEInputCheckTriggered(AEVK_LBUTTON))
-        {
-            gInvConfirmOpen = false;
-        }
-
-        // ================= Confirm buttons hover =================
-
-        const float btnW = 80.0f;
-        const float btnH = 40.0f;
-
-        const float yesX = -60.0f;
-        const float yesY = -40.0f;
-
-        const float noX = 60.0f;
-        const float noY = -40.0f;
-
-        gHoverYes =
-            worldX >= yesX - btnW * 0.5f &&
-            worldX <= yesX + btnW * 0.5f &&
-            worldY >= yesY - btnH * 0.5f &&
-            worldY <= yesY + btnH * 0.5f;
-
-        gHoverNo =
-            worldX >= noX - btnW * 0.5f &&
-            worldX <= noX + btnW * 0.5f &&
-            worldY >= noY - btnH * 0.5f &&
-            worldY <= noY + btnH * 0.5f;
-
     }
 
     // ================= Settings input =================
@@ -1429,10 +1486,12 @@ void UI_UpdateButtons()
             UIAudio_PlayToggle();
         }
     }
+
+
     // -------------------------------------------------
     // CLOSE POPUP WHEN CLICKING OUTSIDE
     // -------------------------------------------------
-    if (popupOpen && AEInputCheckTriggered(AEVK_LBUTTON))
+    if (popupOpen && !gInvConfirmOpen && AEInputCheckTriggered(AEVK_LBUTTON) && !clickConsumed)
     {
         bool clickInside = false;
 
@@ -1448,22 +1507,7 @@ void UI_UpdateButtons()
             break;
         }
 
-        case BUTTON_COLLECTION:
-        {
-            const float panelCenterX = 180.0f;
-            const float panelCenterY = 0.0f;
 
-            const float panelHalfW = 800.0f * 0.5f;
-            const float panelHalfH = 600.0f * 0.4f;
-
-            clickInside =
-                worldX >= panelCenterX - panelHalfW &&
-                worldX <= panelCenterX + panelHalfW &&
-                worldY >= panelCenterY - panelHalfH &&
-                worldY <= panelCenterY + panelHalfH;
-
-            break;
-        }
         case BUTTON_SETTINGS:
         {
             float panelHalfW = (SET_PANEL_W * ScaleX) * 0.5f;
@@ -1483,13 +1527,12 @@ void UI_UpdateButtons()
             clickConsumed = true;
         }
 
-        if (!clickInside && !clickConsumed)
+        if (!clickInside)
         {
             popupOpen = false;
             activePopupIndex = -1;
         }
     }
-
 }
 
 bool isHovered_apple = false;
@@ -1505,7 +1548,6 @@ void UI_Draw()
     //============== Crate Panel =====================
     if (cratePopupOpen) {
         // Draw crate background
-        // Use nearest sampling for crisp UI
         if (pMeshCratePanelBG) {
             AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
             AEGfxSetBlendMode(AE_GFX_BM_BLEND);
@@ -1917,7 +1959,7 @@ void UI_Draw()
         }
     }
 
-    // THEN menu stuff
+    // menu 
     if (!menuOpen)
         return;
 
@@ -1952,7 +1994,6 @@ void UI_Draw()
     {
         AEGfxTextureSet(
             button.type == BUTTON_INVENTORY ? inventoryIcon :
-            button.type == BUTTON_COLLECTION ? collectionIcon :
             settingsIcon, 0, 0);
 
         AEGfxSetColorToMultiply(
@@ -2003,7 +2044,7 @@ void UI_Draw()
                 const float slotW = INV_FRUIT_W;
                 const float slotH = INV_FRUIT_H;
 
-                // Centers computed from padding (so it's aligned to the left under the title)
+                // Centers computed from padding 
                 const float fruitCx = leftEdge + INV_TAB_LEFT_PAD + slotW * 0.5f;
                 const float fruitCy = topEdge - INV_TAB_TOP_PAD - slotH * 0.5f;
 
@@ -2020,7 +2061,7 @@ void UI_Draw()
 
                     AEGfxTextureSet(fruitActive ? invFruitHighlight : invFruit, 0, 0);
                     AEMtx33Scale(&scale, w, h);
-                    AEMtx33Trans(&trans, fruitCx, fruitCy); // same center
+                    AEMtx33Trans(&trans, fruitCx, fruitCy);
                     AEMtx33Concat(&transform, &trans, &scale);
                     AEGfxSetTransform(transform.m);
                     AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
@@ -2047,13 +2088,11 @@ void UI_Draw()
             char capText[16];
             sprintf_s(capText, "%d/%d", invcur, invmax);
 
-            // Position inside the small rounded header box on your PNG.
-            // Nudge the multipliers a little if it’s off by a few pixels.
             float textX = (panelX + panelW * 0.24f) / 800.0f;
             float textY = (panelY + panelH * 0.41f) / 450.0f;
 
             AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
-            AEGfxSetColorToMultiply(0, 0, 0, 1); // dark text to match your PNG style
+            AEGfxSetColorToMultiply(0, 0, 0, 1);
             AEGfxPrint(fontId, capText, textX, textY, 0.9f, 0, 0, 0, 1);
 
             // --- Slider fill + knob + min/max labels (single scope) ---
@@ -2075,9 +2114,14 @@ void UI_Draw()
 
             // Range
             const int curCount = (gActiveInvTab == TAB_FRUITS)
-                ? GetFruitCount()
-                : GetSeedCount();
-            const int minVal = (curCount > 0) ? 1 : 0;   // set to 0 if you prefer [0..N]
+                ? (gSelectedInvItem == INV_ITEM_PEAR ? GetPearCount()
+                    : gSelectedInvItem == INV_ITEM_BANANA ? GetBananaCount()
+                    : GetAppleCount())
+                : (gSelectedInvItem == INV_ITEM_PEAR_SEED ? Inventory_GetSeedCount(SEED_PEAR)
+                    : gSelectedInvItem == INV_ITEM_BANANA_SEED ? Inventory_GetSeedCount(SEED_BANANA)
+                    : Inventory_GetSeedCount(SEED_APPLE));
+
+            const int minVal = (curCount > 0) ? 1 : 0;
             const int maxVal = curCount;
 
             gInvSliderValue = (std::max)(minVal, (std::min)(maxVal, gInvSliderValue));
@@ -2097,7 +2141,7 @@ void UI_Draw()
                 AEGfxSetBlendMode(AE_GFX_BM_BLEND);
                 if (invSliderFill) {
                     AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
-                    AEGfxSetColorToMultiply(1.00f, 0.95f, 0.80f, 1.0f); // optional warm tint
+                    AEGfxSetColorToMultiply(1.00f, 0.95f, 0.80f, 1.0f);
                     AEGfxTextureSet(invSliderFill, 0, 0);
                 }
                 else {
@@ -2156,7 +2200,7 @@ void UI_Draw()
                 const float textWorldX = knobX + INV_SLD_TEXT_X_OFFSET;
                 const float textWorldY = knobY + INV_SLD_KNOB_ANCHOR_Y + INV_SLD_TEXT_FROM_PNG_CENTER_Y;
 
-                // Approx width per character in normalized coordinates (tweak if needed)
+                // Approx width per character in normalized coordinates 
                 float charWidth = 0.012f; // ~1.2% of screen width per character
                 int len = static_cast<int>(strlen(valTxt));
                 float adjX = textWorldX / vhalfW - charWidth * (len - 1) * 0.5f;
@@ -2169,90 +2213,88 @@ void UI_Draw()
 
             // ================= Inventory items =================
             {
-
                 const float itemX = panelX + INV_ITEM_X;
                 const float itemY = panelY + INV_ITEM_Y;
 
-                const float iconSize = 90.0f;
+                const float iconSize = 100.0f;
+                const float spacing = 100.0f; // horizontal gap between icons
+
+                // Helper: draw one inventory slot (fruit or seed)
+                auto DrawInvSlot = [&](
+                    AEGfxTexture* tex,
+                    float cx, float cy,
+                    bool selected,
+                    float tintR, float tintG, float tintB,
+                    int count,
+                    float cntOffX, float cntOffY,
+                    float cntR, float cntG, float cntB)
+                    {
+                        bool hasItem = count > 0;
+
+                        // --- ICON ---
+                        AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+                        AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+                        AEGfxSetColorToMultiply(1, 1, 1, 1);
+
+                        AEGfxTextureSet(tex, 0, 0);
+                        AEMtx33Scale(&scale, iconSize, iconSize);
+                        AEMtx33Trans(&trans, cx, cy);
+                        AEMtx33Concat(&transform, &trans, &scale);
+                        AEGfxSetTransform(transform.m);
+                        AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+                        // --- SELECTION HIGHLIGHT ---
+                        if (selected && hasItem)
+                        {
+                            AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+                            AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+                            AEGfxSetColorToMultiply(tintR, tintG, tintB, 0.4f);
+                            AEMtx33Scale(&scale, (iconSize + 10.0f), (iconSize + 10.0f));
+                            AEMtx33Trans(&trans, cx, cy);
+                            AEMtx33Concat(&transform, &trans, &scale);
+                            AEGfxSetTransform(transform.m);
+                            AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+                        }
+
+                        // --- COUNT ---
+                        char cnt[8];
+                        sprintf_s(cnt, "%d", count);
+                        AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+                        AEGfxPrint(fontId, cnt,
+                            (cx + cntOffX) / 800.0f,
+                            (cy + cntOffY) / 450.0f,
+                            0.7f, cntR, cntG, cntB, 1);
+                    };
 
                 if (gActiveInvTab == TAB_FRUITS)
                 {
-                    if (GetFruitCount() > 0)
-                    {
-
-                        AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
-                        AEGfxSetBlendMode(AE_GFX_BM_BLEND);
-                        AEGfxSetColorToMultiply(1, 1, 1, 1);
-                        AEGfxTextureSet(appleIcon, 0, 0);
-
-                        AEMtx33Scale(&scale, iconSize, iconSize);
-                        AEMtx33Trans(&trans, itemX, itemY);
-                        AEMtx33Concat(&transform, &trans, &scale);
-                        AEGfxSetTransform(transform.m);
-                        AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
-
-                        if (gSelectedInvItem == INV_ITEM_APPLE)
-                        {
-                            // Semi‑transparent yellow/orange tint overlay
-                            AEGfxSetRenderMode(AE_GFX_RM_COLOR);
-                            AEGfxSetBlendMode(AE_GFX_BM_BLEND);
-                            AEGfxSetColorToMultiply(1.0f, 0.75f, 0.2f, 0.4f);
-
-                            AEMtx33Scale(&scale, iconSize + 10.0f, iconSize + 10.0f);
-                            AEMtx33Trans(&trans, itemX, itemY);
-                            AEMtx33Concat(&transform, &trans, &scale);
-                            AEGfxSetTransform(transform.m);
-                            AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
-
-                            // Reset render mode
-                            AEGfxSetColorToMultiply(1, 1, 1, 1);
-                            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
-                        }
-
-                        // Count
-                        char cnt[8];
-                        sprintf_s(cnt, "%d", GetFruitCount());
-                        AEGfxPrint(fontId, cnt, (itemX + 40) / 800.0f, (itemY - 40) / 450.0f, 0.7f, 0, 0, 0, 1);
-                    }
+                    DrawInvSlot(appleIcon, itemX, itemY,
+                        gSelectedInvItem == INV_ITEM_APPLE,
+                        1.0f, 0.75f, 0.2f,
+                        GetAppleCount(), +40.0f, -40.0f, 0, 0, 0);
+                    DrawInvSlot(pearIcon, itemX + spacing, itemY,
+                        gSelectedInvItem == INV_ITEM_PEAR,
+                        1.0f, 0.75f, 0.2f,
+                        GetPearCount(), +40.0f, -40.00f, 0, 0, 0);
+                    DrawInvSlot(bananaIcon, itemX + spacing * 2, itemY,
+                        gSelectedInvItem == INV_ITEM_BANANA,
+                        1.0f, 0.75f, 0.2f,
+                        GetBananaCount(), +40.0f, -40.0f, 0, 0, 0);
                 }
-                else // SEEDS
+                else // TAB_SEEDS
                 {
-                    if (Inventory_GetSeedCount(SEED_APPLE) > 0)
-                    {
-                        AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
-                        AEGfxSetBlendMode(AE_GFX_BM_BLEND);
-                        AEGfxSetColorToMultiply(1, 1, 1, 1);
-                        AEGfxTextureSet(appleSeedIcon, 0, 0);
-
-                        AEMtx33Scale(&scale, iconSize, iconSize);
-                        AEMtx33Trans(&trans, itemX, itemY);
-                        AEMtx33Concat(&transform, &trans, &scale);
-                        AEGfxSetTransform(transform.m);
-                        AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
-
-                        if (gSelectedInvItem == INV_ITEM_APPLE_SEED)
-                        {
-                            // Soft green tint to distinguish seed selection
-                            AEGfxSetRenderMode(AE_GFX_RM_COLOR);
-                            AEGfxSetBlendMode(AE_GFX_BM_BLEND);
-                            AEGfxSetColorToMultiply(0.3f, 1.0f, 0.4f, 0.4f);
-
-                            AEMtx33Scale(&scale, iconSize + 10.0f, iconSize + 10.0f);
-                            AEMtx33Trans(&trans, itemX, itemY);
-                            AEMtx33Concat(&transform, &trans, &scale);
-                            AEGfxSetTransform(transform.m);
-                            AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
-
-                            // Reset state
-                            AEGfxSetColorToMultiply(1, 1, 1, 1);
-                            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
-                        }
-
-                        char cnt[8];
-                        sprintf_s(cnt, "%d", Inventory_GetSeedCount(SEED_APPLE));
-                        AEGfxPrint(fontId, cnt, (itemX + 20) / 800.0f, (itemY - 35) / 450.0f, 0.7f, 1, 1, 1, 1);
-
-                    }
+                    DrawInvSlot(appleSeedIcon, itemX, itemY,
+                        gSelectedInvItem == INV_ITEM_APPLE_SEED,
+                        0.3f, 0.9f, 0.2f,
+                        Inventory_GetSeedCount(SEED_APPLE), +20.0f, -35.0f, 1, 1, 1);
+                    DrawInvSlot(pearSeedIcon, itemX + spacing, itemY,
+                        gSelectedInvItem == INV_ITEM_PEAR_SEED,
+                        0.3f, 0.9f, 0.2f,
+                        Inventory_GetSeedCount(SEED_PEAR), +20.0f, -35.0f, 1, 1, 1);
+                    DrawInvSlot(bananaSeedIcon, itemX + spacing * 2, itemY,
+                        gSelectedInvItem == INV_ITEM_BANANA_SEED,
+                        0.3f, 0.9f, 0.2f,
+                        Inventory_GetSeedCount(SEED_BANANA), +20.0f, -35.0f, 1, 1, 1);
                 }
             }
 
@@ -2321,27 +2363,7 @@ void UI_Draw()
             break;
         }
 
-        case BUTTON_COLLECTION:
-        {
-            const float panelW = 800.0f;
-            const float panelH = 600.0f;
-            const float panelX = 180.0f;   // to the right
-            const float panelY = 0.0f;   // centered
 
-            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
-            AEGfxSetBlendMode(AE_GFX_BM_BLEND);
-            AEGfxSetColorToMultiply(1, 1, 1, 1);
-            AEGfxTextureSet(collectionBG, 0, 0);
-
-            AEMtx33Scale(&scale, panelW, panelH);
-            AEMtx33Trans(&trans, panelX, panelY);
-            AEMtx33Concat(&transform, &trans, &scale);
-
-            AEGfxSetTransform(transform.m);
-            AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
-
-            break;
-        }
         case BUTTON_SETTINGS:
         {
             // Background
@@ -2388,8 +2410,7 @@ void UI_Draw()
     }
 
     // --- Upgrades Panel ---
-
-
+    AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
 
     // Draw upgrades text & hover highlight
 
@@ -2437,6 +2458,36 @@ void UI_Draw()
         AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
 
         visibleSlot++;
+    }
+
+    if (gUpgradeMsgTimer > 0.0f)
+    {
+        float dt = (float)AEFrameRateControllerGetFrameTime();
+        gUpgradeMsgTimer -= dt;
+        if (gUpgradeMsgTimer < 0.0f) gUpgradeMsgTimer = 0.0f;
+
+        float alpha = (gUpgradeMsgTimer < 0.5f) ? (gUpgradeMsgTimer / 0.5f) : 1.0f;
+
+        const float toastW = 240.0f;
+        const float toastH = 40.0f;
+        const float toastX = UPGRADES_PANEL_X;
+        const float toastY = UPGRADES_PANEL_Y - UPGRADES_PANEL_H * 0.5f - 30.0f;
+
+        AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+        AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+        AEGfxSetColorToMultiply(0.08f, 0.08f, 0.08f, 0.82f * alpha);
+        AEMtx33Scale(&scale, toastW, toastH);
+        AEMtx33Trans(&trans, toastX, toastY);
+        AEMtx33Concat(&transform, &trans, &scale);
+        AEGfxSetTransform(transform.m);
+        AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+        AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+        AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+        AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, alpha);
+        float tx = (toastX - toastW * 0.38f) / 800.0f;
+        float ty = (toastY - 6.0f) / 450.0f;
+        AEGfxPrint(fontId, gUpgradeMsg, tx, ty, 0.55f, 1.0f, 0.95f, 0.6f, alpha);
     }
 
     // --- Seeds Panel ---
@@ -2516,16 +2567,18 @@ void UI_Draw()
             int seedCount = Inventory_GetSeedCount(SEED_APPLE);
             char seedCountText[8];
             sprintf_s(seedCountText, "%d", seedCount);
-
             float badgeX = seedspanelX + 35.0f;
-            float badgeY = seedY - 30.0f;
-            float textBadgeX = badgeX - ((seedCount < 10) ? 4.0f : 8.0f);
+            float badgeY = seedY - 35.0f;
+
+            // Normalized offset per digit at scale 0.7 (~0.018 per char, half for centering)
+            int charCount = (int)strlen(seedCountText);
+            float normOffset = charCount * 0.020f * 0.5f;
+            float textBadgeX = (badgeX / 800.0f) - normOffset;
 
             AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
             AEGfxSetBlendMode(AE_GFX_BM_BLEND);
             AEGfxSetColorToMultiply(1, 1, 1, 1);
-            AEGfxPrint(fontId, seedCountText, textBadgeX / 800.0f, badgeY / 450.0f, 0.7f, 1, 1, 1, 1);
-
+            AEGfxPrint(fontId, seedCountText, textBadgeX, badgeY / 450.0f, 0.7f, 1, 1, 1, 1);
             // Info text
             const float panelLeft = seedspanelX - 200.0f;
             const float panelTop = seedspanelY + 275.0f;
@@ -2623,16 +2676,20 @@ void UI_Draw()
             char pearSeedCountText[8];
             sprintf_s(pearSeedCountText, "%d", pearSeedCount);
 
-            float badgeX = seedspanelX + 35.0f;
-            float badgeY = seedY - 30.0f;
-            float textBadgeX = badgeX - ((pearSeedCount < 10) ? 4.0f : 8.0f);
+            float badgeX = seedspanelX + 40.0f;
+            float badgeY = seedY - 35.0f;
+
+            // Normalized offset per digit at scale 0.7 (~0.018 per char, half for centering)
+            int charCount = (int)strlen(pearSeedCountText);
+            float normOffset = charCount * 0.020f * 0.5f;
+            float textBadgeX = (badgeX / 800.0f) - normOffset;
 
             AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
             AEGfxSetBlendMode(AE_GFX_BM_BLEND);
             AEGfxSetColorToMultiply(1, 1, 1, 1);
-            AEGfxPrint(fontId, pearSeedCountText, textBadgeX / 800.0f, badgeY / 450.0f, 0.7f, 1, 1, 1, 1);
+            AEGfxPrint(fontId, pearSeedCountText, textBadgeX, badgeY / 450.0f, 0.7f, 1, 1, 1, 1);
 
-            // Info text — same layout as apple block
+            // Info text 
             const float panelLeft = seedspanelX - 200.0f;
             const float panelTop = seedspanelY + 275.0f;
             const float scaleTexX = 400.0f / 616.0f;
@@ -2732,13 +2789,18 @@ void UI_Draw()
             sprintf_s(bananaSeedCountText, "%d", bananaSeedCount);
 
             float badgeX = seedspanelX + 35.0f;
-            float badgeY = seedY - 30.0f;
-            float textBadgeX = badgeX - ((bananaSeedCount < 10) ? 4.0f : 8.0f);
+            float badgeY = seedY - 35.0f;
+
+            // Normalized offset per digit at scale 0.7 (~0.018 per char, half for centering)
+            int charCount = (int)strlen(bananaSeedCountText);
+            float normOffset = charCount * 0.020f * 0.5f;
+            float textBadgeX = (badgeX / 800.0f) - normOffset;
 
             AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
             AEGfxSetBlendMode(AE_GFX_BM_BLEND);
             AEGfxSetColorToMultiply(1, 1, 1, 1);
-            AEGfxPrint(fontId, bananaSeedCountText, textBadgeX / 800.0f, badgeY / 450.0f, 0.7f, 1, 1, 1, 1);
+            AEGfxPrint(fontId, bananaSeedCountText, textBadgeX, badgeY / 450.0f, 0.7f, 1, 1, 1, 1);
+
 
             // Info text
             const float panelLeft = seedspanelX - 200.0f;
@@ -2855,9 +2917,6 @@ bool UI_IsMenuOpen()
 // ============================
 // Crate hover + tints
 // ============================
-
-// Build crate hover rectangles so they align with the wooden bins on the stall.
-// Uses the SAME transform in MainScreen_Render() for the stall image.
 
 static void UI_ResetCrateConfigToDefaults()
 {
@@ -3345,9 +3404,10 @@ void UI_Exit()
     AEGfxTextureUnload(confirmYes);
     AEGfxTextureUnload(confirmNo);
     AEGfxTextureUnload(appleIcon);
+    AEGfxTextureUnload(pearIcon);
+    AEGfxTextureUnload(bananaIcon);
 
-    AEGfxTextureUnload(collectionIcon);
-    AEGfxTextureUnload(collectionBG);
+
 
     AEGfxTextureUnload(settingsIcon);
     AEGfxTextureUnload(settingsBG);

@@ -49,22 +49,25 @@ enum RhythmDifficulty {
 };
 
 // Per-difficulty tuning parameters
-// (reward multipliers are intentionally left as placeholders for later)
 struct RhythmDifficultyConfig {
     float noteSpeed;            // Pixels per second notes travel
     float minSpawnInterval;     // Minimum seconds between notes
     float maxSpawnInterval;     // Maximum seconds between notes
-    float doubleNoteChance;     // 0�1 probability of a quick double note
-    float premiumNoteChance;    // 0�1 probability of a premium note
+    float doubleNoteChance;     // 0-1 probability of a quick double note
+    float premiumNoteChance;    // 0-1 probability of a premium note
+
+    // ---------------------------------------------------------------
+    // MODIFY THESE: paths to each difficulty's audio and background
+    // ---------------------------------------------------------------
+    const char* audioFile;      // Path to song audio file
+    const char* backgroundFile; // Path to background image for gameplay
+    // ---------------------------------------------------------------
 };
 
 // ================= DIFFICULTY =================
 
-// Set difficulty before calling Rhythm_Start(). Defaults to DIFFICULTY_MEDIUM.
 void Rhythm_SetDifficulty(RhythmDifficulty difficulty);
 RhythmDifficulty Rhythm_GetDifficulty();
-
-// Returns the config that is currently active (useful for UI display)
 const RhythmDifficultyConfig& Rhythm_GetDifficultyConfig();
 
 // ================= LIFECYCLE =================
@@ -78,31 +81,34 @@ void Rhythm_Unload();
 
 // ================= GAMEPLAY =================
 
-void Rhythm_Start();   // Starts the default chart
+void Rhythm_Start();
 void Rhythm_Stop();
 bool Rhythm_IsPlaying();
-void Rhythm_Hit();     // Call when SPACE is pressed
-bool Rhythm_IsSongFinished();  // Returns true when song + all notes are done
+void Rhythm_Hit();
+bool Rhythm_IsSongFinished();
 
 // ================= GETTERS =================
 
 const RhythmScore& Rhythm_GetScore();
-float Rhythm_GetSongDuration();    // Total duration of the song
-float Rhythm_GetCurrentTime();     // Current playback time
+float Rhythm_GetSongDuration();
+float Rhythm_GetCurrentTime();
 
 // ================= REWARDS =================
 
 enum RhythmRewardTier {
-    REWARD_POOR = 0,   // No reward (Easy only)
-    REWARD_AVERAGE,    // 1 seed / 1-2 fruits depending on difficulty
-    REWARD_GOOD        // 2 fruits / fruits+gold depending on difficulty
+    REWARD_POOR = 0,
+    REWARD_AVERAGE,
+    REWARD_GOOD
 };
 
-// Call after Rhythm_IsSongFinished() returns true to get the reward tier.
 RhythmRewardTier Rhythm_GetRewardTier();
 
-// =================SETTINGS =================
+// ================= SETTINGS =================
 void Rhythm_SetMusicEnabled(bool enabled);
+
+// Call this before starting the rhythm game to set which fruit/seed textures to use.
+// seedType: 0 = Apple, 1 = Pear, 2 = Banana  (matches SeedType enum in UI.h)
+void Rhythm_SetSeedType(int seedType);
 
 
 #endif // RHYTHM_H

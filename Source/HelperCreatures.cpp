@@ -19,9 +19,16 @@ static float facing = 1.0f;
 static int targetFruit = -1;
 static float targetX = 0.0f;
 
-static float pickupTimer = 0.0f;
 static bool isPicking = false;
 static float hopTimer = 0.0f;
+
+// ------------------------------------------------------------
+// PATROL STATE (idle walking across the stall)
+// ------------------------------------------------------------
+static const float PATROL_LEFT = 50.0f;
+static const float PATROL_RIGHT = 450.0f;
+static float patrolDir = 1.0f;   // 1 = right, -1 = left
+static const float PATROL_SPEED = 60.0f;
 
 // ------------------------------------------------------------
 // HELPER STRUCT
@@ -108,10 +115,44 @@ void Helper_Update(float dt)
             targetX = fruits[targetFruit].x; // lock position
     }
 
-    // no fruit to idle
+
+
+    // --------------------------------------------------------
+    // PATROL when no fruit to collect
+    // --------------------------------------------------------
     if (targetFruit == -1)
     {
-        g_bunny.y = -300.0f + sinf(animTimer * 6.0f) * 2.0f;
+        // move in current patrol direction
+        g_bunny.x += patrolDir * PATROL_SPEED * dt;
+
+        // flip at boundaries
+        if (g_bunny.x >= PATROL_RIGHT)
+        {
+            g_bunny.x = PATROL_RIGHT;
+            patrolDir = -1.0f;
+        }
+        else if (g_bunny.x <= PATROL_LEFT)
+        {
+            g_bunny.x = PATROL_LEFT;
+            patrolDir = 1.0f;
+        }
+
+        facing = patrolDir;
+
+        // hop while patrolling
+        hopTimer += dt * 1.5f;
+        float hop = sinf(hopTimer * 8.0f);
+        hop = hop * hop;
+        g_bunny.y = -300.0f + hop * 6.0f;
+
+        // walk animation
+        animTimer += dt;
+        if (animTimer > 0.3f)
+        {
+            altFrame = !altFrame;
+            animTimer = 0.0f;
+        }
+
         return;
     }
 
@@ -148,37 +189,20 @@ void Helper_Update(float dt)
             if (!isPicking)
             {
                 isPicking = true;
-                pickupTimer = 0.0f;
 
-                //  immediate visual feedback
-                // (slight dip)
-                g_bunny.y -= 5.0f;
+                // collect immediately — no delay
+                fruits[targetFruit].isCollected = true;
+                fruits[targetFruit].y += 10.0f;
+                Inventory_AddFruit(1, 0);
+                MainScreen_OnHelperCollect(1);
+
+                isPicking = false;
+                targetFruit = -1;
             }
         }
     }
 
-    // --------------------------------------------------------
-    // PICKUP DELAY (visual feedback)
-    // --------------------------------------------------------
-    if (isPicking)
-    {
-        pickupTimer += dt;
-
-        if (pickupTimer > 0.25f)
-        {
-            fruits[targetFruit].isCollected = true;
-            // optional: move fruit slightly upward before disappearing
-            fruits[targetFruit].y += 10.0f;
-            Inventory_AddFruit(1, 0);
-            MainScreen_OnHelperCollect(1);
-
-            isPicking = false;
-            targetFruit = -1;
-        }
-    }
-
-  
-   // animation (for sprite switching only)
+    // animation (for sprite switching only)
     animTimer += dt;
     if (animTimer > 0.3f)
     {
@@ -220,10 +244,8 @@ void Helper_Update(float dt)
 
 void Helper_Draw()
 {
-    AEGfxTexture* tex = bunnyIdle;
-
-    if (targetFruit != -1 && !isPicking)
-        tex = altFrame ? bunnyWalk1 : bunnyWalk2;
+    // walk animation plays at all times (idle wander or chasing fruit)
+    AEGfxTexture* tex = altFrame ? bunnyWalk1 : bunnyWalk2;
 
     AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
     AEGfxSetBlendMode(AE_GFX_BM_BLEND);

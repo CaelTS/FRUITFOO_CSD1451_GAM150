@@ -18,8 +18,8 @@ u8 seed_apple = 10;
 u8 seed_pear = 10;
 u8 seed_banana = 10;
 
-// Runtime-configurable inventory capacity (default 10)
-static int g_inventoryCapacity = 10;
+// Runtime-configurable inventory capacity 
+static int g_inventoryCapacity = 30;
 
 //placeholder inventory stock function
 u8 Inventory_GetFruitStock() {
@@ -180,7 +180,7 @@ void Inventory_AddFruit(u8 amount, u8 fruitType) {
 	// Update totals
 	total_fruits = apples + pears + bananas;
 
-	// Clamp to capacity
+	// Clamp to capacity — trim from lowest priority first (bananas -> pears -> apples)
 	if (total_fruits > g_inventoryCapacity)
 	{
 		int toRemove = total_fruits - g_inventoryCapacity;
@@ -300,9 +300,13 @@ void Inventory_LoadFromProfile(int slot) {
 	pears = static_cast<u8>(Profile_GetPears());
 	bananas = static_cast<u8>(Profile_GetBananas());
 
-	seed_apple = static_cast<u8>(Profile_GetSeed(0));
-	seed_pear = static_cast<u8>(Profile_GetSeed(1));
-	seed_banana = static_cast<u8>(Profile_GetSeed(2));
+	// Use saved value if > 0, otherwise fall back to default of 10 (fresh profile)
+	int saved_seed_apple = Profile_GetSeed(0);
+	int saved_seed_pear = Profile_GetSeed(1);
+	int saved_seed_banana = Profile_GetSeed(2);
+	seed_apple = static_cast<u8>(saved_seed_apple > 0 ? saved_seed_apple : 10);
+	seed_pear = static_cast<u8>(saved_seed_pear > 0 ? saved_seed_pear : 10);
+	seed_banana = static_cast<u8>(saved_seed_banana > 0 ? saved_seed_banana : 10);
 
 	// Update total counts
 	total_fruits = apples + pears + bananas;

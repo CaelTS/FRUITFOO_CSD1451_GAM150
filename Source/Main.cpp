@@ -344,6 +344,9 @@ void MainScreen_Initialize()
         Crate_Initialize();
     }
 
+    // Load per-type fruit/seed counts from the active profile
+    Inventory_LoadFromProfile(Profile_GetActiveSlot());
+
     // Initialize fruit count tracking after inventory is loaded
     g_prevFruitCount = GetFruitCount();
 
@@ -614,6 +617,7 @@ void MainScreen_Update()
     {
         OutputDebugStringA("Farm requested rhythm game\n");
         Farm_ClearRhythmFlag();
+        Rhythm_SetSeedType(Farm_GetRhythmSeedType());
         MainBGM_Stop();
         nextState = GS_RHYTHM_SCREEN;
     }
