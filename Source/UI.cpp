@@ -1061,7 +1061,6 @@ void UI_UpdateButtons()
                 gInvConfirmOpen = false;
             }
         }
-        // 🔒 BLOCK ALL OTHER UI INPUT THIS FRAME
     }
 
     // -------------------------------------------------
