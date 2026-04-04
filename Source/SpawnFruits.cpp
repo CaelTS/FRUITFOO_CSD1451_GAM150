@@ -193,11 +193,7 @@ const float targetY = -240.0f; // how high the apple should move up during colle
 // Update function: Updates the position of all apples
 void UpdateSpawnFruits(float dt) {
 
-    //if (AEInputCheckReleased(AEVK_SPACE)) { // Simulate reward after rhythm game by pressing spacebar, can be removed later
-    //    spawnMultiple = true;
-    //}
-
-    if (SpawnMultipleFruits) {
+    if (spawnMultiple) {
 		currentTimer += dt; // Advance timer by delta time
 		if (currentTimer >= currentDelay) { // Check if the timer has reached the delay threshold
             currentTimer = 0.0f;  // Reset timer

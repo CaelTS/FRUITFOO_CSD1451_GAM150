@@ -44,7 +44,7 @@ struct CrateData
 {
     bool isUnlocked = false;
 
-    FruitType fruitType;     // which fruit this crate holds (0=apple, 1=pear, 2=banana) 
+    FruitType fruitType = APPLE;     // which fruit this crate holds (0=apple, 1=pear, 2=banana) 
 
     int  fruitCount = 0;       // current stock
 
@@ -52,7 +52,7 @@ struct CrateData
     AEGfxVertexList* AppleMesh = NULL;
 
     AEGfxTexture* crate_texture = nullptr;
-    f32 crate_x = 0.0, crate_y = 0.0;
+    f32 crate_x = 0.0f, crate_y = 0.0f;
 
     AEGfxTexture* apple_1_texture = nullptr;
     AEGfxTexture* apple_2_texture = nullptr;
@@ -78,9 +78,9 @@ struct CrateData
 	int pear_scale_x_2 = 0, pear_scale_y_2 = 0;
 	int pear_scale_x_3 = 0, pear_scale_y_3 = 0;
 
-    f32 apple_x_1 = 0.0, apple_y_1 = 0.0;
-    f32 apple_x_2 = 0.0, apple_y_2 = 0.0;
-    f32 apple_x_3 = 0.0, apple_y_3 = 0.0;
+    f32 apple_x_1 = 0.0f, apple_y_1 = 0.0f;
+    f32 apple_x_2 = 0.0f, apple_y_2 = 0.0f;
+    f32 apple_x_3 = 0.0f, apple_y_3 = 0.0f;
 };
 
 static CrateData g_crates[CRATE_COUNT];
@@ -161,13 +161,13 @@ void Crate_Initialize()
 
 	// Apple positions and scales for different stock levels 
     crate0.apple_x_1 = crate0.crate_x;
-    crate0.apple_y_1 = crate0.crate_y - 20;
+    crate0.apple_y_1 = crate0.crate_y - 20.0f;
 
-    crate0.apple_x_2 = crate0.crate_x + 2;
+    crate0.apple_x_2 = crate0.crate_x + 2.0f;
     crate0.apple_y_2 = crate0.crate_y - 9.0f;
 
-    crate0.apple_x_3 = crate0.crate_x + 5.5;
-    crate0.apple_y_3 = crate0.crate_y - 1;
+    crate0.apple_x_3 = crate0.crate_x + 5.5f;
+    crate0.apple_y_3 = crate0.crate_y - 1.0f;
 
 	crate0.apple_scale_x_1 = 145;
 	crate0.apple_scale_y_1 = 48;
@@ -290,14 +290,14 @@ void Crate_Initialize()
     crate2.crate_y = -148.0f;
 
     // Apple positions and scales for different stock levels 
-    crate2.apple_x_1 = crate2.crate_x + 10.3;
-    crate2.apple_y_1 = crate2.crate_y - 21.5;
+    crate2.apple_x_1 = crate2.crate_x + 10.3f;
+    crate2.apple_y_1 = crate2.crate_y - 21.5f;
 
-    crate2.apple_x_2 = crate2.crate_x + 8.2;
+    crate2.apple_x_2 = crate2.crate_x + 8.2f;
     crate2.apple_y_2 = crate2.crate_y - 10.0f;
 
-    crate2.apple_x_3 = crate2.crate_x + 5;
-    crate2.apple_y_3 = crate2.crate_y - 1.5;
+    crate2.apple_x_3 = crate2.crate_x + 5.0f;
+    crate2.apple_y_3 = crate2.crate_y - 1.5f;
 
     crate2.apple_scale_x_1 = 133;
     crate2.apple_scale_y_1 = 48;
@@ -410,9 +410,9 @@ void Crate_Draw()
             scalex_2 = crate0.banana_scale_x_2; scaley_2 = crate0.banana_scale_y_2;
             scalex_3 = crate0.banana_scale_x_3; scaley_3 = crate0.banana_scale_y_3;
 
-			x_1 = crate0.apple_x_1 - 9; y_1 = crate0.apple_y_1 + 4;
-			x_2 = crate0.apple_x_2 - 4; y_2 = crate0.apple_y_2 + 2.5;
-			x_3 = crate0.apple_x_3 - 7; y_3 = crate0.apple_y_3 + 2.9;
+			x_1 = crate0.apple_x_1 - 9.0f; y_1 = crate0.apple_y_1 + 4.0f;
+			x_2 = crate0.apple_x_2 - 4.0f; y_2 = crate0.apple_y_2 + 2.5f;
+			x_3 = crate0.apple_x_3 - 7.0f; y_3 = crate0.apple_y_3 + 2.9f;
 
             break;
         case PEAR:
@@ -423,9 +423,9 @@ void Crate_Draw()
             scalex_2 = crate0.pear_scale_x_2; scaley_2 = crate0.pear_scale_y_2;
             scalex_3 = crate0.pear_scale_x_3; scaley_3 = crate0.pear_scale_y_3;
 
-            x_1 = crate0.apple_x_1 - 5; y_1 = crate0.apple_y_1 + 8.5;
-            x_2 = crate0.apple_x_2; y_2 = crate0.apple_y_2 + 5;
-			x_3 = crate0.apple_x_3 - 5; y_3 = crate0.apple_y_3 + 5;
+            x_1 = crate0.apple_x_1 - 5.0f; y_1 = crate0.apple_y_1 + 8.5f;
+            x_2 = crate0.apple_x_2; y_2 = crate0.apple_y_2 + 5.0f;
+			x_3 = crate0.apple_x_3 - 5.0f; y_3 = crate0.apple_y_3 + 5.0f;
             break;
         default:
             // leave textures null
@@ -539,9 +539,9 @@ void Crate_Draw()
             scalex_2 = crate2.banana_scale_x_2; scaley_2 = crate2.banana_scale_y_2;
             scalex_3 = crate2.banana_scale_x_3; scaley_3 = crate2.banana_scale_y_3;
 
-            x_1 = crate2.apple_x_1 + 1.5; y_1 = crate2.apple_y_1 + 4;
-            x_2 = crate2.apple_x_2 - 1.5; y_2 = crate2.apple_y_2 + 2;
-            x_3 = crate2.apple_x_3 - 3; y_3 = crate2.apple_y_3 + 1.8;
+            x_1 = crate2.apple_x_1 + 1.5f; y_1 = crate2.apple_y_1 + 4.0f;
+            x_2 = crate2.apple_x_2 - 1.5f; y_2 = crate2.apple_y_2 + 2.0f;
+            x_3 = crate2.apple_x_3 - 3.0f; y_3 = crate2.apple_y_3 + 1.8f;
 
             break;
         case PEAR:
@@ -552,9 +552,9 @@ void Crate_Draw()
             scalex_2 = crate2.pear_scale_x_2; scaley_2 = crate2.pear_scale_y_2;
             scalex_3 = crate2.pear_scale_x_3; scaley_3 = crate2.pear_scale_y_3;
 
-            x_1 = crate2.apple_x_1; y_1 = crate2.apple_y_1 + 8.2 ;
-            x_2 = crate2.apple_x_2 - 1.6; y_2 = crate2.apple_y_2 + 5.2 ;
-            x_3 = crate2.apple_x_3 - 2; y_3 = crate2.apple_y_3 + 5;
+            x_1 = crate2.apple_x_1; y_1 = crate2.apple_y_1 + 8.2f;
+            x_2 = crate2.apple_x_2 - 1.6f; y_2 = crate2.apple_y_2 + 5.2f;
+            x_3 = crate2.apple_x_3 - 2.0f; y_3 = crate2.apple_y_3 + 5.0f;
             break;
         default:
             // leave textures null
@@ -662,9 +662,9 @@ void Crate_Draw()
             scalex_2 = crate1.banana_scale_x_2; scaley_2 = crate1.banana_scale_y_2;
             scalex_3 = crate1.banana_scale_x_3; scaley_3 = crate1.banana_scale_y_3;
 
-            x_1 = crate1.apple_x_1 - 2; y_1 = crate1.apple_y_1 + 3.1;
-            x_2 = crate1.apple_x_2 - 4; y_2 = crate1.apple_y_2 + 2.0;
-            x_3 = crate1.apple_x_3 - 2; y_3 = crate1.apple_y_3 + 0.4;
+            x_1 = crate1.apple_x_1 - 2.0f; y_1 = crate1.apple_y_1 + 3.1f;
+            x_2 = crate1.apple_x_2 - 4.0f; y_2 = crate1.apple_y_2 + 2.0f;
+            x_3 = crate1.apple_x_3 - 2.0f; y_3 = crate1.apple_y_3 + 0.4f;
 
             break;
         case PEAR:
@@ -675,9 +675,9 @@ void Crate_Draw()
             scalex_2 = crate1.pear_scale_x_2; scaley_2 = crate1.pear_scale_y_2;
             scalex_3 = crate1.pear_scale_x_3; scaley_3 = crate1.pear_scale_y_3;
 
-            x_1 = crate1.apple_x_1 ; y_1 = crate1.apple_y_1 + 11.9;
-            x_2 = crate1.apple_x_2 - 2; y_2 = crate1.apple_y_2 + 9.9;
-            x_3 = crate1.apple_x_3 ; y_3 = crate1.apple_y_3 + 8.2;
+            x_1 = crate1.apple_x_1 ; y_1 = crate1.apple_y_1 + 11.9f;
+            x_2 = crate1.apple_x_2 - 2.0f; y_2 = crate1.apple_y_2 + 9.9f;
+            x_3 = crate1.apple_x_3 ; y_3 = crate1.apple_y_3 + 8.2f;
             break;
         default:
             // leave textures null

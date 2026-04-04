@@ -861,14 +861,6 @@ void UI_Input()
 
         // End drag on mouse release
         if (AEInputCheckReleased(AEVK_LBUTTON)) {
-            const bool overInvBtn = isButtonHovered(InvAppleButton.x, InvAppleButton.y, InvAppleButton.availableScaleX, InvAppleButton.availableScaleY) || 
-                                    isButtonHovered(InvPearButton.x, InvPearButton.y, InvPearButton.availableScaleX, InvPearButton.availableScaleY) ||
-                                    isButtonHovered(InvBananaButton.x, InvBananaButton.y, InvBananaButton.availableScaleX, InvBananaButton.availableScaleY);
-
-            const bool overCrateBtn = isButtonHovered(CrateAppleButton.x, CrateAppleButton.y, CrateAppleButton.availableScaleX, CrateAppleButton.availableScaleY) ||
-                                      isButtonHovered(CratePearButton.x, CratePearButton.y, CratePearButton.availableScaleX, CratePearButton.availableScaleY) ||
-                                      isButtonHovered(CrateBananaButton.x, CrateBananaButton.y, CrateBananaButton.availableScaleX, CrateBananaButton.availableScaleY);
-
             isDragging = false;
         }
 

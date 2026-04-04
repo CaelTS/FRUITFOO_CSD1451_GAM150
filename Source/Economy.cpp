@@ -83,7 +83,7 @@ static void sell_fruit(int crateIndex, FruitType type) {
 		return;
 	}
 
-	u8 base_price_fruit = Economy_GetBasePrice(type);
+	u8 base_price_fruit = static_cast<u8>(Economy_GetBasePrice(type));
 
 	// determine sale price
 	// NOTE: currently using base_price_apple as generic price. Replace with a lookup per fruitType later.
