@@ -2567,16 +2567,18 @@ void UI_Draw()
             int seedCount = Inventory_GetSeedCount(SEED_APPLE);
             char seedCountText[8];
             sprintf_s(seedCountText, "%d", seedCount);
-
             float badgeX = seedspanelX + 35.0f;
-            float badgeY = seedY - 30.0f;
-            float textBadgeX = badgeX - ((seedCount < 10) ? 4.0f : 8.0f);
+            float badgeY = seedY - 35.0f;
+
+            // Normalized offset per digit at scale 0.7 (~0.018 per char, half for centering)
+            int charCount = (int)strlen(seedCountText);
+            float normOffset = charCount * 0.020f * 0.5f;
+            float textBadgeX = (badgeX / 800.0f) - normOffset;
 
             AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
             AEGfxSetBlendMode(AE_GFX_BM_BLEND);
             AEGfxSetColorToMultiply(1, 1, 1, 1);
-            AEGfxPrint(fontId, seedCountText, textBadgeX / 800.0f, badgeY / 450.0f, 0.7f, 1, 1, 1, 1);
-
+            AEGfxPrint(fontId, seedCountText, textBadgeX, badgeY / 450.0f, 0.7f, 1, 1, 1, 1);
             // Info text
             const float panelLeft = seedspanelX - 200.0f;
             const float panelTop = seedspanelY + 275.0f;
@@ -2674,14 +2676,18 @@ void UI_Draw()
             char pearSeedCountText[8];
             sprintf_s(pearSeedCountText, "%d", pearSeedCount);
 
-            float badgeX = seedspanelX + 35.0f;
-            float badgeY = seedY - 30.0f;
-            float textBadgeX = badgeX - ((pearSeedCount < 10) ? 4.0f : 8.0f);
+            float badgeX = seedspanelX + 40.0f;
+            float badgeY = seedY - 35.0f;
+
+            // Normalized offset per digit at scale 0.7 (~0.018 per char, half for centering)
+            int charCount = (int)strlen(pearSeedCountText);
+            float normOffset = charCount * 0.020f * 0.5f;
+            float textBadgeX = (badgeX / 800.0f) - normOffset;
 
             AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
             AEGfxSetBlendMode(AE_GFX_BM_BLEND);
             AEGfxSetColorToMultiply(1, 1, 1, 1);
-            AEGfxPrint(fontId, pearSeedCountText, textBadgeX / 800.0f, badgeY / 450.0f, 0.7f, 1, 1, 1, 1);
+            AEGfxPrint(fontId, pearSeedCountText, textBadgeX, badgeY / 450.0f, 0.7f, 1, 1, 1, 1);
 
             // Info text 
             const float panelLeft = seedspanelX - 200.0f;
@@ -2783,13 +2789,18 @@ void UI_Draw()
             sprintf_s(bananaSeedCountText, "%d", bananaSeedCount);
 
             float badgeX = seedspanelX + 35.0f;
-            float badgeY = seedY - 30.0f;
-            float textBadgeX = badgeX - ((bananaSeedCount < 10) ? 4.0f : 8.0f);
+            float badgeY = seedY - 35.0f;
+
+            // Normalized offset per digit at scale 0.7 (~0.018 per char, half for centering)
+            int charCount = (int)strlen(bananaSeedCountText);
+            float normOffset = charCount * 0.020f * 0.5f;
+            float textBadgeX = (badgeX / 800.0f) - normOffset;
 
             AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
             AEGfxSetBlendMode(AE_GFX_BM_BLEND);
             AEGfxSetColorToMultiply(1, 1, 1, 1);
-            AEGfxPrint(fontId, bananaSeedCountText, textBadgeX / 800.0f, badgeY / 450.0f, 0.7f, 1, 1, 1, 1);
+            AEGfxPrint(fontId, bananaSeedCountText, textBadgeX, badgeY / 450.0f, 0.7f, 1, 1, 1, 1);
+
 
             // Info text
             const float panelLeft = seedspanelX - 200.0f;
