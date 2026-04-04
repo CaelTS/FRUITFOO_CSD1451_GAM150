@@ -34,6 +34,9 @@ static int hoveredSeed = -1;   // purely for highlight
 static int infoSeed = -1;         // which seed info panel is showing
 static int hoveredPlotIndex = -1;
 static int activePlotIndex = -1;
+static char  gUpgradeMsg[64] = "";
+static float gUpgradeMsgTimer = 0.0f;
+static const float UPGRADE_MSG_DURATION = 2.0f;
 
 float UI_GetPlotCenterX();
 float UI_GetPlotCenterY();
@@ -1235,10 +1238,9 @@ void UI_UpdateButtons()
     for (int i = upgradesStartIndex; i < (int)upgrades.size() && shownUp < MAX_VISIBLE_UPGRADES; ++i)
     {
         auto& u = upgrades[i];
-        if (u.purchased) continue;  // skip purchased upgrades
+        if (u.purchased) continue;
 
         float y = startYUp - shownUp * spacingUp;
-
         float boxW = upgradesPanelW - 40.0f;
         float boxH = 50.0f;
 
@@ -1250,20 +1252,21 @@ void UI_UpdateButtons()
 
         if (over && AEInputCheckTriggered(AEVK_LBUTTON))
         {
-            // Check affordability using current money from Economy
-            if (Upgrades_CanPurchase(u, Economy_GetTotalMoney()))
+            if (Upgrades_CanPurchase(u, Economy_GetTotalMoney())) //check affordability from Economy
             {
                 Upgrades_Purchase(u.id);
+                sprintf_s(gUpgradeMsg, "Purchased!"); //when purchasing upgrade
             }
             else
             {
-                std::cout << "Cannot afford upgrade " << static_cast<int>(u.id)
-                    << " (cost=" << u.cost << ", money=" << Economy_GetTotalMoney() << ")\n";
+                int need = u.cost - Economy_GetTotalMoney();
+                sprintf_s(gUpgradeMsg, "Need %d more coins!", need);
             }
-            break;
+            gUpgradeMsgTimer = UPGRADE_MSG_DURATION;
+            break; // break is fine here — only fires on an actual click
         }
 
-        ++shownUp;
+        ++shownUp; // must increment AFTER the hit-test so row Y matches draw Y
     }
 
     // ================= Inventory header icons input =================
@@ -2493,6 +2496,36 @@ void UI_Draw()
         AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
 
         visibleSlot++;
+    }
+
+    if (gUpgradeMsgTimer > 0.0f)
+    {
+        float dt = (float)AEFrameRateControllerGetFrameTime();
+        gUpgradeMsgTimer -= dt;
+        if (gUpgradeMsgTimer < 0.0f) gUpgradeMsgTimer = 0.0f;
+
+        float alpha = (gUpgradeMsgTimer < 0.5f) ? (gUpgradeMsgTimer / 0.5f) : 1.0f;
+
+        const float toastW = 240.0f;
+        const float toastH = 40.0f;
+        const float toastX = UPGRADES_PANEL_X;
+        const float toastY = UPGRADES_PANEL_Y - UPGRADES_PANEL_H * 0.5f - 30.0f;
+
+        AEGfxSetRenderMode(AE_GFX_RM_COLOR);
+        AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+        AEGfxSetColorToMultiply(0.08f, 0.08f, 0.08f, 0.82f * alpha);
+        AEMtx33Scale(&scale, toastW, toastH);
+        AEMtx33Trans(&trans, toastX, toastY);
+        AEMtx33Concat(&transform, &trans, &scale);
+        AEGfxSetTransform(transform.m);
+        AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+        AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+        AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+        AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, alpha);
+        float tx = (toastX - toastW * 0.38f) / 800.0f;
+        float ty = (toastY - 6.0f) / 450.0f;
+        AEGfxPrint(fontId, gUpgradeMsg, tx, ty, 0.55f, 1.0f, 0.95f, 0.6f, alpha);
     }
 
     // --- Seeds Panel ---
