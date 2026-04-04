@@ -226,13 +226,13 @@ void Crate_Initialize()
 
     // Apple positions and scales for different stock levels 
     crate1.apple_x_1 = crate1.crate_x;
-    crate1.apple_y_1 = crate1.crate_y - 20.2;
+    crate1.apple_y_1 = crate1.crate_y - 20.2f;
 
     crate1.apple_x_2 = crate1.crate_x + 2;
     crate1.apple_y_2 = crate1.crate_y - 9.5f;
 
     crate1.apple_x_3 = crate1.crate_x ;
-    crate1.apple_y_3 = crate1.crate_y + 0.5;
+    crate1.apple_y_3 = crate1.crate_y + 0.5f;
 
     crate1.apple_scale_x_1 = 133;
     crate1.apple_scale_y_1 = 48;

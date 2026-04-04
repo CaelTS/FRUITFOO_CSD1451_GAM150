@@ -6,6 +6,7 @@
 #include "Rhythm.h"
 #include "StartScreen.h"
 #include "Splash.h"
+#include "Credits.h"
 #include <iostream>
 
 
@@ -42,7 +43,6 @@ static void StartScreen_GSM_Update()
     {
         if (nextState == currentState) // nothing chosen yet
             nextState = GS_MAIN_SCREEN;
-        // else: Continue set GS_NEXT_SCREEN, New Game set GS_MAIN_SCREEN, etc. � keep it
     }
 }
 static void StartScreen_GSM_Render() { StartScreen_Draw(); }
@@ -112,6 +112,15 @@ void GSM_Update()
     case GS_EXIT:
         fpLoad = fpInitialize = fpUpdate =
             fpDraw = fpFree = fpUnload = nullptr;
+        break;
+
+    case GS_CREDITS:
+        fpLoad = Credits_Load;
+        fpInitialize = Credits_Initialize;
+        fpUpdate = Credits_Update;
+        fpDraw = Credits_Draw;
+        fpFree = Credits_Free;
+        fpUnload = Credits_Unload;
         break;
     }
 }

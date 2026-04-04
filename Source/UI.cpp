@@ -868,22 +868,6 @@ void UI_Input()
             const bool overCrateBtn = isButtonHovered(CrateAppleButton.x, CrateAppleButton.y, CrateAppleButton.availableScaleX, CrateAppleButton.availableScaleY) ||
                                       isButtonHovered(CratePearButton.x, CratePearButton.y, CratePearButton.availableScaleX, CratePearButton.availableScaleY) ||
                                       isButtonHovered(CrateBananaButton.x, CrateBananaButton.y, CrateBananaButton.availableScaleX, CrateBananaButton.availableScaleY);
-            
-
-            //if (!overInvBtn && !overCrateBtn && !isMouseOver4Corners(-220.00, -218.00, 219.00, -323.00))
-            //{
-            //    selectedLocation = NIL;
-            //    sliderX = minSlider; // explicit deselect -> reset
-            //}
-            //else if (selectedLocation == NIL && isMouseOver4Corners(-220.00, -218.00, 219.00, -323.00))
-            //{
-            //    // released over track but not buttons, keep selection but don't reset slider
-            //    sliderX = minSlider; // reset slider but keep location so user can see where they dropped on track
-            //}
-            //else
-            //{
-            //    // released over a button, keep selection and slider as is
-            //}
 
             isDragging = false;
         }
