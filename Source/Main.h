@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include "SpawnFruits.h"
 
 // MainScreen lifecycle functions
 void MainScreen_Load();
@@ -9,8 +10,8 @@ void MainScreen_Render();
 void MainScreen_Free();
 void MainScreen_Unload();
 
-// Called by UI.cpp when the player toggles BGM in Settings
-void MainBGM_SetEnabled(bool enabled);
+void MainScreen_OnHelperCollect(int amount , FruitType fruit);
 
-// Called by HelperCreatures.cpp when the bunny collects a fruit
-void MainScreen_OnHelperCollect(int amount);
+// Expose global scale factors (defined in Main.cpp)
+extern float gScaleX;
+extern float gScaleY;

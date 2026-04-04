@@ -294,6 +294,8 @@ AEGfxVertexList* pMeshCrateSliderFILL = NULL;
 AEGfxTexture* pCratePanelBGTexture = nullptr;
 AEGfxTexture* pCrateCostTexture = nullptr;
 AEGfxTexture* pCrateInfoATexture = nullptr;
+AEGfxTexture* pCrateInfoPTexture = nullptr;
+AEGfxTexture* pCrateInfoBTexture = nullptr;
 
 AEGfxTexture* pCrateSliderCircleTexture = nullptr;
 AEGfxTexture* pCrateSliderFillTexture = nullptr;
@@ -365,7 +367,13 @@ static AEGfxTexture* TextureLoad(const char* address) {
 }
 
 CButton InvAppleButton;
+CButton InvPearButton;
+CButton InvBananaButton;
+
 CButton CrateAppleButton;
+CButton CratePearButton;
+CButton CrateBananaButton;
+
 RButton Store_Crate;
 
 static bool isButtonHovered(float btnX, float btnY, float btnW, float btnH)
@@ -426,6 +434,10 @@ static int GetFruitBasketIndexUnderMouse()
     return -1;
 }
 
+static bool GetCrateUnlockedUnderMouse() {
+    return Crate_IsUnlocked(GetFruitBasketIndexUnderMouse());
+}
+
 
 // -------------------------
 // Settings panel state
@@ -455,6 +467,8 @@ static const float SET_TOGGLE_H = 57.0f;
 static const float SET_CLOSE_X = 230.0f;
 static const float SET_CLOSE_Y = 150.0f;
 static const float SET_CLOSE_SIZE = 28.0f;
+
+static const float shiftTgt = -40.0f;
 
 void UI_Init()
 {
@@ -506,6 +520,8 @@ void UI_Init()
 
     pMeshCrateInfo = CreateMesh();
     pCrateInfoATexture = AEGfxTextureLoad("Assets/Crate_1_UI_Info_Apple.png");
+    pCrateInfoPTexture = AEGfxTextureLoad("Assets/Crate_UI_Pear_Info.png");
+    pCrateInfoBTexture = AEGfxTextureLoad("Assets/Crate_UI_Banana_Info.png");
 
     pMeshCrateSliderCircle = CreateMesh();
     pCrateSliderCircleTexture = AEGfxTextureLoad("Assets/Crate_1_UI_SliderCircle.png");
@@ -519,11 +535,35 @@ void UI_Init()
         122, 122, 141, 141, 158, 145,
         -140, -40);
 
+    InvPearButton = CreateCrateButton(TextureLoad("Assets/Crate_1_UI_Available.png"),
+        TextureLoad("Assets/Crate_UI_Pear_Unselected.png"),
+        TextureLoad("Assets/Crate_UI_Pear_Selected.png"),
+        122, 122, 141, 141, 158, 145,
+		40 + shiftTgt + (40 + shiftTgt - (-140)), -40);
+
+    InvBananaButton = CreateCrateButton(TextureLoad("Assets/Crate_1_UI_Available.png"),
+        TextureLoad("Assets/Crate_UI_Banana_Unselected.png"),
+        TextureLoad("Assets/Crate_UI_Banana_Selected.png"),
+		122, 122, 141, 141, 158, 145,
+		40 + shiftTgt, -40);
+
     CrateAppleButton = CreateCrateButton(TextureLoad("Assets/Crate_1_UI_Available.png"),
         TextureLoad("Assets/Crate_1_UI_Unselected_Apple.png"),
         TextureLoad("Assets/Crate_1_UI_Selected_Apple.png"),
         122, 122, 141, 141, 158, 145,
         -150, 180);
+
+    CratePearButton = CreateCrateButton(TextureLoad("Assets/Crate_1_UI_Available.png"),
+        TextureLoad("Assets/Crate_UI_Pear_Unselected.png"),
+        TextureLoad("Assets/Crate_UI_Pear_Selected.png"),
+		122, 122, 141, 141, 158, 145,
+		-150, 180);
+
+    CrateBananaButton = CreateCrateButton(TextureLoad("Assets/Crate_1_UI_Available.png"),
+        TextureLoad("Assets/Crate_UI_Banana_Unselected.png"),
+		TextureLoad("Assets/Crate_UI_Banana_Selected.png"),
+		122, 122, 141, 141, 158, 145,
+		-150, 180);
 
     Store_Crate = CreateCrateRButton(TextureLoad("Assets/Crate_1_UI_Icon_Crate.png"),
         TextureLoad("Assets/Crate_1_UI_Icon_Inventory.png"),
@@ -596,6 +636,8 @@ int crateID = -1; //default
 bool empty = false;
 bool once = true;
 bool isDragging = false;
+bool clickedtwice = false;
+bool ImInYou = false; // to prevent clicking on fruit buttons in confirm panel when trying to click the crate buttons behind it (since they share the same space)
 
 float sliderX = -200.0f;
 float sliderY = -265.0f;
@@ -663,10 +705,12 @@ void UI_Input()
 
     //================= Crate panel input ===================
     /*float crate0x = 143.0f, crate0y = -148.0f, crateW = 186 * gScaleX, crateH = 99 * gScaleY;*/
-    if (cratePopupOpen == false && /*IsMouseOverRect(crate0x, crate0y, crateW, crateH)*/ GetFruitBasketIndexUnderMouse() >= 0 && AEInputCheckTriggered(AEVK_LBUTTON))
+    if (cratePopupOpen == false && /*IsMouseOverRect(crate0x, crate0y, crateW, crateH)*/ GetCrateUnlockedUnderMouse() && AEInputCheckTriggered(AEVK_LBUTTON))
     {
         // toggle UI
         cratePopupOpen = true;
+        clickedtwice = false;
+		ImInYou = false;
         crateID = GetFruitBasketIndexUnderMouse();
         printf("Clicked on basket %d,popup now %s\n", crateID, cratePopupOpen ? "OPEN" : "CLOSED");
 
@@ -675,16 +719,15 @@ void UI_Input()
         // you can use fruitId to open crate UI for that fruit
     }
 
-    GetFruitBasketIndexUnderMouse();
-    (void)GetFruitBasketIndexUnderMouse();
-
-    if (cratePopupOpen)
+    if (cratePopupOpen && clickedtwice)
     {
         // Example: close crate UI if clicking outside
         float panelX = 0, panelY = 0, panelW = 617 * gScaleX, panelH = 871 * gScaleY;
         if (!IsMouseOverRect(panelX, panelY, panelW, panelH) && AEInputCheckTriggered(AEVK_LBUTTON))
         {
             cratePopupOpen = false;
+            clickedtwice = false;
+			ImInYou = false;
             printf("Clicked outside crate panel, closing it\n");
         }
     }
@@ -695,7 +738,7 @@ void UI_Input()
         // - Check if clicking on "Add to Crate" button
         // - Check if dragging slider
         // - etc.
-
+        
         int typeInCrate = Crate_GetFruitType(crateID);
         int countInCrate = Crate_GetFruitCount(crateID);
         empty = countInCrate < 0;
@@ -727,17 +770,50 @@ void UI_Input()
         // Trigger: start drag when clicking knob, or snap+start if clicking the track
         if (AEInputCheckTriggered(AEVK_LBUTTON)) {
 
-            if (isButtonClicked(InvAppleButton.x, InvAppleButton.y, InvAppleButton.availableScaleX, InvAppleButton.availableScaleY)) {
-                selectedInventoryFruitType = APPLE;
-                selectedLocation = INVENTORY;
-                printf("Selected fruit: APPLE\n");
-            }
+            clickedtwice = true;
 
-            if (isButtonClicked(CrateAppleButton.x, CrateAppleButton.y, CrateAppleButton.availableScaleX, CrateAppleButton.availableScaleY)) {
-                selectedFruit = APPLE;
-                selectedLocation = CRATE;
-                printf("Selected fruit: APPLE\n");
+            if (!ImInYou) {
+
+                // Inventory Buttons (source)
+                if (isButtonClicked(InvAppleButton.x, InvAppleButton.y, InvAppleButton.availableScaleX, InvAppleButton.availableScaleY)) {
+                    selectedInventoryFruitType = APPLE;
+                    selectedLocation = INVENTORY;
+                    printf("Selected fruit: APPLE\n");
+                }
+
+                if (isButtonClicked(InvPearButton.x, InvPearButton.y, InvPearButton.availableScaleX, InvPearButton.availableScaleY)) {
+                    selectedInventoryFruitType = PEAR;
+                    selectedLocation = INVENTORY;
+                    printf("Selected fruit: PEAR\n");
+                }
+
+                if (isButtonClicked(InvBananaButton.x, InvBananaButton.y, InvBananaButton.availableScaleX, InvBananaButton.availableScaleY)) {
+                    selectedInventoryFruitType = BANANA;
+                    selectedLocation = INVENTORY;
+                    printf("Selected fruit: BANANA\n");
+                }
+
+			    // Crate Buttons (destination)
+                if (isButtonClicked(CrateAppleButton.x, CrateAppleButton.y, CrateAppleButton.availableScaleX, CrateAppleButton.availableScaleY)) {
+                    selectedFruit = APPLE;
+                    selectedLocation = CRATE;
+                    printf("Selected fruit: APPLE\n");
+                }
+
+                if (isButtonClicked(CratePearButton.x, CratePearButton.y, CratePearButton.availableScaleX, CratePearButton.availableScaleY)) {
+                    selectedFruit = PEAR;
+                    selectedLocation = CRATE;
+                    printf("Selected fruit: PEAR\n");
+                }
+
+                if (isButtonClicked(CrateBananaButton.x, CrateBananaButton.y, CrateBananaButton.availableScaleX, CrateBananaButton.availableScaleY)) {
+                    selectedFruit = BANANA;
+                    selectedLocation = CRATE;
+                    printf("Selected fruit: BANANA\n");
+                }
             }
+        
+
 
             // Hit test knob
             const bool overKnob =
@@ -783,24 +859,6 @@ void UI_Input()
 
         // End drag on mouse release
         if (AEInputCheckReleased(AEVK_LBUTTON)) {
-            const bool overInvBtn = isButtonHovered(InvAppleButton.x, InvAppleButton.y, InvAppleButton.availableScaleX, InvAppleButton.availableScaleY);
-            const bool overCrateBtn = isButtonHovered(CrateAppleButton.x, CrateAppleButton.y, CrateAppleButton.availableScaleX, CrateAppleButton.availableScaleY);
-
-            if (!overInvBtn && !overCrateBtn && !isMouseOver4Corners(-220.00, -218.00, 219.00, -323.00))
-            {
-                selectedLocation = NIL;
-                sliderX = minSlider; // explicit deselect -> reset
-            }
-            else if (selectedLocation == NIL && isMouseOver4Corners(-220.00, -218.00, 219.00, -323.00))
-            {
-                // released over track but not buttons, keep selection but don't reset slider
-                sliderX = minSlider; // reset slider but keep location so user can see where they dropped on track
-            }
-            else
-            {
-                // released over a button, keep selection and slider as is
-            }
-
             isDragging = false;
         }
 
@@ -824,6 +882,8 @@ void UI_Input()
             };
 
         if (gInvConfirmOpen) {
+
+			ImInYou = true; // prevent clicks on crate buttons behind confirm dialog
 
             // ================= Confirm buttons hover =================
 
@@ -864,7 +924,8 @@ void UI_Input()
                             printf("Moved %d apples from inventory to crate %d\n", toMove, crateID);
                         }
                     }
-                    else if (selectedLocation == CRATE && selectedFruit == APPLE) {
+                    
+                    if (selectedLocation == CRATE && selectedFruit == APPLE) {
                         // Move from crate back to inventory
                         int availableToMove = Crate_GetFruitCount(crateID);
                         int toMove = std::min(sliderValue, availableToMove);
@@ -875,16 +936,18 @@ void UI_Input()
                         }
                     }
 
-                    else if (selectedLocation == INVENTORY && selectedInventoryFruitType == PEAR) {
+                    if (selectedLocation == INVENTORY && selectedInventoryFruitType == PEAR) {
                         int availableToMove = GetPearCount();
                         int toMove = std::min(sliderValue, availableToMove);
                         if (toMove > 0) {
                             Inventory_RemoveFruitTyped(static_cast<u8>(toMove), 1); // 1 = pear
                             Crate_AddFruit(crateID, toMove);
                             Crate_SetFruitType(crateID, PEAR);
+                            printf("FruitType : %d \n", Crate_GetFruitType(crateID));
                         }
                     }
-                    else if (selectedLocation == CRATE && selectedFruit == PEAR) {
+                    
+                    if (selectedLocation == CRATE && selectedFruit == PEAR) {
                         int availableToMove = Crate_GetFruitCount(crateID);
                         int toMove = std::min(sliderValue, availableToMove);
                         if (toMove > 0) {
@@ -892,7 +955,8 @@ void UI_Input()
                             Inventory_AddFruit(static_cast<u8>(toMove), 1); // 1 = pear
                         }
                     }
-                    else if (selectedLocation == INVENTORY && selectedInventoryFruitType == BANANA) {
+                    
+                    if (selectedLocation == INVENTORY && selectedInventoryFruitType == BANANA) {
                         int availableToMove = GetBananaCount();
                         int toMove = std::min(sliderValue, availableToMove);
                         if (toMove > 0) {
@@ -901,7 +965,8 @@ void UI_Input()
                             Crate_SetFruitType(crateID, BANANA);
                         }
                     }
-                    else if (selectedLocation == CRATE && selectedFruit == BANANA) {
+                    
+                    if (selectedLocation == CRATE && selectedFruit == BANANA) {
                         int availableToMove = Crate_GetFruitCount(crateID);
                         int toMove = std::min(sliderValue, availableToMove);
                         if (toMove > 0) {
@@ -912,6 +977,7 @@ void UI_Input()
 
                     // close dialog after action
                     gInvConfirmOpen = false;
+					ImInYou = false;
                 }
 
 
@@ -919,6 +985,7 @@ void UI_Input()
                 else if (Btn(60, -40))
                 {
                     gInvConfirmOpen = false;
+					ImInYou = false;
                 }
 
             }
@@ -1533,8 +1600,10 @@ void UI_UpdateButtons()
     }
 }
 
-bool isHovered_apple = false;
-bool isSelected_apple = false;
+bool isHovered = false;
+bool isSelectedApple = false;
+bool isSelectedBanana = false;
+bool isSelectedPear = false;
 int shiftUP = 10;
 int price_apple = 0;
 
@@ -1582,6 +1651,14 @@ void UI_Draw()
                 price_apple = Economy_GetBasePrice(APPLE);
             }
 
+            if (selectedFruit == PEAR && Crate_GetFruitCount(crateID) != 0) {
+                price_apple = Economy_GetBasePrice(PEAR);
+            }
+
+            if (selectedFruit == BANANA && Crate_GetFruitCount(crateID) != 0) {
+                price_apple = Economy_GetBasePrice(BANANA);
+            }
+
             if (Crate_GetFruitCount(crateID) == 0) {
                 price_apple = 0;
             }
@@ -1625,15 +1702,15 @@ void UI_Draw()
 
 
                 if (AEInputCheckTriggered(AEVK_LBUTTON) && isButtonHovered(CrateAppleButton.x, CrateAppleButton.y, CrateAppleButton.unselectedScaleX, CrateAppleButton.unselectedScaleY)) {
-                    isHovered_apple = true;
+                    isHovered = true;
 
                 }
                 if (AEInputCheckTriggered(AEVK_LBUTTON) && !isButtonHovered(CrateAppleButton.x, CrateAppleButton.y, CrateAppleButton.unselectedScaleX, CrateAppleButton.unselectedScaleY)
                     && !isMouseOver4Corners(-220.00, -218.00, 219.00, -323.00)) {
-                    isHovered_apple = false;
+                    isHovered = false;
                 }
 
-                if (isHovered_apple) {
+                if (isHovered) {
                     textureApple = CrateAppleButton.selectedTex;
                     scaleAppleX = CrateAppleButton.selectedScaleX;
                     scaleAppleY = CrateAppleButton.selectedScaleY;
@@ -1700,72 +1777,83 @@ void UI_Draw()
 
                 AEGfxPrint(fontId, appleQTYText, xNorm, yNorm, 1.0f, r, g, b, 1);
             }
+        }
 
-            if (InvAppleButton.mesh) {
-                textureApple = nullptr;
-                scaleAppleX = 0;
-                scaleAppleY = 0;
-                AppleX = InvAppleButton.x;
-                AppleY = InvAppleButton.y;
+        if (CratePearButton.mesh && Crate_GetFruitType(crateID) == 1 ) { // pear
+            AEGfxTexture* texturePear = nullptr;
+            float scalePearX = 0.0f;
+            float scalePearY = 0.0f;
+            float PearX = CratePearButton.x, PearY = CratePearButton.y;
 
-                if (AEInputCheckTriggered(AEVK_LBUTTON) && isButtonHovered(InvAppleButton.x, InvAppleButton.y, InvAppleButton.unselectedScaleX, InvAppleButton.unselectedScaleY)) {
-                    isSelected_apple = true;
+            if (Crate_GetFruitCount(crateID) > 0) {
+                texturePear = CratePearButton.unselectedTex;
+                scalePearX = CratePearButton.unselectedScaleX;
+                scalePearY = CratePearButton.unselectedScaleY;
+                PearX = CratePearButton.x + 8.1f;
+                PearY = CratePearButton.y - 7.8f;
+
+
+                if (AEInputCheckTriggered(AEVK_LBUTTON) && isButtonHovered(CratePearButton.x, CratePearButton.y, CratePearButton.unselectedScaleX, CratePearButton.unselectedScaleY)) {
+                    isHovered = true;
+
                 }
-
-                if (AEInputCheckTriggered(AEVK_LBUTTON) && !isButtonHovered(InvAppleButton.x, InvAppleButton.y, InvAppleButton.unselectedScaleX, InvAppleButton.unselectedScaleY)
+                if (AEInputCheckTriggered(AEVK_LBUTTON) && !isButtonHovered(CratePearButton.x, CratePearButton.y, CratePearButton.unselectedScaleX, CratePearButton.unselectedScaleY)
                     && !isMouseOver4Corners(-220.00, -218.00, 219.00, -323.00)) {
-                    isSelected_apple = false;
-                    printf("Deselected apple\n");
+                    isHovered= false;
                 }
 
-                if (isSelected_apple) {
-                    textureApple = InvAppleButton.selectedTex;
-                    scaleAppleX = InvAppleButton.selectedScaleX;
-                    scaleAppleY = InvAppleButton.selectedScaleY;
-                }
-                else {
-                    textureApple = InvAppleButton.unselectedTex;
-                    scaleAppleX = InvAppleButton.unselectedScaleX;
-                    scaleAppleY = InvAppleButton.unselectedScaleY;
+                if (isHovered) {
+                    texturePear = CratePearButton.selectedTex;
+                    scalePearX = CratePearButton.selectedScaleX;
+                    scalePearY = CratePearButton.selectedScaleY;
                 }
 
-                // Draw "Apple" button in inventory UI (for reference, not interactive here)
-                AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
-                AEGfxSetBlendMode(AE_GFX_BM_BLEND);
-                AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
-                AEGfxSetTransparency(1.0f);
-                AEGfxSetTextureMode(AE_GFX_TM_PRECISE);
-                AEGfxTextureSet(textureApple, 0, 0);  // Set the texture
-                AEMtx33Trans(&trans, AppleX, AppleY + shiftUP);  // Apply position transformation
-                AEMtx33Scale(&scale, scaleAppleX * gScaleX, scaleAppleY * gScaleY);
-                AEMtx33Concat(&transform, &trans, &scale);
-                AEGfxSetTransform(transform.m);  // Set the transformation matrix for the apple
-                AEGfxMeshDraw(InvAppleButton.mesh, AE_GFX_MDM_TRIANGLES);  // Draw the apple as a quad
+            }
+
+            if (Crate_GetFruitCount(crateID) <= 0) {
+                texturePear = CratePearButton.availableTex;
+                scalePearX = CratePearButton.availableScaleX;
+                scalePearY = CratePearButton.availableScaleY;
+            }
+
+            // Draw "Apple" button in crate UI
+            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+            AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+            AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
+            AEGfxSetTransparency(1.0f);
+            AEGfxSetTextureMode(AE_GFX_TM_PRECISE);
+            AEGfxTextureSet(texturePear, 0, 0);  // Set the texture
+            AEMtx33Trans(&trans, PearX, PearY);  // Apply position transformation
+            AEMtx33Scale(&scale, scalePearX * gScaleX, scalePearY * gScaleY);
+            AEMtx33Concat(&transform, &trans, &scale);
+            AEGfxSetTransform(transform.m);  // Set the transformation matrix for the apple
+            AEGfxMeshDraw(CratePearButton.mesh, AE_GFX_MDM_TRIANGLES);  // Draw the apple as a quad
+
+            if (texturePear == CratePearButton.unselectedTex || texturePear == CratePearButton.selectedTex) {
 
                 // --- Quantity number text ---
-                int qty_apple = GetAppleCount();
+                int qty_pear = Crate_GetFruitCount(crateID);
 
-
-                char appleQTYText[32];
-                sprintf_s(appleQTYText, "%d", qty_apple);
+                char pearQTYText[32];
+                sprintf_s(pearQTYText, "%d", qty_pear);
 
 
                 //float x = -530.0f / 800.0f;  // normalize X by 800.0f
                 //float y = 350.0f / 450.0f;  // normalize Y by 450.0f
                 float xOf = 0.0f;
-                if (qty_apple <= 9) {
-                    xOf = -111;
-                    if (textureApple == InvAppleButton.selectedTex) {
-                        xOf = -105;
+                if (qty_pear<= 9) {
+                    xOf = -112;
+                    if (texturePear == CratePearButton.selectedTex) {
+                        xOf = -106;
                     }
                 }
                 else {
-                    xOf = -117;
-                    if (textureApple == InvAppleButton.selectedTex) {
-                        xOf = -111;
+                    xOf = -118;
+                    if (texturePear == CratePearButton.selectedTex) {
+                        xOf = -112;
                     }
                 }
-                float yOf = -83.0f + shiftUP;
+                float yOf = 131 - 2;
                 const float halfW = 800.0f;
                 const float halfH = 450.0f;
                 float xNorm = xOf / halfW;
@@ -1779,82 +1867,85 @@ void UI_Draw()
                 AEGfxSetBlendMode(AE_GFX_BM_BLEND);
                 AEGfxSetColorToMultiply(1, 1, 1, 1);
 
-                AEGfxPrint(fontId, appleQTYText, xNorm, yNorm, 1.0f, r, g, b, 1);
+                AEGfxPrint(fontId, pearQTYText, xNorm, yNorm, 1.0f, r, g, b, 1);
             }
+        }
 
-            if (pMeshCrateInfo) {
-                if (Crate_GetFruitType(crateID) == APPLE) {
-                    AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
-                    AEGfxSetBlendMode(AE_GFX_BM_BLEND);
-                    AEGfxSetColorToMultiply(1, 1, 1, 1);
-                    AEGfxTextureSet(pCrateInfoATexture, 0, 0);  // Set the texture
-                    AEMtx33Trans(&trans, 0, -155);  // Apply position transformation
-                    AEMtx33Scale(&scale, 530 * gScaleX, 117 * gScaleY);
-                    AEMtx33Concat(&transform, &trans, &scale);
-                    AEGfxSetTransform(transform.m);  // Set the transformation matrix for the apple
-                    AEGfxMeshDraw(pMeshCrateInfo, AE_GFX_MDM_TRIANGLES);  // Draw the apple as a quad
+        if (CrateBananaButton.mesh && Crate_GetFruitType(crateID) == 2) { // banana
+            AEGfxTexture* textureBanana = nullptr;
+            float scaleBananaX = 0.0f;
+            float scaleBananaY = 0.0f;
+            float BananaX = CrateBananaButton.x, BananaY = CrateBananaButton.y;
 
-                    // --- Gold number text ---
-
-                    if (selectedInventoryFruitType == APPLE) {
-                        price_apple = Economy_GetBasePrice(APPLE);
-                    }
-                    char appleText[32];
-                    sprintf_s(appleText, "%d", price_apple);
+            if (Crate_GetFruitCount(crateID) > 0) {
+                textureBanana = CrateBananaButton.unselectedTex;
+                scaleBananaX = CrateBananaButton.unselectedScaleX;
+                scaleBananaY = CrateBananaButton.unselectedScaleY;
+                BananaX = CrateBananaButton.x + 8.1f;
+                BananaY = CrateBananaButton.y - 7.8f;
 
 
+                if (AEInputCheckTriggered(AEVK_LBUTTON) && isButtonHovered(CrateBananaButton.x, CrateBananaButton.y, CrateBananaButton.unselectedScaleX, CrateBananaButton.unselectedScaleY)) {
+                    isHovered = true;
 
-                    float xOf = 130;
-                    float yOf = -161.5;
-                    const float halfW = 800.0f;
-                    const float halfH = 450.0f;
-                    float xNorm = xOf / halfW;
-                    float yNorm = yOf / halfH;
-
-                    float r = 60.0f / 255.0f;
-                    float g = 68.0f / 255.0f;
-                    float b = 92.0f / 255.0f;
-
-                    AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
-                    AEGfxSetBlendMode(AE_GFX_BM_BLEND);
-                    AEGfxSetColorToMultiply(1, 1, 1, 1);
-
-                    AEGfxPrint(fontId, appleText, xNorm, yNorm, 1.0f, r, g, b, 1);
                 }
+                if (AEInputCheckTriggered(AEVK_LBUTTON) && !isButtonHovered(CrateBananaButton.x, CrateBananaButton.y, CrateBananaButton.unselectedScaleX, CrateBananaButton.unselectedScaleY)
+                    && !isMouseOver4Corners(-220.00, -218.00, 219.00, -323.00)) {
+                    isHovered = false;
+                }
+
+                if (isHovered) {
+                    textureBanana = CrateBananaButton.selectedTex;
+                    scaleBananaX = CrateBananaButton.selectedScaleX;
+                    scaleBananaY = CrateBananaButton.selectedScaleY;
+                }
+
             }
 
-            if (pMeshCrateSliderCircle) {
-                AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
-                AEGfxSetBlendMode(AE_GFX_BM_BLEND);
-                AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
-                AEGfxSetTransparency(1.0f);
-                AEGfxSetTextureMode(AE_GFX_TM_PRECISE);
-                AEGfxTextureSet(pCrateSliderCircleTexture, 0, 0);  // Set the texture
-                AEMtx33Trans(&trans, sliderX, sliderY);  // Apply position transformation
-                AEMtx33Scale(&scale, 43 * gScaleX, 65 * gScaleY);
-                AEMtx33Concat(&transform, &trans, &scale);
-                AEGfxSetTransform(transform.m);  // Set the transformation matrix for the apple
-                AEGfxMeshDraw(pMeshCrateSliderCircle, AE_GFX_MDM_TRIANGLES);  // Draw the apple as a quad
+            if (Crate_GetFruitCount(crateID) <= 0) {
+                textureBanana = CrateBananaButton.availableTex;
+                scaleBananaX = CrateBananaButton.availableScaleX;
+                scaleBananaY = CrateBananaButton.availableScaleY;
+            }
+
+            // Draw "Apple" button in crate UI
+            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+            AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+            AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
+            AEGfxSetTransparency(1.0f);
+            AEGfxSetTextureMode(AE_GFX_TM_PRECISE);
+            AEGfxTextureSet(textureBanana, 0, 0);  // Set the texture
+            AEMtx33Trans(&trans, BananaX, BananaY);  // Apply position transformation
+            AEMtx33Scale(&scale, scaleBananaX * gScaleX, scaleBananaY * gScaleY);
+            AEMtx33Concat(&transform, &trans, &scale);
+            AEGfxSetTransform(transform.m);  // Set the transformation matrix for the apple
+            AEGfxMeshDraw(CrateBananaButton.mesh, AE_GFX_MDM_TRIANGLES);  // Draw the apple as a quad
+
+            if (textureBanana == CrateBananaButton.unselectedTex || textureBanana  == CrateBananaButton.selectedTex) {
 
                 // --- Quantity number text ---
-                int qty_fruits = GetSliderFruitCount(selectedLocation);
+                int qty_banana = Crate_GetFruitCount(crateID);
 
-
-                char fruitQTYText[32];
-                sprintf_s(fruitQTYText, "%d", qty_fruits);
+                char bananaQTYText[32];
+                sprintf_s(bananaQTYText, "%d", qty_banana);
 
 
                 //float x = -530.0f / 800.0f;  // normalize X by 800.0f
                 //float y = 350.0f / 450.0f;  // normalize Y by 450.0f
-                float xOf;
-                if (qty_fruits <= 9) {
-                    xOf = sliderX - 8;
+                float xOf = 0.0f;
+                if (qty_banana <= 9) {
+                    xOf = -112;
+                    if (textureBanana == CrateBananaButton.selectedTex) {
+                        xOf = -106;
+                    }
                 }
                 else {
-                    xOf = sliderX - 12;
-
+                    xOf = -118;
+                    if (textureBanana == CrateBananaButton.selectedTex) {
+                        xOf = -112;
+                    }
                 }
-                float yOf = sliderY + 9;
+                float yOf = 131 - 2;
                 const float halfW = 800.0f;
                 const float halfH = 450.0f;
                 float xNorm = xOf / halfW;
@@ -1868,93 +1959,463 @@ void UI_Draw()
                 AEGfxSetBlendMode(AE_GFX_BM_BLEND);
                 AEGfxSetColorToMultiply(1, 1, 1, 1);
 
-                AEGfxPrint(fontId, fruitQTYText, xNorm, yNorm, 0.9f, r, g, b, 1);
-
-            }
-
-            if (Store_Crate.mesh && selectedLocation != NIL) {
-                AEGfxTexture* tex = nullptr;
-                float scaleX, scaleY;
-                float X = Store_Crate.x, Y = Store_Crate.y;
-
-                if (selectedLocation == INVENTORY) {
-                    tex = Store_Crate.normalTex;
-                    scaleX = Store_Crate.normalScaleX;
-                    scaleY = Store_Crate.normalScaleY;
-                }
-                else if (selectedLocation == CRATE) {
-                    tex = Store_Crate.altTex;
-                    scaleX = Store_Crate.altScaleX;
-                    scaleY = Store_Crate.altScaleY;
-                }
-                else {
-                    tex = Store_Crate.normalTex;
-                    scaleX = 0;
-                    scaleY = 0;
-                }
-
-                AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
-                AEGfxSetBlendMode(AE_GFX_BM_BLEND);
-                AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
-                AEGfxSetTransparency(1.0f);
-                AEGfxSetTextureMode(AE_GFX_TM_PRECISE);
-                AEGfxTextureSet(tex, 0, 0);  // Set the texture
-                AEMtx33Trans(&trans, X, Y);  // Apply position transformation
-                AEMtx33Scale(&scale, scaleX * gScaleX, scaleY * gScaleY);
-                AEMtx33Concat(&transform, &trans, &scale);
-                AEGfxSetTransform(transform.m);  // Set the transformation matrix for the apple
-                AEGfxMeshDraw(Store_Crate.mesh, AE_GFX_MDM_TRIANGLES);  // Draw the apple as a quad
-            }
-
-            // Confirmation popup
-            if (gInvConfirmOpen)
-            {
-                AEGfxTextureSet(confirmBG, 0, 0);
-                AEMtx33Scale(&scale, 300 * gScaleX, 180 * gScaleY);
-                AEMtx33Trans(&trans, 0, 0);
-                AEMtx33Concat(&transform, &trans, &scale);
-                AEGfxSetTransform(transform.m);
-                AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
-
-                //color
-                float r = 243.0f / 255.0f;
-                float g = 196.0f / 255.0f;
-                float b = 115.0f / 255.0f;
-
-
-                // YES
-
-                AEGfxSetColorToMultiply(
-                    gHoverYes ? r : 1.0f,
-                    gHoverYes ? g : 1.0f,
-                    gHoverYes ? b : 1.0f,
-                    1.0f
-                );
-
-                AEGfxTextureSet(confirmYes, 0, 0);
-                AEMtx33Scale(&scale, 71 * gScaleX, 49 * gScaleY);
-                AEMtx33Trans(&trans, -60, -40);
-                AEMtx33Concat(&transform, &trans, &scale);
-                AEGfxSetTransform(transform.m);
-                AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
-
-                // NO
-
-                AEGfxSetColorToMultiply(
-                    gHoverNo ? r : 1.0f,
-                    gHoverNo ? g : 1.0f,
-                    gHoverNo ? b : 1.0f,
-                    1.0f
-                );
-
-                AEGfxTextureSet(confirmNo, 0, 0);
-                AEMtx33Scale(&scale, 71 * gScaleX, 49 * gScaleY);
-                AEMtx33Trans(&trans, 60, -40);
-                AEMtx33Concat(&transform, &trans, &scale);
-                AEGfxSetTransform(transform.m);
-                AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+                AEGfxPrint(fontId, bananaQTYText, xNorm, yNorm, 1.0f, r, g, b, 1);
             }
         }
+
+        if (pMeshCrateInfo) {
+			AEGfxTexture* textureInfo = pCrateInfoATexture;
+
+			if (selectedInventoryFruitType == APPLE ) {
+				price_apple = Economy_GetBasePrice(APPLE);
+				textureInfo = pCrateInfoATexture;
+			}
+
+			if (selectedInventoryFruitType == PEAR ) {
+				price_apple = Economy_GetBasePrice(PEAR);
+				textureInfo = pCrateInfoPTexture;
+			}
+
+			if (selectedInventoryFruitType == BANANA ) {
+				price_apple = Economy_GetBasePrice(BANANA);
+				textureInfo = pCrateInfoBTexture;
+			}
+
+            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+            AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+            AEGfxSetColorToMultiply(1, 1, 1, 1);
+            AEGfxTextureSet(textureInfo, 0, 0);  // Set the texture
+            AEMtx33Trans(&trans, 0, -155);  // Apply position transformation
+            AEMtx33Scale(&scale, 530 * gScaleX, 117 * gScaleY);
+            AEMtx33Concat(&transform, &trans, &scale);
+            AEGfxSetTransform(transform.m);  // Set the transformation matrix for the apple
+            AEGfxMeshDraw(pMeshCrateInfo, AE_GFX_MDM_TRIANGLES);  // Draw the apple as a quad
+
+            // --- Gold number text ---
+
+            if (selectedInventoryFruitType == APPLE) {
+                price_apple = Economy_GetBasePrice(APPLE);
+            }
+            char appleText[32];
+            sprintf_s(appleText, "%d", price_apple);
+
+
+
+            float xOf = 130;
+            float yOf = -161.5;
+            const float halfW = 800.0f;
+            const float halfH = 450.0f;
+            float xNorm = xOf / halfW;
+            float yNorm = yOf / halfH;
+
+            float r = 60.0f / 255.0f;
+            float g = 68.0f / 255.0f;
+            float b = 92.0f / 255.0f;
+
+            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+            AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+            AEGfxSetColorToMultiply(1, 1, 1, 1);
+
+            AEGfxPrint(fontId, appleText, xNorm, yNorm, 1.0f, r, g, b, 1);
+            
+        }
+
+        if (InvAppleButton.mesh) {
+
+            AEGfxTexture* textureApple = nullptr;
+            float scaleAppleX = 0.0f;
+            float scaleAppleY = 0.0f;
+            float AppleX = CrateAppleButton.x, AppleY = CrateAppleButton.y;
+
+            textureApple = nullptr;
+            scaleAppleX = 0;
+            scaleAppleY = 0;
+            AppleX = InvAppleButton.x;
+            AppleY = InvAppleButton.y;
+
+            if (AEInputCheckTriggered(AEVK_LBUTTON) && isButtonHovered(InvAppleButton.x, InvAppleButton.y, InvAppleButton.unselectedScaleX, InvAppleButton.unselectedScaleY)) {
+                isSelectedApple = true;
+            }
+
+            if (AEInputCheckTriggered(AEVK_LBUTTON) && !isButtonHovered(InvAppleButton.x, InvAppleButton.y, InvAppleButton.unselectedScaleX, InvAppleButton.unselectedScaleY)
+                && !isMouseOver4Corners(-220.00, -218.00, 219.00, -323.00)) {
+                isSelectedApple = false;
+                printf("Deselected apple\n");
+            }
+
+            if (isSelectedApple) {
+                textureApple = InvAppleButton.selectedTex;
+                scaleAppleX = InvAppleButton.selectedScaleX;
+                scaleAppleY = InvAppleButton.selectedScaleY;
+            }
+            else {
+                textureApple = InvAppleButton.unselectedTex;
+                scaleAppleX = InvAppleButton.unselectedScaleX;
+                scaleAppleY = InvAppleButton.unselectedScaleY;
+            }
+
+            // Draw "Apple" button in inventory UI (for reference, not interactive here)
+            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+            AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+            AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
+            AEGfxSetTransparency(1.0f);
+            AEGfxSetTextureMode(AE_GFX_TM_PRECISE);
+            AEGfxTextureSet(textureApple, 0, 0);  // Set the texture
+            AEMtx33Trans(&trans, AppleX, AppleY + shiftUP);  // Apply position transformation
+            AEMtx33Scale(&scale, scaleAppleX * gScaleX, scaleAppleY * gScaleY);
+            AEMtx33Concat(&transform, &trans, &scale);
+            AEGfxSetTransform(transform.m);  // Set the transformation matrix for the apple
+            AEGfxMeshDraw(InvAppleButton.mesh, AE_GFX_MDM_TRIANGLES);  // Draw the apple as a quad
+
+            // --- Quantity number text ---
+            int qty_apple = GetAppleCount();
+
+
+            char appleQTYText[32];
+            sprintf_s(appleQTYText, "%d", qty_apple);
+
+
+            //float x = -530.0f / 800.0f;  // normalize X by 800.0f
+            //float y = 350.0f / 450.0f;  // normalize Y by 450.0f
+            float xOf = 0.0f;
+            if (qty_apple <= 9) {
+                xOf = -111;
+                if (textureApple == InvAppleButton.selectedTex) {
+                    xOf = -105;
+                }
+            }
+            else {
+                xOf = -117;
+                if (textureApple == InvAppleButton.selectedTex) {
+                    xOf = -111;
+                }
+            }
+            float yOf = -83.0f + shiftUP;
+            const float halfW = 800.0f;
+            const float halfH = 450.0f;
+            float xNorm = xOf / halfW;
+            float yNorm = yOf / halfH;
+
+            float r = 243.0f / 255.0f;
+            float g = 196.0f / 255.0f;
+            float b = 115.0f / 255.0f;
+
+            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+            AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+            AEGfxSetColorToMultiply(1, 1, 1, 1);
+
+            AEGfxPrint(fontId, appleQTYText, xNorm, yNorm, 1.0f, r, g, b, 1);
+        }
+
+        if (InvBananaButton.mesh) {
+
+            AEGfxTexture* textureBanana = nullptr;
+            float scaleBananaX = 0.0f;
+            float scaleBananaY = 0.0f;
+            float BananaX = CrateBananaButton.x, BananaY = CrateBananaButton.y;
+
+            textureBanana = nullptr;
+            scaleBananaX = 0;
+            scaleBananaY = 0;
+            BananaX = InvBananaButton.x;
+            BananaY = InvBananaButton.y;
+
+            if (AEInputCheckTriggered(AEVK_LBUTTON) && isButtonHovered(InvBananaButton.x, InvBananaButton.y, InvBananaButton.unselectedScaleX, InvBananaButton.unselectedScaleY)) {
+                isSelectedBanana = true;
+            }
+
+            if (AEInputCheckTriggered(AEVK_LBUTTON) && !isButtonHovered(InvBananaButton.x, InvBananaButton.y, InvBananaButton.unselectedScaleX, InvBananaButton.unselectedScaleY)
+                && !isMouseOver4Corners(-220.00, -218.00, 219.00, -323.00)) {
+                isSelectedBanana = false;
+                printf("Deselected banana\n");
+            }
+
+            if (isSelectedBanana) {
+                textureBanana = InvBananaButton.selectedTex;
+                scaleBananaX = InvBananaButton.selectedScaleX;
+                scaleBananaY = InvBananaButton.selectedScaleY;
+            }
+            else {
+                textureBanana = InvBananaButton.unselectedTex;
+                scaleBananaX = InvBananaButton.unselectedScaleX;
+                scaleBananaY = InvBananaButton.unselectedScaleY;
+            }
+
+            // Draw "Apple" button in inventory UI (for reference, not interactive here)
+            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+            AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+            AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
+            AEGfxSetTransparency(1.0f);
+            AEGfxSetTextureMode(AE_GFX_TM_PRECISE);
+            AEGfxTextureSet(textureBanana, 0, 0);  // Set the texture
+            AEMtx33Trans(&trans, BananaX, BananaY + shiftUP);  // Apply position transformation
+            AEMtx33Scale(&scale, scaleBananaX * gScaleX, scaleBananaY * gScaleY);
+            AEMtx33Concat(&transform, &trans, &scale);
+            AEGfxSetTransform(transform.m);  // Set the transformation matrix for the apple
+            AEGfxMeshDraw(InvBananaButton.mesh, AE_GFX_MDM_TRIANGLES);  // Draw the apple as a quad
+
+            // --- Quantity number text ---
+            int qty_banana = GetBananaCount();
+            
+            float shiftRight = 250.0 - 73 + 3 + shiftTgt;
+
+            char bananaQTYText[32];
+            sprintf_s(bananaQTYText, "%d", qty_banana);
+
+
+            //float x = -530.0f / 800.0f;  // normalize X by 800.0f
+            //float y = 350.0f / 450.0f;  // normalize Y by 450.0f
+            float xOf = 0.0f;
+            if (qty_banana <= 9) {
+                xOf = -111;
+                if (textureBanana == InvBananaButton.selectedTex) {
+                    xOf = -105;
+                }
+            }
+            else {
+                xOf = -117;
+                if (textureBanana == InvBananaButton.selectedTex) {
+                    xOf = -111;
+                }
+            }
+            float yOf = -83.0f + shiftUP;
+            const float halfW = 800.0f;
+            const float halfH = 450.0f;
+            float xNorm = (xOf + shiftRight) / halfW;
+            float yNorm = yOf / halfH;
+
+            float r = 243.0f / 255.0f;
+            float g = 196.0f / 255.0f;
+            float b = 115.0f / 255.0f;
+
+            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+            AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+            AEGfxSetColorToMultiply(1, 1, 1, 1);
+
+            AEGfxPrint(fontId, bananaQTYText, xNorm, yNorm, 1.0f, r, g, b, 1);
+        }
+
+        if (InvPearButton.mesh) {
+
+            AEGfxTexture* texturePear = nullptr;
+            float scalePearX = 0.0f;
+            float scalePearY = 0.0f;
+            float PearX = CratePearButton.x, PearY = CratePearButton.y;
+
+            texturePear = nullptr;
+            scalePearX = 0;
+            scalePearY = 0;
+            PearX = InvPearButton.x;
+            PearY = InvPearButton.y;
+
+            if (AEInputCheckTriggered(AEVK_LBUTTON) && isButtonHovered(InvPearButton.x, InvPearButton.y, InvPearButton.unselectedScaleX, InvPearButton.unselectedScaleY)) {
+                isSelectedPear = true;
+            }
+
+            if (AEInputCheckTriggered(AEVK_LBUTTON) && !isButtonHovered(InvPearButton.x, InvPearButton.y, InvPearButton.unselectedScaleX, InvPearButton.unselectedScaleY)
+                && !isMouseOver4Corners(-220.00, -218.00, 219.00, -323.00)) {
+                isSelectedPear = false;
+                printf("Deselected pear\n");
+            }
+
+            if (isSelectedPear) {
+                texturePear = InvPearButton.selectedTex;
+                scalePearX = InvPearButton.selectedScaleX;
+                scalePearY = InvPearButton.selectedScaleY;
+            }
+
+            else {
+                texturePear = InvPearButton.unselectedTex;
+                scalePearX = InvPearButton.unselectedScaleX;
+                scalePearY = InvPearButton.unselectedScaleY;
+            }
+
+            // Draw "Apple" button in inventory UI (for reference, not interactive here)
+            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+            AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+            AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
+            AEGfxSetTransparency(1.0f);
+            AEGfxSetTextureMode(AE_GFX_TM_PRECISE);
+            AEGfxTextureSet(texturePear, 0, 0);  // Set the texture
+            AEMtx33Trans(&trans, PearX, PearY + shiftUP);  // Apply position transformation
+            AEMtx33Scale(&scale, scalePearX * gScaleX, scalePearY * gScaleY);
+            AEMtx33Concat(&transform, &trans, &scale);
+            AEGfxSetTransform(transform.m);  // Set the transformation matrix for the apple
+            AEGfxMeshDraw(InvPearButton.mesh, AE_GFX_MDM_TRIANGLES);  // Draw the apple as a quad
+
+            // --- Quantity number text ---
+            int qty_pear = GetPearCount();
+
+            float shiftRight = 280;
+
+            char pearQTYText[32];
+            sprintf_s(pearQTYText, "%d", qty_pear);
+
+
+            //float x = -530.0f / 800.0f;  // normalize X by 800.0f
+            //float y = 350.0f / 450.0f;  // normalize Y by 450.0f
+            float xOf = 0.0f;
+            if (qty_pear <= 9) {
+                xOf = -111;
+                if (texturePear == InvPearButton.selectedTex) {
+                    xOf = -105;
+                }
+            }
+            else {
+                xOf = -117;
+                if (texturePear == InvPearButton.selectedTex) {
+                    xOf = -111;
+                }
+            }
+            float yOf = -83.0f + shiftUP;
+            const float halfW = 800.0f;
+            const float halfH = 450.0f;
+            float xNorm = (xOf + shiftRight) / halfW;
+            float yNorm = yOf / halfH;
+
+            float r = 243.0f / 255.0f;
+            float g = 196.0f / 255.0f;
+            float b = 115.0f / 255.0f;
+
+            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+            AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+            AEGfxSetColorToMultiply(1, 1, 1, 1);
+
+            AEGfxPrint(fontId, pearQTYText, xNorm, yNorm, 1.0f, r, g, b, 1);
+        }
+
+        if (pMeshCrateSliderCircle) {
+            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+            AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+            AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
+            AEGfxSetTransparency(1.0f);
+            AEGfxSetTextureMode(AE_GFX_TM_PRECISE);
+            AEGfxTextureSet(pCrateSliderCircleTexture, 0, 0);  // Set the texture
+            AEMtx33Trans(&trans, sliderX, sliderY);  // Apply position transformation
+            AEMtx33Scale(&scale, 43 * gScaleX, 65 * gScaleY);
+            AEMtx33Concat(&transform, &trans, &scale);
+            AEGfxSetTransform(transform.m);  // Set the transformation matrix for the apple
+            AEGfxMeshDraw(pMeshCrateSliderCircle, AE_GFX_MDM_TRIANGLES);  // Draw the apple as a quad
+
+            // --- Quantity number text ---
+            int qty_fruits = GetSliderFruitCount(selectedLocation);
+
+
+            char fruitQTYText[32];
+            sprintf_s(fruitQTYText, "%d", qty_fruits);
+
+
+            //float x = -530.0f / 800.0f;  // normalize X by 800.0f
+            //float y = 350.0f / 450.0f;  // normalize Y by 450.0f
+            float xOf;
+            if (qty_fruits <= 9) {
+                xOf = sliderX - 8;
+            }
+            else {
+                xOf = sliderX - 12;
+
+            }
+            float yOf = sliderY + 9;
+            const float halfW = 800.0f;
+            const float halfH = 450.0f;
+            float xNorm = xOf / halfW;
+            float yNorm = yOf / halfH;
+
+            float r = 243.0f / 255.0f;
+            float g = 196.0f / 255.0f;
+            float b = 115.0f / 255.0f;
+
+            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+            AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+            AEGfxSetColorToMultiply(1, 1, 1, 1);
+
+            AEGfxPrint(fontId, fruitQTYText, xNorm, yNorm, 0.9f, r, g, b, 1);
+
+        }
+
+        if (Store_Crate.mesh && selectedLocation != NIL) {
+            AEGfxTexture* tex = nullptr;
+            float scaleX, scaleY;
+            float X = Store_Crate.x, Y = Store_Crate.y;
+
+            if (selectedLocation == INVENTORY) {
+                tex = Store_Crate.normalTex;
+                scaleX = Store_Crate.normalScaleX;
+                scaleY = Store_Crate.normalScaleY;
+            }
+            else if (selectedLocation == CRATE) {
+                tex = Store_Crate.altTex;
+                scaleX = Store_Crate.altScaleX;
+                scaleY = Store_Crate.altScaleY;
+            }
+            else {
+                tex = Store_Crate.normalTex;
+                scaleX = 0;
+                scaleY = 0;
+            }
+
+            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+            AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+            AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
+            AEGfxSetTransparency(1.0f);
+            AEGfxSetTextureMode(AE_GFX_TM_PRECISE);
+            AEGfxTextureSet(tex, 0, 0);  // Set the texture
+            AEMtx33Trans(&trans, X, Y);  // Apply position transformation
+            AEMtx33Scale(&scale, scaleX * gScaleX, scaleY * gScaleY);
+            AEMtx33Concat(&transform, &trans, &scale);
+            AEGfxSetTransform(transform.m);  // Set the transformation matrix for the apple
+            AEGfxMeshDraw(Store_Crate.mesh, AE_GFX_MDM_TRIANGLES);  // Draw the apple as a quad
+        }
+
+        // Confirmation popup
+        if (gInvConfirmOpen)
+        {
+            AEGfxTextureSet(confirmBG, 0, 0);
+            AEMtx33Scale(&scale, 300 * gScaleX, 180 * gScaleY);
+            AEMtx33Trans(&trans, 0, 0);
+            AEMtx33Concat(&transform, &trans, &scale);
+            AEGfxSetTransform(transform.m);
+            AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+            //color
+            float r = 243.0f / 255.0f;
+            float g = 196.0f / 255.0f;
+            float b = 115.0f / 255.0f;
+
+
+            // YES
+
+            AEGfxSetColorToMultiply(
+                gHoverYes ? r : 1.0f,
+                gHoverYes ? g : 1.0f,
+                gHoverYes ? b : 1.0f,
+                1.0f
+            );
+
+            AEGfxTextureSet(confirmYes, 0, 0);
+            AEMtx33Scale(&scale, 71 * gScaleX, 49 * gScaleY);
+            AEMtx33Trans(&trans, -60, -40);
+            AEMtx33Concat(&transform, &trans, &scale);
+            AEGfxSetTransform(transform.m);
+            AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+
+            // NO
+
+            AEGfxSetColorToMultiply(
+                gHoverNo ? r : 1.0f,
+                gHoverNo ? g : 1.0f,
+                gHoverNo ? b : 1.0f,
+                1.0f
+            );
+
+            AEGfxTextureSet(confirmNo, 0, 0);
+            AEMtx33Scale(&scale, 71 * gScaleX, 49 * gScaleY);
+            AEMtx33Trans(&trans, 60, -40);
+            AEMtx33Concat(&transform, &trans, &scale);
+            AEGfxSetTransform(transform.m);
+            AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
+        }
+        
     }
 
     // menu 

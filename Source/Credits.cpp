@@ -203,9 +203,7 @@ void Credits_Update()
 // ---------------------------------------------------------------
 void Credits_Draw()
 {
-    const float halfW = 800.0f;
     const float halfH = 450.0f;
-
     // ---- Background ----
     AEGfxSetBackgroundColor(0.0f, 0.0f, 0.0f);
 

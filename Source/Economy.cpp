@@ -42,6 +42,8 @@ bool timer_reset = true;
 //extern u8 base_price_apple = 0;
 //u8 base_price_apple = 10;
 u8 base_price_apple = 5;
+u8 base_price_pear = base_price_apple + 7;
+u8 base_price_banana = base_price_apple + 2;
 
 
 //Helper functions
@@ -64,8 +66,8 @@ std::pair<f32, f32> random_range_pair(f32 min1, f32 max1, f32 min2, f32 max2) {
 
 // Sell from a specific crate index (crateIndex) for a given fruit type.
 // Removes stock from the crate and credits money.
-static void sell_fruit(int crateIndex, int fruitType) {
-	(void)fruitType; // reserved for per-fruit pricing; currently uses base_price_apple
+static void sell_fruit(int crateIndex, FruitType type) {
+	
 	if (crateIndex < 0) return;
 
 	int stock = Crate_GetFruitCount(crateIndex);
@@ -81,9 +83,11 @@ static void sell_fruit(int crateIndex, int fruitType) {
 		return;
 	}
 
+	u8 base_price_fruit = static_cast<u8>(Economy_GetBasePrice(type));
+
 	// determine sale price
 	// NOTE: currently using base_price_apple as generic price. Replace with a lookup per fruitType later.
-	u64 total_price = static_cast<u64>(sale_amount) * static_cast<u64>(base_price_apple);
+	u64 total_price = static_cast<u64>(sale_amount) * static_cast<u64>(base_price_fruit);
 
 	// add money to total
 	Economy_AddMoney(static_cast<int>(total_price));
@@ -106,7 +110,7 @@ void Economy_Init() {
 	}
 
 	// randomize next sale time
-	std::pair<float, float> range_pair = random_range_pair(5.0f, 10.0f, 4.0f, 20.0f);
+	std::pair<float, float> range_pair = random_range_pair(5.0f, 30.0f, 30.0f, 75.0f);
 	next_sale_time = random_time(range_pair.first, range_pair.second);
 
 	printf("base price apple: %d\n", base_price_apple);
@@ -134,7 +138,7 @@ void Economy_Update(float dt) {
 
 			if (in_stock) {
 				// sell from this crate/basket
-				sell_fruit(b.stock, b.fruitType);
+				sell_fruit(b.stock, static_cast<FruitType>(b.fruitType));
 				anySale = true;
 
 				// Log using the stock id to report remaining stock
@@ -155,14 +159,14 @@ void Economy_Update(float dt) {
 			// Schedule next sale once per window (not per-basket)
 			if (anySale) {
 				timer = 0.0f;
-				auto range_pair = random_range_pair(10.0f, 20.0f, 5.0f, 40.0f);
+				auto range_pair = random_range_pair(10.0f, 30.0f, 45.0f, 105.0f);
 				next_sale_time = random_time(range_pair.first, range_pair.second);
 				printf("Next sale in %.2f seconds.\n", next_sale_time);
 			}
 			else {
-				// If no stock anywhere, try again sooner (or pick whatever policy you want)
+				// If no stock anywhere, try again reset timer new timer
 				timer = 0.0f;
-				next_sale_time = 1.0f; // try again after 1 second
+				auto range_pair = random_range_pair(10.0f, 30.0f, 45.0f, 105.0f); 
 			}
 		}
 	}
@@ -211,6 +215,10 @@ int Economy_GetBasePrice(FruitType fruitID) {
 	{
 	case APPLE:
 		return base_price_apple;
+	case PEAR:
+		return base_price_pear;
+	case BANANA:
+		return base_price_banana;
 	default:
 		return 0;
 	}

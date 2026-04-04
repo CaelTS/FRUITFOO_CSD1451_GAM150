@@ -251,10 +251,19 @@ static void GrantRhythmReward()
     }
 }
 
-void MainScreen_OnHelperCollect(int amount)
+void MainScreen_OnHelperCollect(int amount , FruitType fruit)
 {
     char msg[96];
-    sprintf_s(msg, "Helper collected %d apple%s!", amount, (amount > 1) ? "s" : "");
+
+    if (fruit == APPLE) {
+        sprintf_s(msg, "Helper collected %d apple%s!", amount, (amount > 1) ? "s" : "");
+    }
+    if (fruit == PEAR) {
+        sprintf_s(msg, "Helper collected %d pear%s!", amount, (amount > 1) ? "s" : "");
+    }
+    if (fruit == BANANA) {
+        sprintf_s(msg, "Helper collected %d banana%s!", amount, (amount > 1) ? "s" : "");
+    }
     Toast_Push(msg, 0.4f, 0.9f, 0.4f);
 }
 
@@ -495,6 +504,7 @@ void MainScreen_Update()
         g_legendOpen = !g_legendOpen;
 
     Economy_Update(dt);
+    Crate_Update();
     UpdateSpawnFruits(dt);
     UpdateFruitSpawner(dt);
     Helper_Update(dt);
