@@ -191,18 +191,18 @@ void Helper_Update(float dt)
                 isPicking = true;
 
                 // collect immediately — no delay
-                fruits[targetFruit].isCollected = true;
-                fruits[targetFruit].y += 10.0f;
-                Inventory_AddFruit(1, 0);
-                MainScreen_OnHelperCollect(1);
+                if (CollectFruit(targetFruit))
+                    printf("Helper collected fruit %d via CollectFruit()\n", targetFruit);
+                else
+                    printf("Helper attempted to collect fruit %d but it failed\n", targetFruit);
 
                 isPicking = false;
                 targetFruit = -1;
             }
         }
     }
-
-    // animation (for sprite switching only)
+  
+   // animation (for sprite switching only)
     animTimer += dt;
     if (animTimer > 0.3f)
     {
