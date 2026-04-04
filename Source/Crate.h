@@ -16,6 +16,7 @@
 // ------------------------------------------------------------
 void Crate_Load();
 void Crate_Initialize();
+void Crate_Update();
 void Crate_Draw();
 void Crate_Free();
 

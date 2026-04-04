@@ -202,7 +202,35 @@ void Helper_Update(float dt)
         }
     }
 
+
     // animation (for sprite switching only)
+
+    // --------------------------------------------------------
+    // PICKUP DELAY (visual feedback)
+    // --------------------------------------------------------
+    if (isPicking)
+    {
+        pickupTimer += dt;
+
+        if (pickupTimer > 0.25f)
+        {
+            // let SpawnFruits handle collection logic (inventory, animation, toast)
+            if (targetFruit >= 0)
+            {
+                if (CollectFruit(targetFruit))
+                    printf("Helper collected fruit %d via CollectFruit()\n", targetFruit);
+                else
+                    printf("Helper attempted to collect fruit %d but it failed\n", targetFruit);
+            }
+
+            isPicking = false;
+            targetFruit = -1;
+        }
+    }
+
+  
+   // animation (for sprite switching only)
+
     animTimer += dt;
     if (animTimer > 0.3f)
     {

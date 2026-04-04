@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <cstdlib>  // For random number generation
 #include <time.h>    // For time-based randomness
+#include "Main.h" // For accessing global scale factors if needed
 #include "Inventory.h" // For inventory interaction when collecting fruits
 
 
@@ -65,6 +66,10 @@ f32 spawnInterval = 10.0f;  // Initial interval between apple spawns (in seconds
 // Global variable 
 AEGfxVertexList* pMeshApple = NULL;
 static AEGfxTexture* gAppleTexture = nullptr;
+static AEGfxTexture* gPearTexture = nullptr;
+static AEGfxTexture* gBananaTexture = nullptr;
+
+Fruit newApple{};
 
 void SpawnFruit_Init() {
     srand((unsigned int)time(NULL));
@@ -75,27 +80,47 @@ void SpawnFruit_Init() {
     pMeshApple = AEGfxMeshEnd();
 
     gAppleTexture = AEGfxTextureLoad("Assets/Fruit_Apple.png");
+	gPearTexture = AEGfxTextureLoad("Assets/Fruit_Pear.png");
+	gBananaTexture = AEGfxTextureLoad("Assets/Fruit_Banana.png");
+
 
 	spawnInterval = random_float(10.0f, 30.0f); // Randomize initial spawn interval between 10 and 30 seconds
 	printf("Initial spawn interval: %.2f seconds\n", spawnInterval);
 }
 
 void SpawnFruit() {
-    Fruit newApple{};
-    newApple.texture = gAppleTexture;  // Load the apple texture
+
+
+    if (rand_chance(80.0f)) { // 20% chance to spawn a pear 
+        newApple.texture = gPearTexture;
+        newApple.type = PEAR;
+        // adjust scale for pear
+        newApple.scaleX = 42.0f;
+		newApple.scaleY = 67.0f;
+		printf("Spawn a pear!\n");
+    }
+    else if (rand_chance(50.0f)) { // 50% chance to spawn a banana (if not pear)
+        newApple.texture = gBananaTexture;
+		newApple.type = BANANA;
+        newApple.scaleX = 72.0f;
+        newApple.scaleY = 70.0f;
+		printf("Spawn a banana!\n");
+    }
+    else {
+        newApple.texture = gAppleTexture;  // Load the apple texturenew
+		newApple.type = APPLE;
+        newApple.scaleX = 72.0f;
+        newApple.scaleY = 70.0f;
+        printf("Spawn an apple!\n");
+    }
 
     newApple.x = random_float(-200.0, 600.0);  // Random X position between 400 to 1000
-    newApple.y = 1500;  // Start the apple at the top of the screen (y = 0)
     printf("Spawned apple at (%.2f, %.2f)\n", newApple.x, newApple.y);
 
     newApple.rotation = static_cast<f32>(rand() & 180);  // Start with no rotation
 
-    newApple.speedY = static_cast<f32>((rand() % 4) + 3);  // Random falling speed between 2 and 6
-    newApple.speedX = 0.0f;  // Start with no horizontal speed
-    newApple.angularVelocity = 0.0f;  // Start with no rotation
+	newApple.speedY = static_cast<f32>((rand() % 4) + 3);  // random falling speed between 2 and 6
 
-    newApple.isFalling = true;  // Start it falling
-    newApple.isCollected = false;  // It hasn?t been clicked yet
     newApple.rollDirection = (rand() % 2 == 0) ? 1.0f : -1.0f;  // Randomly decide left (-1) or right (+1) roll
 
     fruits.push_back(newApple);  // Add the new apple to the apple list
@@ -103,9 +128,7 @@ void SpawnFruit() {
 }
 
 static void SpawnFruit(float x) {
-    Fruit newApple{};
-    newApple.texture = AEGfxTextureLoad("Assets/Fruit_Apple.png");  // Load the apple texture
-
+    
     newApple.x = x;  // Random X position between 400 to 1000
     newApple.y = 100;  // Start the apple at the top of the screen (y = 0)
     printf("Spawned apple at (%.2f, %.2f)\n", newApple.x, newApple.y);
@@ -113,21 +136,47 @@ static void SpawnFruit(float x) {
     newApple.rotation = static_cast<f32>(rand() & 180);  // Start with no rotation
 
     newApple.speedY = static_cast<f32>((rand() % 4) + 3);  // Random falling speed between 2 and 6
-    newApple.speedX = 0.0f;  // Start with no horizontal speed
-    newApple.angularVelocity = 0.0f;  // Start with no rotation
 
-    newApple.isFalling = true;  // Start it falling
-    newApple.isCollected = false;  // It hasn?t been clicked yet
     newApple.rollDirection = (rand() % 2 == 0) ? 1.0f : -1.0f;  // Randomly decide left (-1) or right (+1) roll
 
     fruits.push_back(newApple);  // Add the new apple to the apple list
     collectAnims.push_back(CollectAnim()); // keep anim vector in syn
 }
 
-void SpawnMultipleFruits(int count) {
+bool SpawnMultipleFruits(int count, FruitType fruit) {
+
+    if (count <= 0) {
+        return false;
+	}
+
+    if (fruit == APPLE) {
+        newApple.texture = gAppleTexture;  // Load the apple texture
+		newApple.type = APPLE;
+        newApple.scaleX = 72.0f;
+        newApple.scaleY = 70.0f;
+		printf("Spawning multiple apples!\n");
+	}
+
+    if (fruit == PEAR) {
+		newApple.texture = gPearTexture;  // Load the pear texture
+        newApple.type = PEAR;
+        // adjust scale for pear
+		newApple.scaleX = 42.0f;
+		newApple.scaleY = 67.0f;
+	}  
+
+    if (fruit == BANANA) {
+		newApple.texture = gBananaTexture;  // Load the banana texture
+        newApple.type = BANANA;
+        newApple.scaleX = 72.0f;
+		newApple.scaleY = 70.0f;
+    }
+
     for (int i = 0; i < count; ++i) {
         SpawnFruit(random_float(-200.0, 200.0));
     }
+
+    return true;
 }
 
 // multiple spawns for testing, can be triggered by rhythm game reward later
@@ -148,15 +197,11 @@ void UpdateSpawnFruits(float dt) {
     //    spawnMultiple = true;
     //}
 
-    if (spawnMultiple) {
-        currentTimer += dt;
-        if (currentTimer >= currentDelay) {
+    if (SpawnMultipleFruits) {
+		currentTimer += dt; // Advance timer by delta time
+		if (currentTimer >= currentDelay) { // Check if the timer has reached the delay threshold
             currentTimer = 0.0f;  // Reset timer
-            spawnMultiple = false;  // Reset flag
-            SpawnMultipleFruits(10);  // Spawn 5 apples at once for testing
-        }
-        if (currentTimer == 0.0f) {
-            printf("Spawned 10 apples at once!\n");
+   
         }
     }
 
@@ -309,9 +354,9 @@ void RenderSpawnFruits() {
 
             AEMtx33 scale, trans, rotation, transform, rotscale;
 
-            float baseSize = 47.0f;
-            float drawSize = baseSize * (anim.active ? anim.curScale : 1.0f);
-            AEMtx33Scale(&scale, drawSize, drawSize);
+            float drawSizeX = (apple.scaleX * gScaleX )* (anim.active ? anim.curScale : 1.0f);
+            float drawSizeY = (apple.scaleY * gScaleY )* (anim.active ? anim.curScale : 1.0f);
+            AEMtx33Scale(&scale, drawSizeX, drawSizeY);
 
             f32 rotationInRadians = apple.rotation * (3.14159265358979323846f / 180.0f);  // Convert degrees to radian
             AEMtx33Rot(&rotation, rotationInRadians);  // Create rotation matrix based on current rotation
@@ -410,7 +455,7 @@ void CheckForFruitClicks(s32 mouseX, s32 mouseY) {
 
         if (!apple.isCollected && !apple.isFalling)
         {
-            float halfSize = 47.0f * 0.5f;
+            float halfSize = apple.scaleX * 0.5f;
 
             if (worldX > apple.x - halfSize &&
                 worldX < apple.x + halfSize &&
@@ -433,13 +478,15 @@ void CheckForFruitClicks(s32 mouseX, s32 mouseY) {
         {
             if (GetInventoryCount() < GetInventoryLimit()) {
                 // Add to inventory when clicked (can be moved to animation finish if you want it to add after animation instead of at start)
-                Inventory_AddFruit(1, 0);
-                printf("Added 1 apple to inventory. Total fruits: %d\n", Inventory_GetFruitStock());
-                printf("Inventory count: %d\n", GetAppleCount());
+                if (apple.type == 0) Inventory_AddFruit(1, 0);
+                if (apple.type == 1) Inventory_AddFruit(1, 1);
+                if (apple.type == 2) Inventory_AddFruit(1, 2);
 
-                //20% chance to also give an apple seed when collecting an apple, can be adjusted as needed
-                if (rand_chance(20)) {
-                    Inventory_AddSeed(1, 0);
+				//20% chance to also give an apple seed when collecting an apple OR if the player has 3 or fewer seeds of that type to help them keep collecting
+                if (rand_chance(20) || GetSeedCount() <= 3) {
+                    if (apple.type == 0) Inventory_AddSeed(1, 0);
+                    if (apple.type == 1) Inventory_AddSeed(1, 1);
+                    if (apple.type == 2) Inventory_AddSeed(1, 2);
                 }
             }
 
@@ -457,7 +504,7 @@ void CheckForFruitClicks(s32 mouseX, s32 mouseY) {
 }
 
 // Collect fruits by proximity to a moving object (center in world coords, size in pixels).
-// Rectangular AABB test (default). Set useCircle=true to use radius-based test.
+// Rectangular AABB test (default). Set useCircle=true to use radius. Up to you what you want to use for the creature proximity
 void Proximity_CheckForFruitClicks(f32 objX, f32 objY, f32 objWidth, f32 objHeight, bool useCircle /*= false*/)
 {
     const float fruitHalf = 47.0f * 0.5f; // same half-size used for clicks
@@ -505,4 +552,49 @@ void Proximity_CheckForFruitClicks(f32 objX, f32 objY, f32 objWidth, f32 objHeig
             printf("Apple collected by proximity at (%.2f, %.2f) -> starting animation\n", f.x, f.y);
         }
     }
+}
+
+// New function to collect fruit by index (for direct interaction cases)
+bool CollectFruit(int index)
+{
+    if (index < 0 || index >= (int)fruits.size())
+        return false;
+
+    Fruit& fruit = fruits[index];
+    if (fruit.isCollected)
+        return false;
+
+    // Mark collected and start collect animation
+    fruit.isCollected = true;
+    if (index < (int)collectAnims.size())
+    {
+        CollectAnim& anim = collectAnims[index];
+        anim.active = true;
+        anim.anim_moveup = false;
+        anim.timer = 0.0f;
+        anim.startScale = anim.curScale = 1.0f;
+        anim.duration = 0.5f;
+        anim.velocityY = 300.0f;
+    }
+
+    // Give player inventory or money if full
+    if (GetInventoryCount() < GetInventoryLimit())
+    {
+        Inventory_AddFruit(1, static_cast<u8>(fruit.type)); // amount=1, fruitType
+        // seed drop chance (20%)
+        if (rand_chance(20.0f) || GetSeedCount() <= 3)
+        {
+            Inventory_AddSeed(1, static_cast<u8>(fruit.type));
+        }
+    }
+    else
+    {
+        int add_money = random_range(1, 5);
+        Economy_AddMoney(add_money);
+    }
+
+    // Inform main screen / toasts
+    MainScreen_OnHelperCollect(1, fruit.type);
+
+    return true;
 }
