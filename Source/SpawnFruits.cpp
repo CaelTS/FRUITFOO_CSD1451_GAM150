@@ -310,33 +310,6 @@ void UpdateSpawnFruits(float dt) {
     }
 }
 
-//// Render function: Renders all apples on the screen
-//void RenderSpawnFruits() {
-//    for (const auto& apple : fruits) {
-//        if (!apple.isCollected) {// if havent collect yet
-//
-//            // Render apple at its current position
-//            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);  // Use texture rendering mode
-//            AEGfxTextureSet(apple.texture, 0, 0);  // Set the texture
-//
-//            AEMtx33 scale, trans, rotation, transform, rotscale;
-//			AEMtx33Scale(&scale, 47.0f, 47.0f);  
-//
-//            f32 rotationInRadians = apple.rotation * (3.14159265358979323846f / 180.0f);  // Convert degrees to radian
-//			AEMtx33Rot(&rotation, rotationInRadians);  // Create rotation matrix based on current rotation
-//
-//            AEMtx33Trans(&trans, apple.x, apple.y);  // Apply position transformation
-//
-//            AEMtx33Concat(&rotscale, &rotation, &scale);
-//            AEMtx33Concat(&transform, &trans, &rotscale);
-//
-//            AEGfxSetTransform(transform.m);  // Set the transformation matrix for the apple
-//
-//            AEGfxMeshDraw(pMeshApple, AE_GFX_MDM_TRIANGLES);  // Draw the apple as a quad
-//        }
-//    }
-//}
-
 // --- RenderSpawnFruits: use per-fruit scale when drawing ---
 void RenderSpawnFruits() {
     for (size_t i = 0; i < fruits.size(); ++i) {
@@ -378,62 +351,11 @@ void UpdateFruitSpawner(float dt) {
     if (spawnTimer >= spawnInterval) {
         SpawnFruit();  // Spawn fruit when timer exceeds the interval
         spawnTimer = 0.0f;  // Reset the spawn timer
-        spawnInterval = random_time(1, 400);  // Random spawn interval (between 1 and 400 seconds / 6.67 mins)
+        spawnInterval = random_time(30, 500);  // Random spawn interval (between 30 and 500 seconds / 8.33 mins)
         printf("Next fruit in %.2f seconds.\n", spawnInterval);
     }
 }
-//--------------------------------------------------------------------------//
 
-//void CheckForFruitClicks(s32 mouseX, s32 mouseY) {
-//	    
-//    if (!AEInputCheckCurr(AEVK_LBUTTON)) {  // If not clicked, exit the function
-//		return;  
-//    }
-//
-//    // Convert screen coordinates to world coordinates
-//    float worldX = (float)mouseX - 800.0f;
-//    float worldY = 450.0f - (float)mouseY;
-//
-//    for (auto apple = fruits.begin(); apple != fruits.end(); )
-//    {
-//        if (!apple->isCollected && !apple->isFalling)
-//        {
-//            float halfSize = 47.0f * 0.5f;
-//
-//            if (worldX > apple->x - halfSize &&
-//                worldX < apple->x + halfSize &&
-//                worldY > apple->y - halfSize &&
-//				worldY < apple->y + halfSize) // Check if click is within apple bounds
-//            {
-//                apple->isCollected = true;
-//                printf("Apple clicked!\n");
-//
-//            }
-//        }
-//        if (apple->isCollected){
-//            //AddToInventory();  // Add to inventory when clicked
-//			
-//            //animation
-//			//apple moves up quickly and shrinks down to show it being collected
-//
-//
-//			apple = fruits.erase(apple);  // Remove apple from the world
-//			printf("Apple removed from the world.\n");
-//
-//			//visual feedback for collecting apple could be added here ( + 1 floating text, sound effect, etc.)
-//
-//            //+1 floating text
-//
-//			//smoke sprite to show the apple being collected or a quick sparkle effect
-//
-//            //sound effect
-//            
-//		}
-//        else {
-//            ++apple;  // Move to next apple
-//        }
-//    }
-//}
 
 void CheckForFruitClicks(s32 mouseX, s32 mouseY) {
     if (!AEInputCheckCurr(AEVK_LBUTTON)) {  // If not clicked, exit the function

@@ -515,7 +515,7 @@ void UI_Init()
     //=========================== Crate Panel ==================================
 
     pMeshCratePanelBG = CreateMesh();
-    pCratePanelBGTexture = AEGfxTextureLoad("Assets/Crate_1_UI_BG.png");
+    pCratePanelBGTexture = AEGfxTextureLoad("Assets/Crate_UI_BG.png");
 
     pMeshCrateCost = CreateMesh();
     pCrateCostTexture = AEGfxTextureLoad("Assets/Crate_1_UI_Cost_Apple.png");
@@ -645,6 +645,10 @@ float sliderX = -200.0f;
 float sliderY = -265.0f;
 float maxSlider = 132.0f, minSlider = -200.0f;
 
+bool isSelectedApple = false;
+bool isSelectedBanana = false;
+bool isSelectedPear = false;
+
 enum location { INVENTORY, CRATE, NIL };
 location selectedLocation = NIL; // where the fruit is coming from (inventory) or going to (crate)
 
@@ -654,38 +658,69 @@ FruitType selectedInventoryFruitType = APPLE;
 // Get the max fruit count for the slider based on the current location and selected fruit type
 static int GetSliderFruitCount(location location)
 {
-    (void)location;
     if (location == NIL) return 0; // no location, no fruit
 
-    float range = maxSlider - minSlider;
-    int maxFruitCount = 0;
+    const float range = maxSlider - minSlider;
+    if (range <= 1e-6f) return 0;
 
+    int maxFruitCount = 0;
     if (location == INVENTORY) {
-        if (selectedInventoryFruitType == APPLE) {
-            maxFruitCount = GetAppleCount();
-        }
-        if (selectedInventoryFruitType == PEAR) {
-            maxFruitCount = GetPearCount();
-        }
-        if (selectedInventoryFruitType == BANANA) {
-            maxFruitCount = GetBananaCount();
+        switch (selectedInventoryFruitType) {
+        case APPLE:  maxFruitCount = std::min(GetAppleCount(), Crate_GetMaxStock());  break;
+		case PEAR:   maxFruitCount = std::min(GetPearCount(), Crate_GetMaxStock());   break;
+		case BANANA: maxFruitCount = std::min(GetBananaCount(), Crate_GetMaxStock()); break;
+        default:     maxFruitCount = 0;                break;
         }
     }
     else if (location == CRATE) {
+        if (crateID < 0) return 0;
         maxFruitCount = Crate_GetFruitCount(crateID);
     }
 
-    // Map sliderX to fruit count
-    int fruitCount = static_cast<int>(((sliderX - minSlider) / range) * maxFruitCount);
+    if (maxFruitCount <= 0) return 0;
+
+    // normalized position [0..1], clamped
+    float t = (sliderX - minSlider) / range;
+    t = clampf(t, 0.0f, 1.0f);
+
+    // round to nearest integer and clamp
+    int fruitCount = static_cast<int>(std::round(t * static_cast<float>(maxFruitCount)));
+    if (fruitCount < 0) fruitCount = 0;
+    if (fruitCount > maxFruitCount) fruitCount = maxFruitCount;
     return fruitCount;
 }
+
+// Animation state for menu sliding in/out
+extern float menuAnimOffset = -500.0f; // Starts hidden off-screen to the left
+static const float MENU_ANIM_SPEED = 2000.0f; // 
+
+bool menuAnimInProgress = false;
 
 void UI_Input()
 {
     if (AEInputCheckTriggered(AEVK_M))
         menuOpen = !menuOpen;
 
-    if (menuOpen)
+    // --- ANIMATION UPDATE ---
+    float dt = (float)AEFrameRateControllerGetFrameTime();
+    float targetOffset = menuOpen ? 0.0f : -500.0f;
+    menuAnimInProgress = false;
+
+    if (menuAnimOffset < targetOffset)
+    {
+        menuAnimOffset += MENU_ANIM_SPEED * dt;
+        if (menuAnimOffset > targetOffset) menuAnimOffset = targetOffset;
+		menuAnimInProgress = true;
+    }
+    else if (menuAnimOffset > targetOffset)
+    {
+        menuAnimOffset -= MENU_ANIM_SPEED * dt;
+        if (menuAnimOffset < targetOffset) menuAnimOffset = targetOffset;
+        menuAnimInProgress = true;
+    }
+
+    // Only update buttons if the menu is visible (even partially)
+    if (menuAnimOffset > -500.0f)
         UI_UpdateButtons();
 
     if (AEInputCheckTriggered(AEVK_P)) {
@@ -776,39 +811,68 @@ void UI_Input()
 
             if (!ImInYou) {
 
+				//=============================================== Unhighlight buttons on hover ==========================================================//
+
+                if (!isButtonHovered(InvAppleButton.x, InvAppleButton.y, InvAppleButton.availableScaleX, InvAppleButton.availableScaleY)
+                    && !isMouseOver4Corners(-220.00, -218.00, 219.00, -323.00)) {
+                    isSelectedApple = false;
+                    
+                }
+
+                if (!isButtonHovered(InvBananaButton.x, InvBananaButton.y, InvBananaButton.availableScaleX, InvBananaButton.availableScaleY)
+                    && !isMouseOver4Corners(-220.00, -218.00, 219.00, -323.00)) {
+                    isSelectedBanana = false;
+                }
+
+                if (!isButtonHovered(InvPearButton.x, InvPearButton.y, InvPearButton.availableScaleX, InvPearButton.availableScaleY)
+                    && !isMouseOver4Corners(-220.00, -218.00, 219.00, -323.00)) {
+                    isSelectedPear = false;
+                }
+
+                //======================================================================================================================================//
+
                 // Inventory Buttons (source)
                 if (isButtonClicked(InvAppleButton.x, InvAppleButton.y, InvAppleButton.availableScaleX, InvAppleButton.availableScaleY)) {
                     selectedInventoryFruitType = APPLE;
                     selectedLocation = INVENTORY;
+                    isSelectedApple = true;
+                    isSelectedBanana = false;
+                    isSelectedPear = false;
                     printf("Selected fruit: APPLE\n");
                 }
 
                 if (isButtonClicked(InvPearButton.x, InvPearButton.y, InvPearButton.availableScaleX, InvPearButton.availableScaleY)) {
                     selectedInventoryFruitType = PEAR;
                     selectedLocation = INVENTORY;
+                    isSelectedPear = true;
+                    isSelectedApple = false;
+                    isSelectedBanana = false;
                     printf("Selected fruit: PEAR\n");
                 }
 
                 if (isButtonClicked(InvBananaButton.x, InvBananaButton.y, InvBananaButton.availableScaleX, InvBananaButton.availableScaleY)) {
                     selectedInventoryFruitType = BANANA;
                     selectedLocation = INVENTORY;
+                    isSelectedBanana = true;
+                    isSelectedApple = false;
+                    isSelectedPear = false;
                     printf("Selected fruit: BANANA\n");
                 }
 
 			    // Crate Buttons (destination)
-                if (isButtonClicked(CrateAppleButton.x, CrateAppleButton.y, CrateAppleButton.availableScaleX, CrateAppleButton.availableScaleY)) {
+                if (Crate_GetFruitType(crateID) == 0 && isButtonClicked(CrateAppleButton.x, CrateAppleButton.y, CrateAppleButton.availableScaleX, CrateAppleButton.availableScaleY)) {
                     selectedFruit = APPLE;
                     selectedLocation = CRATE;
                     printf("Selected fruit: APPLE\n");
                 }
 
-                if (isButtonClicked(CratePearButton.x, CratePearButton.y, CratePearButton.availableScaleX, CratePearButton.availableScaleY)) {
+                if (Crate_GetFruitType(crateID) == 1 && isButtonClicked(CratePearButton.x, CratePearButton.y, CratePearButton.availableScaleX, CratePearButton.availableScaleY)) {
                     selectedFruit = PEAR;
                     selectedLocation = CRATE;
                     printf("Selected fruit: PEAR\n");
                 }
 
-                if (isButtonClicked(CrateBananaButton.x, CrateBananaButton.y, CrateBananaButton.availableScaleX, CrateBananaButton.availableScaleY)) {
+                if (Crate_GetFruitType(crateID) == 2 && isButtonClicked(CrateBananaButton.x, CrateBananaButton.y, CrateBananaButton.availableScaleX, CrateBananaButton.availableScaleY)) {
                     selectedFruit = BANANA;
                     selectedLocation = CRATE;
                     printf("Selected fruit: BANANA\n");
@@ -872,6 +936,7 @@ void UI_Input()
             // Store / confirm button: toggle dialog on click 
             if (isButtonClicked(Store_Crate.x, Store_Crate.y, Store_Crate.normalScaleX, Store_Crate.normalScaleY)) {
                 gInvConfirmOpen = !gInvConfirmOpen;
+				ImInYou = gInvConfirmOpen; // if confirm is open, block clicks to buttons behind it
                 printf("Clicked store crate button, %s confirm dialog\n", gInvConfirmOpen ? "opening" : "closing");
             }
 
@@ -915,14 +980,56 @@ void UI_Input()
                 // For testing, just print action. Replace with actual logic to move fruit.
                 if (Btn(-60, -40)) {
 
+                    // recompute requested amount from slider/knob to avoid stale state
+                    int requested = GetSliderFruitCount(selectedLocation);
+                    if (requested <= 0) {
+						Toast_Push("Please select at least 1 fruit to move!");
+                        gInvConfirmOpen = false;
+                        ImInYou = false;
+                    }
+
+                    if (selectedLocation == INVENTORY && Crate_GetFruitCount(crateID) > 0 && requested > 0) {
+
+                        
+                            int fruitInCrate = Crate_GetFruitType(crateID);
+                            int fruitCountInCrate = Crate_GetFruitCount(crateID);
+
+                            const int invCurrentCount = GetFruitCount();
+							const int invLimit = GetInventoryLimit();
+							const int freeSpaceInInv = (invLimit > invCurrentCount) ? (invLimit - invCurrentCount) : 0;
+
+                            if (freeSpaceInInv > 0) {
+								//return at most the free space in inventory to prevent overfilling
+								const int toReturn = std::min(fruitCountInCrate, freeSpaceInInv);
+
+
+                                // Return fruit in crate back to inventory before moving new fruit in
+                                Crate_RemoveFruitAmount(crateID, toReturn);
+
+                                // Add the removed fruit back to inventory
+                                switch (fruitInCrate) {
+                                case 0: Inventory_AddFruit(static_cast<u8>(toReturn), APPLE); break;
+                                case 1: Inventory_AddFruit(static_cast<u8>(toReturn), PEAR); break;
+                                case 2: Inventory_AddFruit(static_cast<u8>(toReturn), BANANA); break;
+
+                                }
+                            }
+
+                            else {
+								Toast_Push(" Not enough space in Inventory. Sort your fruits out and try again!");
+								return; // abort move if no space in inventory to return existing fruit from crate
+                            }
+                    }
+
                     if (selectedLocation == INVENTORY && selectedInventoryFruitType == APPLE) {
                         // Move from inventory to crate
                         int availableToMove = GetAppleCount();
-                        int toMove = std::min(sliderValue, availableToMove);
+                        int toMove = std::min(requested, availableToMove);
+
                         if (toMove > 0) {
-                            Inventory_RemoveFruit(static_cast<u8>(toMove));
-                            Crate_AddFruit(crateID, toMove);
                             Crate_SetFruitType(crateID, APPLE);
+                            Inventory_RemoveFruitTyped((u8)toMove, APPLE);
+                            Crate_AddFruit(crateID, toMove);
                             printf("Moved %d apples from inventory to crate %d\n", toMove, crateID);
                         }
                     }
@@ -930,7 +1037,7 @@ void UI_Input()
                     if (selectedLocation == CRATE && selectedFruit == APPLE) {
                         // Move from crate back to inventory
                         int availableToMove = Crate_GetFruitCount(crateID);
-                        int toMove = std::min(sliderValue, availableToMove);
+                        int toMove = std::min(requested, availableToMove);
                         if (toMove > 0) {
                             Crate_RemoveFruitAmount(crateID, toMove);
                             Inventory_AddFruit(static_cast<u8>(toMove), APPLE);
@@ -940,9 +1047,9 @@ void UI_Input()
 
                     if (selectedLocation == INVENTORY && selectedInventoryFruitType == PEAR) {
                         int availableToMove = GetPearCount();
-                        int toMove = std::min(sliderValue, availableToMove);
+                        int toMove = std::min(requested, availableToMove);
                         if (toMove > 0) {
-                            Inventory_RemoveFruitTyped(static_cast<u8>(toMove), 1); // 1 = pear
+                            Inventory_RemoveFruitTyped(static_cast<u8>(toMove), PEAR); // 1 = pear
                             Crate_AddFruit(crateID, toMove);
                             Crate_SetFruitType(crateID, PEAR);
                             printf("FruitType : %d \n", Crate_GetFruitType(crateID));
@@ -951,18 +1058,20 @@ void UI_Input()
                     
                     if (selectedLocation == CRATE && selectedFruit == PEAR) {
                         int availableToMove = Crate_GetFruitCount(crateID);
-                        int toMove = std::min(sliderValue, availableToMove);
+						printf("Available to move from crate: %d\n", availableToMove);
+                        int toMove = std::min(requested, availableToMove);
+						printf("Requested to move: %d\n", toMove);
                         if (toMove > 0) {
                             Crate_RemoveFruitAmount(crateID, toMove);
-                            Inventory_AddFruit(static_cast<u8>(toMove), 1); // 1 = pear
+                            Inventory_AddFruit(static_cast<u8>(toMove), PEAR); // 1 = pear
                         }
                     }
                     
                     if (selectedLocation == INVENTORY && selectedInventoryFruitType == BANANA) {
                         int availableToMove = GetBananaCount();
-                        int toMove = std::min(sliderValue, availableToMove);
+                        int toMove = std::min(requested, availableToMove);
                         if (toMove > 0) {
-                            Inventory_RemoveFruitTyped(static_cast<u8>(toMove), 2); // 2 = banana
+                            Inventory_RemoveFruitTyped(static_cast<u8>(toMove), BANANA); // 2 = banana
                             Crate_AddFruit(crateID, toMove);
                             Crate_SetFruitType(crateID, BANANA);
                         }
@@ -970,16 +1079,24 @@ void UI_Input()
                     
                     if (selectedLocation == CRATE && selectedFruit == BANANA) {
                         int availableToMove = Crate_GetFruitCount(crateID);
-                        int toMove = std::min(sliderValue, availableToMove);
+                        int toMove = std::min(requested, availableToMove);
                         if (toMove > 0) {
                             Crate_RemoveFruitAmount(crateID, toMove);
-                            Inventory_AddFruit(static_cast<u8>(toMove), 2); // 2 = banana
+                            Inventory_AddFruit(static_cast<u8>(toMove), BANANA); // 2 = banana
                         }
                     }
 
                     // close dialog after action
                     gInvConfirmOpen = false;
 					ImInYou = false;
+
+					//reset slider and selection after move
+                    sliderX = minSlider;
+                    selectedInventoryFruitType = NILL;
+                    selectedFruit = NILL;
+                    isSelectedApple = false;
+                    isSelectedPear = false;
+					isSelectedBanana = false;
                 }
 
 
@@ -1068,9 +1185,11 @@ void UI_UpdateButtons()
     // -------------------------------------------------
     for (auto& button : menuButtons)
     {
+        float animX = button.x + menuAnimOffset; // Apply offset to hitbox
+
         button.isHovered =
-            worldX >= button.x - button.width * 0.5f &&
-            worldX <= button.x + button.width * 0.5f &&
+            worldX >= animX - button.width * 0.5f &&
+            worldX <= animX + button.width * 0.5f &&
             worldY >= button.y - button.height * 0.5f &&
             worldY <= button.y + button.height * 0.5f;
 
@@ -1225,6 +1344,7 @@ void UI_UpdateButtons()
     for (int i = 0; i < (int)plotSlots.size(); i++)
     {
         PlotSlot& slot = plotSlots[i];
+        float animX = slot.x + menuAnimOffset;
 
         bool isOver =
             worldX >= slot.x - slot.width * 0.5f &&
@@ -1270,7 +1390,7 @@ void UI_UpdateButtons()
         float offsetX = -45.0f;   // SAME as Farm_Render
         float offsetY = 45.0f;
 
-        float xPos = plotSlots[i].x + offsetX;
+        float xPos = plotSlots[i].x + offsetX + menuAnimOffset;
         float yPos = plotSlots[i].y + offsetY;
 
         bool overDelete =
@@ -1290,7 +1410,7 @@ void UI_UpdateButtons()
 
     float upgradesPanelW = UPGRADES_PANEL_W;
 
-    float panelX = UPGRADES_PANEL_X;
+    float panelX = UPGRADES_PANEL_X + menuAnimOffset;;
     float panelY = UPGRADES_PANEL_Y;
 
     float spacingUp = 70.0f;
@@ -1602,12 +1722,9 @@ void UI_UpdateButtons()
 }
 
 bool isHovered = false;
-bool isSelectedApple = false;
-bool isSelectedBanana = false;
-bool isSelectedPear = false;
 int shiftUP = 10;
 int price_apple = 0;
-
+extern s8 g_uiFont;
 
 void UI_Draw()
 {
@@ -1630,6 +1747,21 @@ void UI_Draw()
             AEMtx33Concat(&transform, &trans, &scale);
             AEGfxSetTransform(transform.m);  // Set the transformation matrix for the apple
             AEGfxMeshDraw(pMeshCratePanelBG, AE_GFX_MDM_TRIANGLES);  // Draw the apple as a quad
+
+            //crateID text 
+			char crateText[32];
+            sprintf_s(crateText, "%d", crateID + 1);
+            float x = -40.0f / 800.0f;  // normalize X by 800.0f
+            float y = 295.0f / 450.0f;  // normalize Y by 450.0f
+            float r = 60.0f / 255.0f;
+            float g = 68.0f / 255.0f;
+            float b = 92.0f / 255.0f;
+            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
+            AEGfxSetBlendMode(AE_GFX_BM_BLEND);
+            AEGfxSetColorToMultiply(1, 1, 1, 1);
+			AEGfxPrint(g_uiFont, crateText, x, y, 1.0f, r, g, b, 1);
+
+
         }
         if (pMeshCrateCost) {
             float x = 130.0f;
@@ -2034,16 +2166,6 @@ void UI_Draw()
             AppleX = InvAppleButton.x;
             AppleY = InvAppleButton.y;
 
-            if (AEInputCheckTriggered(AEVK_LBUTTON) && isButtonHovered(InvAppleButton.x, InvAppleButton.y, InvAppleButton.unselectedScaleX, InvAppleButton.unselectedScaleY)) {
-                isSelectedApple = true;
-            }
-
-            if (AEInputCheckTriggered(AEVK_LBUTTON) && !isButtonHovered(InvAppleButton.x, InvAppleButton.y, InvAppleButton.unselectedScaleX, InvAppleButton.unselectedScaleY)
-                && !isMouseOver4Corners(-220.00, -218.00, 219.00, -323.00)) {
-                isSelectedApple = false;
-                printf("Deselected apple\n");
-            }
-
             if (isSelectedApple) {
                 textureApple = InvAppleButton.selectedTex;
                 scaleAppleX = InvAppleButton.selectedScaleX;
@@ -2120,16 +2242,6 @@ void UI_Draw()
             scaleBananaY = 0;
             BananaX = InvBananaButton.x;
             BananaY = InvBananaButton.y;
-
-            if (AEInputCheckTriggered(AEVK_LBUTTON) && isButtonHovered(InvBananaButton.x, InvBananaButton.y, InvBananaButton.unselectedScaleX, InvBananaButton.unselectedScaleY)) {
-                isSelectedBanana = true;
-            }
-
-            if (AEInputCheckTriggered(AEVK_LBUTTON) && !isButtonHovered(InvBananaButton.x, InvBananaButton.y, InvBananaButton.unselectedScaleX, InvBananaButton.unselectedScaleY)
-                && !isMouseOver4Corners(-220.00, -218.00, 219.00, -323.00)) {
-                isSelectedBanana = false;
-                printf("Deselected banana\n");
-            }
 
             if (isSelectedBanana) {
                 textureBanana = InvBananaButton.selectedTex;
@@ -2208,16 +2320,6 @@ void UI_Draw()
             scalePearY = 0;
             PearX = InvPearButton.x;
             PearY = InvPearButton.y;
-
-            if (AEInputCheckTriggered(AEVK_LBUTTON) && isButtonHovered(InvPearButton.x, InvPearButton.y, InvPearButton.unselectedScaleX, InvPearButton.unselectedScaleY)) {
-                isSelectedPear = true;
-            }
-
-            if (AEInputCheckTriggered(AEVK_LBUTTON) && !isButtonHovered(InvPearButton.x, InvPearButton.y, InvPearButton.unselectedScaleX, InvPearButton.unselectedScaleY)
-                && !isMouseOver4Corners(-220.00, -218.00, 219.00, -323.00)) {
-                isSelectedPear = false;
-                printf("Deselected pear\n");
-            }
 
             if (isSelectedPear) {
                 texturePear = InvPearButton.selectedTex;
@@ -2420,8 +2522,9 @@ void UI_Draw()
     }
 
     // menu 
-    if (!menuOpen)
-        return;
+    if (menuAnimOffset <= -500.0f && !menuOpen)
+        return; // Don't draw if fully closed and off-screen
+
 
     // --- Menu Background ---
     AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
@@ -2429,7 +2532,7 @@ void UI_Draw()
     AEGfxTextureSet(menuTexture, 0, 0);
 
     AEMtx33Scale(&scale, 480, 850);
-    AEMtx33Trans(&trans, -770 + 240, 0);
+    AEMtx33Trans(&trans, -770 + 240 + menuAnimOffset, 0);
     AEMtx33Concat(&transform, &trans, &scale);
 
     AEGfxSetTransform(transform.m);
@@ -2440,8 +2543,10 @@ void UI_Draw()
     sprintf_s(goldText, "%d", Economy_GetTotalMoney());
 
 
-    float x = -530.0f / 800.0f;  // normalize X by 800.0f
-    float y = 350.0f / 450.0f;  // normalize Y by 450.0f
+    // Appling normalized offset to X text position
+    float normalizedAnimOffset = menuAnimOffset / 800.0f;
+    float x = (-530.0f / 800.0f) + normalizedAnimOffset;
+    float y = 350.0f / 450.0f;
 
     AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
     AEGfxSetBlendMode(AE_GFX_BM_BLEND);
@@ -2463,7 +2568,8 @@ void UI_Draw()
             1.0f);
 
         AEMtx33Scale(&scale, button.width, button.height);
-        AEMtx33Trans(&trans, button.x, button.y);
+        // Apply menuAnimOffset to button X translation
+        AEMtx33Trans(&trans, button.x + menuAnimOffset, button.y);
         AEMtx33Concat(&transform, &trans, &scale);
 
         AEGfxSetTransform(transform.m);
@@ -2863,12 +2969,6 @@ void UI_Draw()
         }
     }
 
-
-    if (popupOpen && AEInputCheckTriggered(AEVK_Q))
-    {
-        popupOpen = false;
-    }
-
     // --- Upgrades Panel ---
     AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
 
@@ -2876,15 +2976,11 @@ void UI_Draw()
 
     float upgradesPanelW = UPGRADES_PANEL_W;
     float upgradesPanelH = UPGRADES_PANEL_H;
-    float upgradesPanelX = UPGRADES_PANEL_X;
+    float upgradesPanelX = UPGRADES_PANEL_X + menuAnimOffset;
     float upgradesPanelY = UPGRADES_PANEL_Y;
     AEMtx33Scale(&scale, upgradesPanelW, upgradesPanelH);
     AEMtx33Trans(&trans, upgradesPanelX, upgradesPanelY);
     AEMtx33Concat(&transform, &trans, &scale);
-    /*AEGfxSetRenderMode(AE_GFX_RM_COLOR);
-    AEGfxSetColorToMultiply(0.2f, 0.2f, 0.2f, 1.0f);
-    AEGfxSetTransform(transform.m);
-    AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);*/
 
     // Draw upgrades text & hover highlight
     float upgStartY = upgradesPanelY + 60.0f;
@@ -2930,7 +3026,7 @@ void UI_Draw()
 
         const float toastW = 240.0f;
         const float toastH = 40.0f;
-        const float toastX = UPGRADES_PANEL_X;
+        const float toastX = UPGRADES_PANEL_X + menuAnimOffset;
         const float toastY = UPGRADES_PANEL_Y - UPGRADES_PANEL_H * 0.5f - 30.0f;
 
         AEGfxSetRenderMode(AE_GFX_RM_COLOR);
@@ -2951,7 +3047,7 @@ void UI_Draw()
     }
 
     // --- Seeds Panel ---
-    if (seedsPopupOpen)
+    if (seedsPopupOpen && !menuAnimInProgress)
     {
         AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
         AEGfxSetBlendMode(AE_GFX_BM_BLEND);
@@ -3334,6 +3430,8 @@ void UI_Draw()
     {
         PlotSlot& slot = plotSlots[i];
 
+        float animX = slot.x + menuAnimOffset;
+
         // Pick texture based on planted seed type
         AEGfxTexture* slotTex = plotSlotTexture; // default = apple/empty
         if (Farm_IsPlotPlanted(i) && farmPlots[i].seedType == SEED_PEAR)
@@ -3345,7 +3443,7 @@ void UI_Draw()
         AEGfxTextureSet(slotTex, 0, 0);  // <-- was hardcoded plotSlotTexture
 
         AEMtx33Scale(&scale, slot.width, slot.height);
-        AEMtx33Trans(&trans, slot.x, slot.y);
+        AEMtx33Trans(&trans, animX, slot.y);
         AEMtx33Concat(&transform, &trans, &scale);
         AEGfxSetTransform(transform.m);
         AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
@@ -3357,7 +3455,7 @@ void UI_Draw()
             AEGfxSetColorToMultiply(0.2f, 0.8f, 0.3f, 0.55f);
 
             AEMtx33Scale(&scale, slot.width, slot.height);
-            AEMtx33Trans(&trans, slot.x, slot.y);
+            AEMtx33Trans(&trans, animX, slot.y);
             AEMtx33Concat(&transform, &trans, &scale);
             AEGfxSetTransform(transform.m);
             AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
@@ -3509,8 +3607,11 @@ void UI_DrawFruitBasketTooltips()
     const float worldX = (float)mx - halfW;
     const float worldY = halfH - (float)my;
 
-    for (const auto& b : baskets)
+    // Use an index loop so we can figure out the crateID
+    for (int i = 0; i < (int)baskets.size(); ++i)
     {
+        const auto& b = baskets[i];
+
         const bool isHover =
             worldX >= b.x - b.width * 0.5f &&
             worldX <= b.x + b.width * 0.5f &&
@@ -3518,6 +3619,8 @@ void UI_DrawFruitBasketTooltips()
             worldY <= b.y + b.height * 0.5f;
 
         if (!isHover) continue;
+
+        int crateID = i; // The index is the crate ID
 
         // Tooltip panel position
         float tipX = C.tipCenterOnCrate ? b.x : (b.x - b.width * 0.5f + C.tipWidth * 0.5f);
@@ -3530,61 +3633,66 @@ void UI_DrawFruitBasketTooltips()
         // Panel background
         DrawTooltipClampedAt(tipX, tipY, "", C.tipWidth, C.tipHeight);
 
-        // --- Text for the fruit ---
-        const char* fruitName = "Unknown";
-        const char* stockText = "Stock: ?";
-        const char* inventoryText = "Inventory: ?";
-
-
+        // --- Text Setup ---
+        const char* fruitName = "";
+        const char* stockText = "";
         char stockBuf[32];
-        char invBuf[32];
 
-        // GET LIVE STOCK DATA FROM CRATE SYSTEM
-        int liveStock = Crate_GetFruitCount(b.fruitType);
+        bool isUnlocked = Crate_IsUnlocked(crateID);
 
-
-        switch (b.fruitType)
+        if (!isUnlocked)
         {
-        case FRUIT_APPLE:
-            fruitName = "Apple";
-            snprintf(stockBuf, sizeof(stockBuf), "Stock: %d", liveStock);
-            snprintf(invBuf, sizeof(invBuf), "Inventory: %d", GetAppleCount());
-            break;
+            fruitName = "Crate Locked";
+        }
+        else
+        {
+            int typeInCrate = Crate_GetFruitType(crateID);
+            int liveStock = Crate_GetFruitCount(crateID);
 
-        case FRUIT_PEAR:
-            fruitName = "Pear";
-            snprintf(stockBuf, sizeof(stockBuf), "Stock: %d", liveStock);
-            snprintf(invBuf, sizeof(invBuf), "Inventory: %d", GetPearCount());
-            break;
-
-        case FRUIT_BANANA:
-            fruitName = "Banana";
-            snprintf(stockBuf, sizeof(stockBuf), "Stock: %d", liveStock);
-            snprintf(invBuf, sizeof(invBuf), "Inventory: %d", GetBananaCount());
-            break;
+            if (liveStock > 0)
+            {
+                switch (typeInCrate)
+                {
+                case 0: // APPLE
+                    fruitName = "Apple";
+                    break;
+                case 1: // PEAR
+                    fruitName = "Pear";
+                    break;
+                case 2: // BANANA
+                    fruitName = "Banana";
+                    break;
+                default:
+                    fruitName = "Unknown Fruit";
+                    break;
+                }
+                snprintf(stockBuf, sizeof(stockBuf), "Stock: %d", liveStock);
+                stockText = stockBuf;
+            }
+            else
+            {
+                fruitName = "Empty Crate";
+                stockText = "Stock: 0";
+            }
         }
 
-        stockText = stockBuf;
-        inventoryText = invBuf;
-
-
         // --- Draw the text inside the panel ---
-        const float textStartY = tipY + C.tipHeight * 0.25f; // start a bit below top
+        // Center text vertically depending on if it's 1 or 2 lines
         const float lineSpacing = 25.0f;
+        float textStartY = tipY + (isUnlocked ? (lineSpacing * 0.5f) : 0.0f);
 
         const float xTextNorm = (tipX - C.tipWidth * 0.45f) / halfW;
 
-        // Fruit name at top
+        // Fruit name / Locked text at top
         const float yNameNorm = textStartY / halfH;
         AEGfxPrint(fontId, fruitName, xTextNorm, yNameNorm, 1.0f, 1, 1, 1, 1);
 
-        // Stock underneath
-        const float yStockNorm = (textStartY - lineSpacing) / halfH;
-        AEGfxPrint(fontId, stockText, xTextNorm, yStockNorm, 1.0f, 1, 1, 1, 1);
-
-        // Inventory underneath
-        const float yInvNorm = (textStartY - 2.0f * lineSpacing) / halfH;
-        AEGfxPrint(fontId, inventoryText, xTextNorm, yInvNorm, 1.0f, 1, 1, 1, 1);
+        // Stock underneath (only if unlocked)
+        if (isUnlocked)
+        {
+            const float yStockNorm = (textStartY - lineSpacing) / halfH;
+            AEGfxPrint(fontId, stockText, xTextNorm, yStockNorm, 1.0f, 1, 1, 1, 1);
+        }
 
         break; // only show one tooltip at a time
     }
@@ -3608,6 +3716,7 @@ void UI_DrawPlotTooltips()
     for (int i = 0; i < (int)plotSlots.size(); i++)
     {
         const PlotSlot& slot = plotSlots[i];
+        float animX = slot.x + menuAnimOffset;
 
         // Skip if plot is locked
         if (Farm_IsPlotLocked(static_cast<int>(i)))
@@ -3618,8 +3727,8 @@ void UI_DrawPlotTooltips()
             continue;
 
         // Check if mouse is over this plot
-        bool isOver = worldX >= slot.x - slot.width * 0.5f &&
-            worldX <= slot.x + slot.width * 0.5f &&
+        bool isOver = worldX >= animX - slot.width * 0.5f &&
+            worldX <= animX + slot.width * 0.5f &&
             worldY >= slot.y - slot.height * 0.5f &&
             worldY <= slot.y + slot.height * 0.5f;
 
@@ -3640,7 +3749,7 @@ void UI_DrawPlotTooltips()
                 lineCount = 2;
 
                 // Draw tooltip for ready plot
-                float tipX = slot.x;
+                float tipX = animX; // Use animated X
                 float tipY = slot.y + slot.height * 0.7f;
 
                 const float tooltipW = 200.0f;

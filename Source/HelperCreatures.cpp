@@ -58,7 +58,7 @@ void Helper_Init()
 {
     g_bunny.x = 250.0f;
     g_bunny.y = -300.0f;
-    g_bunny.speed = 100.0f;
+    g_bunny.speed = 50.0f;
 
     bunnyWalk1 = AEGfxTextureLoad("Assets/bunny1_walk1.png");
     bunnyWalk2 = AEGfxTextureLoad("Assets/bunny1_walk2.png");
@@ -170,19 +170,21 @@ void Helper_Update(float dt)
         facing = (dx > 0) ? 1.0f : -1.0f;
 
     // --------------------------------------------------------
-    // SMOOTH MOVEMENT (no jitter)
+    // SLOW & CONSISTENT MOVEMENT
     // --------------------------------------------------------
     if (!isPicking)
     {
         if (dist > 2.0f)
         {
-            float followSpeed = 6.0f;
+            // Move slowly towards the target at a constant speed
+            float moveStep = g_bunny.speed * dt;
+            
+            // Prevent overshooting the fruit
+            if (moveStep > dist) 
+                moveStep = dist;
 
-            // smooth slowdown near target
-            float speedMultiplier = dist / 50.0f;
-            if (speedMultiplier > 1.0f) speedMultiplier = 1.0f;
-
-            g_bunny.x += dx * followSpeed * speedMultiplier * dt;
+            // Move the bunny in the correct direction
+            g_bunny.x += facing * moveStep;
         }
         else
         {

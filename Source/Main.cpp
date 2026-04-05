@@ -141,9 +141,11 @@ struct Toast
     bool  active = false;
 };
 static Toast g_toasts[TOAST_MAX];
+static s8 g_toastFont = -1;
+s8 g_uiFont = -1;
 
 // Push a new toast (overwrites oldest if queue is full)
-static void Toast_Push(const char* msg, float r = 1.0f, float g = 0.95f, float b = 0.6f)
+void Toast_Push(const char* msg, float r, float g , float b )
 {
     // Find a free slot; if none, evict the one closest to expiry
     int slot = -1;
@@ -301,6 +303,13 @@ void MainScreen_Load()
 
 void MainScreen_Initialize()
 {
+    // If StartScreen requested a profile activation, do it now (deferred work)
+    if (g_pendingProfileSlot >= 0) {
+        Profiles_Reload();
+        Profile_SetActiveSlot(g_pendingProfileSlot);
+        g_pendingProfileSlot = -1;
+    }
+
     // Start Screen Init
     if (g_returnedFromPause)
     {
@@ -369,8 +378,13 @@ void MainScreen_Initialize()
     }
 
     fontId = AEGfxCreateFont("Assets/Crayon pastel.otf", 26);
+
+	g_uiFont = AEGfxCreateFont("Assets/Crayon pastel.otf", 54); //for big text like the start screen title and the rhythm reward popup
+
     if (fontId < 0)
         OutputDebugStringA("ERROR: Failed to load 'Assets/Crayon pastel.otf'.\n");
+    
+    g_toastFont = fontId;
 
     // Legend fonts — Nunito gives a clean, modern game-UI feel.
     g_legendFontKey = AEGfxCreateFont("Assets/Nunito-SemiBold.ttf", 28);
@@ -844,6 +858,7 @@ void MainScreen_Render()
         }
     }
 
+
     // ---------------------------------------------------------------
     // Status Toasts — TOP CENTER with background, all game messages
     // ---------------------------------------------------------------
@@ -854,7 +869,7 @@ void MainScreen_Render()
         const float TOAST_ROW_SPACING = 58.0f;
         const float TOAST_TEXT_SCALE = 1.0f;
 
-        s8 toastFont = (g_legendFontDesc >= 0) ? g_legendFontDesc : fontId;
+        s8 toastFont = (g_toastFont >= 0) ? g_toastFont : ((g_legendFontDesc >= 0) ? g_legendFontDesc : fontId);
 
         int row = 0;
         for (int i = 0; i < TOAST_MAX; i++)
