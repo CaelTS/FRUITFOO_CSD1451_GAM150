@@ -98,9 +98,11 @@ static const CreditLine k_lines[] =
     { CL_GAP,    nullptr                                },
     { CL_LABEL,  "Sprites and Icons"                    },
     { CL_NAME,   "Game icon pack by Kenney Vleugels (www.kenney.nl)" },
+    { CL_NAME,   "Sky Backgrounds by SoftRiver (opengameart.org/content/sky-backgrounds-0)" },
     { CL_GAP,    nullptr                                },
     { CL_LABEL,  "Songs"                                },
     { CL_NAME,   "Soundly (getsoundly.com)"             },
+    { CL_NAME,   "NoCopyrightsSounds (youtube.com/@NoCopyrightSounds)" },
 
     // ---- Footer ----
     { CL_GAP,    nullptr                                },
