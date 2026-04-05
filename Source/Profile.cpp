@@ -734,7 +734,6 @@ void ProfileScreen_Load() {
 void ProfileScreen_Initialize() {
     fontId = AEGfxCreateFont("Assets/liberation-mono.ttf", 26);
     if (fontId < 0)
-        OutputDebugStringA("ERROR: Failed to load 'Assets/liberation-mono.ttf'.\n");
 
     // Create mesh for long buttons (profile slots)
     AEGfxMeshStart();

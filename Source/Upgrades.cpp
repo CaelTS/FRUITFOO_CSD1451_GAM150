@@ -139,71 +139,57 @@ void Upgrades_Purchase(UpgradeID id) {
                 switch (id) {
                 case UPGRADE_INVENTORY_I:
                     SetInventoryLimit(GetInventoryLimit() + 10);
-                    printf("Inventory limit increased to %d!\n", GetInventoryLimit());
                     break;
 
                 case UPGRADE_FRUIT_I:
                     Economy_SetBasePriceApple(7);
-                    printf("Base price of apples increased to %d!\n", 7);
                     break;
 
                 case UPGRADE_UNLOCK_PLOT2:
                     Farm_SetPlotUnlocked(1, true);
-                    printf("Plot 2 unlocked!\n");
                     break;
 
                 case UPGRADE_CRATE_I:
                     Crate_SetMaxStock(Crate_GetMaxStock() + 10);
-                    printf("Crate capacity increased to %d!\n", Crate_GetMaxStock());
                     break;
 
                 case UPGRADE_INVENTORY_II:
                     SetInventoryLimit(GetInventoryLimit() + 20);
-                    printf("Inventory limit increased to %d!\n", GetInventoryLimit());
                     break;
 
                 case UPGRADE_UNLOCK_CRATE2:
                     Crate_SetUnlocked(1, true);
-                    printf("Crate 2 unlocked!\n");
                     break;
 
                 case UPGRADE_FRUIT_II:
                     Economy_SetBasePriceApple(9);
-                    printf("Base price of apples increased to %d!\n", 9);
                     break;
 
                 case UPGRADE_CRATE_II:
                     Crate_SetMaxStock(Crate_GetMaxStock() + 20);
-                    printf("Crate capacity increased to %d!\n", Crate_GetMaxStock());
                     break;
 
                 case UPGRADE_UNLOCK_PLOT3:
                     Farm_SetPlotUnlocked(2, true);
-                    printf("Plot 3 unlocked!\n");
                     break;
 
                 case UPGRADE_INVENTORY_III:
                     SetInventoryLimit(GetInventoryLimit() + 30);
-                    printf("Inventory limit increased to %d!\n", GetInventoryLimit());
                     break;
 
                 case UPGRADE_FRUIT_III:
                     Economy_SetBasePriceApple(11);
-                    printf("Base price of apples increased to %d!\n", 11);
                     break;
                 case UPGRADE_UNLOCK_CRATE3:
                     Crate_SetUnlocked(2, true);
-                    printf("Crate 3 unlocked!\n");
                     break;
 
                 case UPGRADE_CRATE_III:
                     Crate_SetMaxStock(Crate_GetMaxStock() + 30);
-                    printf("Crate capacity increased to %d!\n", Crate_GetMaxStock());
                     break;
 
                 case UPGRADE_UNLOCK_PLOT4:
                     Farm_SetPlotUnlocked(3, true);
-                    printf("Plot 4 unlocked!\n");
                     break;
 
                 case UPGRADE_LEVEL_UP:
