@@ -140,9 +140,9 @@ void Farm_Load()
     fruitPearTexture = AEGfxTextureLoad("Assets/PlotPear.png");
     fruitBananaTexture = AEGfxTextureLoad("Assets/PlotBanana.png");
 
-    g_farmTickSFX = AEAudioLoadSound("Assets/Tick.wav");
+    g_farmTickSFX = AEAudioLoadSound("Assets/Tick.mp3");
     g_farmTickGroup = AEAudioCreateGroup();
-    g_farmHarvestSFX = AEAudioLoadSound("Assets/Harvest.wav");
+    g_farmHarvestSFX = AEAudioLoadSound("Assets/Harvest.mp3");
     g_farmHarvestGroup = AEAudioCreateGroup();
 
     FlyingFruit_Init();

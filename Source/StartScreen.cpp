@@ -464,12 +464,12 @@ void StartScreen_Init()
     if (!exitButton.normal) exitButton.normal = AEGfxTextureLoad("Assets/StartScreen_Exit.png");
     if (!exitButton.hover) exitButton.hover = AEGfxTextureLoad("Assets/StartScreen_Exit_Selected.png");
     exitButton.x = logoPosX - 102.0f;
-    exitButton.y = -55.0f;
-    exitButton.x_selected = exitButton.x; // slide left on hover
+    exitButton.y = -110.0f;              // shifted down by 55 to make room for Credits above it
+    exitButton.x_selected = exitButton.x;
     exitButton.y_selected = exitButton.y;
-    exitButton.x_save = exitButton.x; // no slide when save exists
-    exitButton.y_save = exitButton.y - 110.0f;
-    exitButton.x_selected_save = exitButton.x - 1; // no slide when save exists
+    exitButton.x_save = exitButton.x;
+    exitButton.y_save = -165.0f;           // save layout: Tutorial(55) Continue(0) Profile(-55) Credits(-110) Exit(-165)
+    exitButton.x_selected_save = exitButton.x - 1;
     exitButton.y_selected_save = exitButton.y_save;
 
     // Initialize "Continue" button 
@@ -522,20 +522,21 @@ void StartScreen_Init()
     tutorialButton.x_selected_save = logoPosX - 50.0f;
     tutorialButton.y_selected_save = 55.0f;
 
-    // Initialize "Credits" button — same texture style as Exit, positioned below it
+    // Initialize "Credits" button — always positioned directly above the Exit button
     if (!creditsButton.normal) creditsButton.normal = AEGfxTextureLoad("Assets/StartScreen_Credits.png");
     if (!creditsButton.hover)  creditsButton.hover = AEGfxTextureLoad("Assets/StartScreen_Credits_Selected.png");
     if (!pMeshCreditsButton)          pMeshCreditsButton = createMesh();
     if (!pMeshCreditsButton_Selected) pMeshCreditsButton_Selected = createMesh();
-    // Positioned directly below the Exit button (exit is at y=-55, credits sit 55px lower)
+    // No-save layout: credits sits 55px above exit (exit.y + 55)
     creditsButton.x = continueButton.x;
-    creditsButton.y = exitButton.y + 55.0f;
+    creditsButton.y = exitButton.y + 55.0f;          // directly above exit, no-save layout
     creditsButton.x_selected = continueButton.x_selected;
     creditsButton.y_selected = exitButton.y_selected + 55.0f;
+    // Save layout: credits sits 55px above exit_save
     creditsButton.x_save = continueButton.x_save;
-    creditsButton.y_save = profileButton.y_save - 55.0f;
+    creditsButton.y_save = exitButton.y_save + 55.0f; // directly above exit, save layout
     creditsButton.x_selected_save = continueButton.x_selected_save;
-    creditsButton.y_selected_save = profileButton.y_selected_save - 55.0f;
+    creditsButton.y_selected_save = exitButton.y_selected_save + 55.0f;
 
     // Reset animation state
     isExiting = false;
@@ -921,8 +922,8 @@ void StartScreen_Unload()
         AEAudioUnloadAudio(g_startMusic);
     if (AEAudioIsValidGroup(g_startMusicGroup))
         AEAudioUnloadAudioGroup(g_startMusicGroup);
-  
-       // Free popup resources
+
+    // Free popup resources
     if (pMeshPopup) { AEGfxMeshFree(pMeshPopup); pMeshPopup = nullptr; }
     if (pTexInputRect) { AEGfxTextureUnload(pTexInputRect); pTexInputRect = nullptr; }
 

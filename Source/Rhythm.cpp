@@ -31,13 +31,13 @@ static const float VERTICAL_OFFSET = 200.0f;
 static const RhythmDifficultyConfig DIFFICULTY_CONFIGS[3] = {
     // EASY
     // noteSpeed  minSpawn  maxSpawn  doubleChance  premiumChance  audioFile                        backgroundFile
-    {  400.0f,    0.8f,     1.4f,     0.05f,        0.15f,         "Assets/TETR-NCS1.wav",          "Assets/bg_diff.png" },
+    {  400.0f,    0.8f,     1.4f,     0.05f,        0.15f,         "Assets/TETR_NCS1.mp3",          "Assets/bg_diff.png" },
 
     // MEDIUM
-    {  500.0f,    0.4f,     1.0f,     0.15f,        0.25f,         "Assets/SAVJP-NCS2.wav",         "Assets/bg_diff.png" },
+    {  500.0f,    0.4f,     1.0f,     0.15f,        0.25f,         "Assets/SAVJP_NCS2.mp3",         "Assets/bg_diff.png" },
 
     // HARD
-    {  600.0f,    0.2f,     0.8f,     0.30f,        0.40f,         "Assets/WDYS-NCS3.wav",         "Assets/bg_diff.png" },
+    {  600.0f,    0.2f,     0.8f,     0.30f,        0.40f,         "Assets/WDYS_NCS3.mp3",         "Assets/bg_diff.png" },
 };
 
 static RhythmDifficulty        g_difficulty = DIFFICULTY_MEDIUM;

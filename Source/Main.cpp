@@ -283,7 +283,7 @@ void MainScreen_Load()
     Crate_Load();
 
     // Load main screen BGM
-    g_mainBGM = AEAudioLoadMusic("Assets/bgm.wav");
+    g_mainBGM = AEAudioLoadMusic("Assets/bgm.mp3");
     g_mainBGMGroup = AEAudioCreateGroup();
 
     // Pause popup assets
