@@ -91,7 +91,7 @@ void SpawnFruit_Init() {
 void SpawnFruit() {
 
 
-    if (rand_chance(80.0f)) { // 20% chance to spawn a pear 
+    if (rand_chance(20.0f)) { // 20% chance to spawn a pear 
         newApple.texture = gPearTexture;
         newApple.type = PEAR;
         // adjust scale for pear
