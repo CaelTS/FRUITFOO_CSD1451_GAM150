@@ -1344,7 +1344,6 @@ void UI_UpdateButtons()
     for (int i = 0; i < (int)plotSlots.size(); i++)
     {
         PlotSlot& slot = plotSlots[i];
-        float animX = slot.x + menuAnimOffset;
 
         bool isOver =
             worldX >= slot.x - slot.width * 0.5f &&
@@ -3619,8 +3618,6 @@ void UI_DrawFruitBasketTooltips()
             worldY <= b.y + b.height * 0.5f;
 
         if (!isHover) continue;
-
-        int crateID = i; // The index is the crate ID
 
         // Tooltip panel position
         float tipX = C.tipCenterOnCrate ? b.x : (b.x - b.width * 0.5f + C.tipWidth * 0.5f);
