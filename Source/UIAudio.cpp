@@ -16,8 +16,8 @@ void UIAudio_Init()
     sUIAudioGroup = AEAudioCreateGroup();
 
     // Load UI sounds
-    sClickSound = AEAudioLoadSound("Assets/ui_click.wav");
-    sToggleSound = AEAudioLoadSound("Assets/ui_toggle.wav");
+    sClickSound = AEAudioLoadSound("Assets/ui_click.mp3");
+    sToggleSound = AEAudioLoadSound("Assets/ui_toggle.mp3");
 }
 
 // ---------------- Playback ----------------
