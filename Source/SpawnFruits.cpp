@@ -85,32 +85,37 @@ void SpawnFruit_Init() {
 
 
 	spawnInterval = random_float(10.0f, 30.0f); // Randomize initial spawn interval between 10 and 30 seconds
+	printf("Initial spawn interval: %.2f seconds\n", spawnInterval);
 }
 
 void SpawnFruit() {
 
 
-    if (rand_chance(80.0f)) { // 20% chance to spawn a pear 
+    if (rand_chance(20.0f)) { // 20% chance to spawn a pear 
         newApple.texture = gPearTexture;
         newApple.type = PEAR;
         // adjust scale for pear
         newApple.scaleX = 42.0f;
 		newApple.scaleY = 67.0f;
+		printf("Spawn a pear!\n");
     }
     else if (rand_chance(50.0f)) { // 50% chance to spawn a banana (if not pear)
         newApple.texture = gBananaTexture;
 		newApple.type = BANANA;
         newApple.scaleX = 72.0f;
         newApple.scaleY = 70.0f;
+		printf("Spawn a banana!\n");
     }
     else {
         newApple.texture = gAppleTexture;  // Load the apple texturenew
 		newApple.type = APPLE;
         newApple.scaleX = 72.0f;
         newApple.scaleY = 70.0f;
+        printf("Spawn an apple!\n");
     }
 
     newApple.x = random_float(-200.0, 600.0);  // Random X position between 400 to 1000
+    printf("Spawned apple at (%.2f, %.2f)\n", newApple.x, newApple.y);
 
     newApple.rotation = static_cast<f32>(rand() & 180);  // Start with no rotation
 
@@ -126,6 +131,7 @@ static void SpawnFruit(float x) {
     
     newApple.x = x;  // Random X position between 400 to 1000
     newApple.y = 100;  // Start the apple at the top of the screen (y = 0)
+    printf("Spawned apple at (%.2f, %.2f)\n", newApple.x, newApple.y);
 
     newApple.rotation = static_cast<f32>(rand() & 180);  // Start with no rotation
 
@@ -148,6 +154,7 @@ bool SpawnMultipleFruits(int count, FruitType fruit) {
 		newApple.type = APPLE;
         newApple.scaleX = 72.0f;
         newApple.scaleY = 70.0f;
+		printf("Spawning multiple apples!\n");
 	}
 
     if (fruit == PEAR) {
@@ -241,6 +248,7 @@ void UpdateSpawnFruits(float dt) {
                 // AddToInventory() here if needed
                 fruits.erase(fruits.begin() + i);
                 collectAnims.erase(collectAnims.begin() + i);
+                printf("Apple collected & removed after animation.\n");
                 continue; // don't increment i (we removed this index)
             }
             else
@@ -263,6 +271,7 @@ void UpdateSpawnFruits(float dt) {
             if (apple.y <= GROUND_Y) {  // Check if apple hits the ground 
                 apple.y = GROUND_Y;  // Snap to ground level
                 GROUND_Y = random_float(-400.0f, -350.0f);  // Randomize next ground level for visual variety
+                printf("Apple hit the ground at (%.2f, %.2f)\n", apple.x, apple.y);
 
                 apple.isFalling = false;  // Stop falling
                 apple.speedY = 0.0f;  // Stop vertical movement
@@ -300,33 +309,6 @@ void UpdateSpawnFruits(float dt) {
         else if (apple.rotation < -360.0f) apple.rotation += 360.0f;
     }
 }
-
-//// Render function: Renders all apples on the screen
-//void RenderSpawnFruits() {
-//    for (const auto& apple : fruits) {
-//        if (!apple.isCollected) {// if havent collect yet
-//
-//            // Render apple at its current position
-//            AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);  // Use texture rendering mode
-//            AEGfxTextureSet(apple.texture, 0, 0);  // Set the texture
-//
-//            AEMtx33 scale, trans, rotation, transform, rotscale;
-//			AEMtx33Scale(&scale, 47.0f, 47.0f);  
-//
-//            f32 rotationInRadians = apple.rotation * (3.14159265358979323846f / 180.0f);  // Convert degrees to radian
-//			AEMtx33Rot(&rotation, rotationInRadians);  // Create rotation matrix based on current rotation
-//
-//            AEMtx33Trans(&trans, apple.x, apple.y);  // Apply position transformation
-//
-//            AEMtx33Concat(&rotscale, &rotation, &scale);
-//            AEMtx33Concat(&transform, &trans, &rotscale);
-//
-//            AEGfxSetTransform(transform.m);  // Set the transformation matrix for the apple
-//
-//            AEGfxMeshDraw(pMeshApple, AE_GFX_MDM_TRIANGLES);  // Draw the apple as a quad
-//        }
-//    }
-//}
 
 // --- RenderSpawnFruits: use per-fruit scale when drawing ---
 void RenderSpawnFruits() {
@@ -369,61 +351,11 @@ void UpdateFruitSpawner(float dt) {
     if (spawnTimer >= spawnInterval) {
         SpawnFruit();  // Spawn fruit when timer exceeds the interval
         spawnTimer = 0.0f;  // Reset the spawn timer
-        spawnInterval = random_time(1, 400);  // Random spawn interval (between 1 and 400 seconds / 6.67 mins)
+        spawnInterval = random_time(30, 500);  // Random spawn interval (between 30 and 500 seconds / 8.33 mins)
+        printf("Next fruit in %.2f seconds.\n", spawnInterval);
     }
 }
-//--------------------------------------------------------------------------//
 
-//void CheckForFruitClicks(s32 mouseX, s32 mouseY) {
-//	    
-//    if (!AEInputCheckCurr(AEVK_LBUTTON)) {  // If not clicked, exit the function
-//		return;  
-//    }
-//
-//    // Convert screen coordinates to world coordinates
-//    float worldX = (float)mouseX - 800.0f;
-//    float worldY = 450.0f - (float)mouseY;
-//
-//    for (auto apple = fruits.begin(); apple != fruits.end(); )
-//    {
-//        if (!apple->isCollected && !apple->isFalling)
-//        {
-//            float halfSize = 47.0f * 0.5f;
-//
-//            if (worldX > apple->x - halfSize &&
-//                worldX < apple->x + halfSize &&
-//                worldY > apple->y - halfSize &&
-//				worldY < apple->y + halfSize) // Check if click is within apple bounds
-//            {
-//                apple->isCollected = true;
-//                printf("Apple clicked!\n");
-//
-//            }
-//        }
-//        if (apple->isCollected){
-//            //AddToInventory();  // Add to inventory when clicked
-//			
-//            //animation
-//			//apple moves up quickly and shrinks down to show it being collected
-//
-//
-//			apple = fruits.erase(apple);  // Remove apple from the world
-//			printf("Apple removed from the world.\n");
-//
-//			//visual feedback for collecting apple could be added here ( + 1 floating text, sound effect, etc.)
-//
-//            //+1 floating text
-//
-//			//smoke sprite to show the apple being collected or a quick sparkle effect
-//
-//            //sound effect
-//            
-//		}
-//        else {
-//            ++apple;  // Move to next apple
-//        }
-//    }
-//}
 
 void CheckForFruitClicks(s32 mouseX, s32 mouseY) {
     if (!AEInputCheckCurr(AEVK_LBUTTON)) {  // If not clicked, exit the function
@@ -455,6 +387,7 @@ void CheckForFruitClicks(s32 mouseX, s32 mouseY) {
                 anim.curScale = anim.startScale = 1.0f;
                 anim.duration = 0.5f;
                 anim.velocityY = 300.0f;
+                printf("Apple clicked! starting collection animation at (%.2f, %.2f)\n", apple.x, apple.y);
 				clickOnce = true; // Set flag to indicate we've handled a click
             }
         }
@@ -476,8 +409,10 @@ void CheckForFruitClicks(s32 mouseX, s32 mouseY) {
             }
 
             else {
+				printf("Inventory full! Cannot add more fruits.\n");
                 int add_money = random_range(1, 5);
                 Economy_AddMoney(add_money);
+				printf("Get money $%d instead!\n", add_money);
             }
 
 			clickOnce = false; // Reset flag after handling the click
@@ -532,6 +467,7 @@ void Proximity_CheckForFruitClicks(f32 objX, f32 objY, f32 objWidth, f32 objHeig
             anim.duration = 0.5f;
             anim.velocityY = 300.0f;
             anim.anim_moveup = false;
+            printf("Apple collected by proximity at (%.2f, %.2f) -> starting animation\n", f.x, f.y);
         }
     }
 }

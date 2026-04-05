@@ -303,7 +303,7 @@ AEGfxVertexList* pMeshGradientBlur = nullptr;
 static bool isExiting = false;          // Has the exit animation started?
 static float exitAnimProgress = 0.0f;   // 0.0 -> 1.0 animation progress
 static float exitAnimFadeOut = 1.0f;    // 0.0 -> 1.0 fade out progress
-static float exitAnimSpeed = 1.3f;      // Speed of slide animation
+static float exitAnimSpeed = 0.5f;      // Speed of slide animation
 
 // ============================================================
 // Popup helpers
@@ -710,19 +710,12 @@ void StartScreen_Update(float dt)
             Tutorial_Open();
         if (IsButtonHovered(tutorialButton, 190.0f, 41.0f))
             tutorialButton.hovered = true;
-
-        // For now, just simulate button click with keyboard for testing
-        if (AEInputCheckTriggered(AEVK_RETURN)) // press Enter to start
-        {
-            isExiting = true;
-        }
-
     }
     else
     {
         // Animate exit
         exitAnimProgress += dt * exitAnimSpeed * 0.8f;
-        exitAnimFadeOut -= (dt * exitAnimSpeed);
+        exitAnimFadeOut -= (dt * exitAnimSpeed * 8.0f);
         if (exitAnimProgress >= 1.0f)
         {
             exitAnimProgress = 1.0f;

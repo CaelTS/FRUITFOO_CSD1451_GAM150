@@ -82,3 +82,5 @@ extern std::vector<PlotSlot> plotSlots;
 
 extern bool gSoundEnabled;
 extern bool gMusicEnabled;
+
+extern float menuAnimOffset;
