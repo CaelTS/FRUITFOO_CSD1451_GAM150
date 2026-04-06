@@ -442,10 +442,10 @@ void Farm_Update()
 
 void Farm_Render()
 {
- /*   if (!UI_IsMenuOpen())
+    if (!UI_IsMenuOpen())
         return;
     if (!plantedTexture)
-        return;*/
+        return;
 
     AEMtx33 scale, trans, transform;
     AEGfxSetRenderMode(AE_GFX_RM_TEXTURE);
@@ -459,17 +459,16 @@ void Farm_Render()
         float plotY = UI_GetPlotSlotY(i);
 
         FarmPlot& plot = farmPlots[i];
-        float animX = plotX + menuAnimOffset;
 
         // --------------------------
         // DRAW LOCKED PLOT
         // --------------------------
         if (!plot.isUnlocked)
         {
-            AEGfxSetColorToMultiply(1.0f, 1.0f, 1.0f, 1.0f);
+            AEGfxSetColorToMultiply(0.4f, 0.4f, 0.4f, 1.0f);
             AEGfxTextureSet(lockedPlot, 0, 0);
             AEMtx33Scale(&scale, 120.0f, 120.0f);
-            AEMtx33Trans(&trans, animX, plotY);
+            AEMtx33Trans(&trans, plotX, plotY);
             AEMtx33Concat(&transform, &trans, &scale);
             AEGfxSetTransform(transform.m);
             AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);
@@ -488,7 +487,7 @@ void Farm_Render()
         AEGfxSetColorToMultiply(1, 1, 1, 1);
         AEGfxTextureSet(plantedTexture, 0, 0);
         AEMtx33Scale(&scale, 120.0f, 120.0f);
-        AEMtx33Trans(&trans, animX, plotY);
+        AEMtx33Trans(&trans, plotX, plotY);
         AEMtx33Concat(&transform, &trans, &scale);
         AEGfxSetTransform(transform.m);
         AEGfxMeshDraw(g_pMeshFullScreen, AE_GFX_MDM_TRIANGLES);

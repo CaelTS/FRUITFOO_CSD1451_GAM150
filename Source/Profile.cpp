@@ -72,9 +72,6 @@ static Profile profiles[MAX_PROFILES] = {
       {true,false,false}, {0,0,0} }
 };
 
-// Pending profile slot requested by StartScreen (deferred activation)
-int g_pendingProfileSlot = -1;
-
 // Popup state
 static bool  popupActive = false;
 static bool  popupEditMode = false;         // true = editing existing profile name
@@ -339,7 +336,7 @@ static void Profiles_Load() {
                 sscanf_s(value, "%f", &profiles[slotIndex].play_time);
             else if (strcmp(key, "session_count") == 0)
                 profiles[slotIndex].session_count = atoi(value);
-            // Backward compatibility: old 'coins' field -> total_money
+            // Backward compatibility: old 'coins' field → total_money
             else if (strcmp(key, "coins") == 0)
                 profiles[slotIndex].total_money = (unsigned long long)_strtoui64(value, nullptr, 10);
         }

@@ -104,8 +104,6 @@ void Profile_SetActiveSlot(int slot);
 // (e.g. the Continue button in StartScreen).
 void Profiles_Reload();
 
-// Pending profile slot (set by StartScreen to defer activating a slot until the main screen initializes)
-extern int g_pendingProfileSlot;
 
 // ---------------------------------------------------------------------------
 // Inventory persistence
