@@ -103,11 +103,16 @@ void Crate_Initialize()
         g_crates[i].fruitCount = Profile_GetCrateFruitCount(i);
     }
 
-    // Unlock all crates unconditionally.
+    // Migration guard: if every crate comes back locked (old save with no
+    // [crate] section), force crate 0 unlocked and persist it.
+    bool anyUnlocked = false;
     for (int i = 0; i < CRATE_COUNT; i++)
+        if (g_crates[i].isUnlocked) { anyUnlocked = true; break; }
+
+    if (!anyUnlocked)
     {
-        g_crates[i].isUnlocked = true;
-        Profile_SetCrateUnlocked(i, true);
+        g_crates[0].isUnlocked = true;
+        Profile_SetCrateUnlocked(0, true);
     }
 
     // Ensure existing stocks don't exceed current max (safe for profile upgrades)
