@@ -694,6 +694,7 @@ void UI_Input()
         AEInputGetCursorPosition(&mouseX, &mouseY);
         worldX = static_cast<float>(mouseX) - 800.0f; // Convert to world coordinates
         worldY = 450.0f - static_cast<float>(mouseY); // Invert Y axis and convert
+        printf("Mouse world coordinates: (%.2f, %.2f)\n", worldX, worldY);
     }
 
 
@@ -701,6 +702,7 @@ void UI_Input()
     if (AEInputCheckTriggered(AEVK_C)) {
         Crate_AddFruit(0, 1);
         Crate_SetFruitType(0, 0);
+        printf("Added apple to crate %d, now has %d apples:fruitID %d\n", 0, Crate_GetFruitCount(0), Crate_GetFruitType(0));
     }
 
     //================= Crate panel input ===================
@@ -712,6 +714,7 @@ void UI_Input()
         clickedtwice = false;
 		ImInYou = false;
         crateID = GetFruitBasketIndexUnderMouse();
+        printf("Clicked on basket %d,popup now %s\n", crateID, cratePopupOpen ? "OPEN" : "CLOSED");
 
         // Example: get fruit type id
         // int fruitId = gFruitBaskets[gSelectedBasketIndex].fruitType;
@@ -727,6 +730,7 @@ void UI_Input()
             cratePopupOpen = false;
             clickedtwice = false;
 			ImInYou = false;
+            printf("Clicked outside crate panel, closing it\n");
         }
     }
 
@@ -736,17 +740,20 @@ void UI_Input()
         // - Check if clicking on "Add to Crate" button
         // - Check if dragging slider
         // - etc.
-       
+        
+        int typeInCrate = Crate_GetFruitType(crateID);
         int countInCrate = Crate_GetFruitCount(crateID);
         empty = countInCrate < 0;
 
         if (empty == false && once == true) {
 
+            printf("Fruit in crate %d: %d, Count: %d\n", crateID, typeInCrate, countInCrate);
             once = false;
 
         }
 
         if (empty) {
+            printf("Crate %d is empty!\n", crateID);
         }
 
         // Improved dragging: world-space, grab-offset, snap-to-track, clamp
@@ -773,32 +780,38 @@ void UI_Input()
                 if (isButtonClicked(InvAppleButton.x, InvAppleButton.y, InvAppleButton.availableScaleX, InvAppleButton.availableScaleY)) {
                     selectedInventoryFruitType = APPLE;
                     selectedLocation = INVENTORY;
+                    printf("Selected fruit: APPLE\n");
                 }
 
                 if (isButtonClicked(InvPearButton.x, InvPearButton.y, InvPearButton.availableScaleX, InvPearButton.availableScaleY)) {
                     selectedInventoryFruitType = PEAR;
                     selectedLocation = INVENTORY;
+                    printf("Selected fruit: PEAR\n");
                 }
 
                 if (isButtonClicked(InvBananaButton.x, InvBananaButton.y, InvBananaButton.availableScaleX, InvBananaButton.availableScaleY)) {
                     selectedInventoryFruitType = BANANA;
                     selectedLocation = INVENTORY;
+                    printf("Selected fruit: BANANA\n");
                 }
 
 			    // Crate Buttons (destination)
                 if (isButtonClicked(CrateAppleButton.x, CrateAppleButton.y, CrateAppleButton.availableScaleX, CrateAppleButton.availableScaleY)) {
                     selectedFruit = APPLE;
                     selectedLocation = CRATE;
+                    printf("Selected fruit: APPLE\n");
                 }
 
                 if (isButtonClicked(CratePearButton.x, CratePearButton.y, CratePearButton.availableScaleX, CratePearButton.availableScaleY)) {
                     selectedFruit = PEAR;
                     selectedLocation = CRATE;
+                    printf("Selected fruit: PEAR\n");
                 }
 
                 if (isButtonClicked(CrateBananaButton.x, CrateBananaButton.y, CrateBananaButton.availableScaleX, CrateBananaButton.availableScaleY)) {
                     selectedFruit = BANANA;
                     selectedLocation = CRATE;
+                    printf("Selected fruit: BANANA\n");
                 }
             }
         
@@ -859,6 +872,7 @@ void UI_Input()
             // Store / confirm button: toggle dialog on click 
             if (isButtonClicked(Store_Crate.x, Store_Crate.y, Store_Crate.normalScaleX, Store_Crate.normalScaleY)) {
                 gInvConfirmOpen = !gInvConfirmOpen;
+                printf("Clicked store crate button, %s confirm dialog\n", gInvConfirmOpen ? "opening" : "closing");
             }
 
         }
@@ -909,6 +923,7 @@ void UI_Input()
                             Inventory_RemoveFruit(static_cast<u8>(toMove));
                             Crate_AddFruit(crateID, toMove);
                             Crate_SetFruitType(crateID, APPLE);
+                            printf("Moved %d apples from inventory to crate %d\n", toMove, crateID);
                         }
                     }
                     
@@ -919,6 +934,7 @@ void UI_Input()
                         if (toMove > 0) {
                             Crate_RemoveFruitAmount(crateID, toMove);
                             Inventory_AddFruit(static_cast<u8>(toMove), APPLE);
+                            printf("Moved %d apples from crate %d back to inventory\n", toMove, crateID);
                         }
                     }
 
@@ -929,6 +945,7 @@ void UI_Input()
                             Inventory_RemoveFruitTyped(static_cast<u8>(toMove), 1); // 1 = pear
                             Crate_AddFruit(crateID, toMove);
                             Crate_SetFruitType(crateID, PEAR);
+                            printf("FruitType : %d \n", Crate_GetFruitType(crateID));
                         }
                     }
                     
@@ -1187,6 +1204,11 @@ void UI_UpdateButtons()
                     seedIndexSafe = static_cast<u8>(currentSeedIndex);
 
                 Inventory_RemoveSeed(static_cast<u8>(1), seedIndexSafe);
+
+
+                std::cout << "Planted seed type: " << currentSeedIndex
+                    << " on plot: " << plotToPlant << "\n";
+
                 seedsPopupOpen = false;
                 activePlotIndex = -1;
                 //selectedSeed = 1;
@@ -2019,6 +2041,7 @@ void UI_Draw()
             if (AEInputCheckTriggered(AEVK_LBUTTON) && !isButtonHovered(InvAppleButton.x, InvAppleButton.y, InvAppleButton.unselectedScaleX, InvAppleButton.unselectedScaleY)
                 && !isMouseOver4Corners(-220.00, -218.00, 219.00, -323.00)) {
                 isSelectedApple = false;
+                printf("Deselected apple\n");
             }
 
             if (isSelectedApple) {
@@ -2105,6 +2128,7 @@ void UI_Draw()
             if (AEInputCheckTriggered(AEVK_LBUTTON) && !isButtonHovered(InvBananaButton.x, InvBananaButton.y, InvBananaButton.unselectedScaleX, InvBananaButton.unselectedScaleY)
                 && !isMouseOver4Corners(-220.00, -218.00, 219.00, -323.00)) {
                 isSelectedBanana = false;
+                printf("Deselected banana\n");
             }
 
             if (isSelectedBanana) {
@@ -2192,6 +2216,7 @@ void UI_Draw()
             if (AEInputCheckTriggered(AEVK_LBUTTON) && !isButtonHovered(InvPearButton.x, InvPearButton.y, InvPearButton.unselectedScaleX, InvPearButton.unselectedScaleY)
                 && !isMouseOver4Corners(-220.00, -218.00, 219.00, -323.00)) {
                 isSelectedPear = false;
+                printf("Deselected pear\n");
             }
 
             if (isSelectedPear) {
@@ -2876,6 +2901,7 @@ void UI_Draw()
             continue;
 
         if (!upgradesList[i].texture) {
+            printf("Upgrade %d missing texture!\n", static_cast<int>(i));
         }
 
 

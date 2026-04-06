@@ -113,6 +113,7 @@ void Economy_Init() {
 	std::pair<float, float> range_pair = random_range_pair(5.0f, 30.0f, 30.0f, 75.0f);
 	next_sale_time = random_time(range_pair.first, range_pair.second);
 
+	printf("base price apple: %d\n", base_price_apple);
 }
 void Economy_Update(float dt) {
 	timer += dt;
@@ -140,6 +141,10 @@ void Economy_Update(float dt) {
 				sell_fruit(b.stock, static_cast<FruitType>(b.fruitType));
 				anySale = true;
 
+				// Log using the stock id to report remaining stock
+				printf("Sale! Money: %llu | Stock remaining (id %d): %d\n",
+					total_money, b.stock, Crate_GetFruitCount(b.stock));
+
 				// If we've reached max, clamp and break out
 				if (total_money >= max_money) {
 					total_money = max_money;
@@ -156,6 +161,7 @@ void Economy_Update(float dt) {
 				timer = 0.0f;
 				auto range_pair = random_range_pair(10.0f, 30.0f, 45.0f, 105.0f);
 				next_sale_time = random_time(range_pair.first, range_pair.second);
+				printf("Next sale in %.2f seconds.\n", next_sale_time);
 			}
 			else {
 				// If no stock anywhere, try again reset timer new timer

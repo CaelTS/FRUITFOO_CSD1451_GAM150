@@ -116,9 +116,15 @@ const float GROW_TIME = 8.0f;
 
 void Farm_Load()
 {
+    std::cout << "Farm_Load\n";
 
     plantedTexture = AEGfxTextureLoad("Assets/PlotPlant.png");
     deleteIcon = AEGfxTextureLoad("Assets/X.png");
+
+    if (!plantedTexture)
+        std::cout << "FAILED TO LOAD PlotPlant.png\n";
+    else
+        std::cout << "PlotPlant.png loaded successfully\n";
 
     fruitStage25 = AEGfxTextureLoad("Assets/fruitStage25.png");
     fruitStage50 = AEGfxTextureLoad("Assets/fruitStage50.png");
@@ -167,6 +173,7 @@ void Farm_Initialize()
     {
         farmPlots[0].isUnlocked = true;
         Profile_SetPlotUnlocked(0, true);
+        std::cout << "Farm migration: plot 0 force-unlocked (no farm data in save)\n";
     }
 
     g_rhythmPaused = false;
@@ -177,6 +184,7 @@ void Farm_Initialize()
     g_harvestPopupOpen = false;
     g_harvestPopupPlotIndex = -1;
 
+    std::cout << "Farm initialized from profile\n";
 }
 
 // ------------------------------------------------------------
@@ -806,6 +814,7 @@ void Farm_Render()
 
 void Farm_Free()
 {
+    std::cout << "Farm_Free\n";
 }
 
 void Farm_Unload()
@@ -825,6 +834,7 @@ void Farm_Unload()
     memset(&g_farmHarvestSFX, 0, sizeof(AEAudio));
     memset(&g_farmHarvestGroup, 0, sizeof(AEAudioGroup));
 
+    std::cout << "Farm_Unload\n";
 }
 
 // ------------------------------------------------------------
@@ -864,6 +874,7 @@ void Farm_PlantSeed(int plotIndex, int seedType)
     }
 
     Profile_SetPlotData(plotIndex, plot.isPlanted, plot.isReady, plot.growTimer, plot.seedType);
+    std::cout << "Planted seed " << seedType << " in plot " << plotIndex << "\n";
 }
 
 bool Farm_IsPlotPlanted(int plotIndex)
@@ -897,6 +908,7 @@ void Farm_ClearPlot(int index)
     }
 
     Profile_SetPlotData(index, false, false, 0.0f, -1);
+    std::cout << "Cleared plot " << index << "\n";
 }
 
 void Farm_OnRhythmResult(bool success)
@@ -913,12 +925,14 @@ void Farm_OnRhythmResult(bool success)
                 plot.growthFrozen = false;
                 plot.growTimer = GROW_TIME * 0.5f + 0.01f;
                 plot.rhythmTriggered = true;
+                std::cout << "Rhythm success! Plot " << i << " growth boosted and unfrozen\n";
             }
             else
             {
                 plot.growTimer -= 0.5f;
                 if (plot.growTimer < 0.0f)
                     plot.growTimer = 0.0f;
+                std::cout << "Rhythm failed! Plot " << i << " growth reduced\n";
             }
 
             Profile_SetPlotData(i, plot.isPlanted, plot.isReady, plot.growTimer, plot.seedType);
@@ -1006,6 +1020,7 @@ void Farm_SetPlotUnlocked(int index, bool unlocked)
     farmPlots[index].isUnlocked = unlocked;
     Profile_SetPlotUnlocked(index, unlocked);
 
+    std::cout << "Farm: plot " << index << " unlocked=" << (unlocked ? "true" : "false") << "\n";
 
     if (!unlocked)
     {

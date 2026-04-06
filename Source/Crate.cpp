@@ -92,6 +92,7 @@ static CrateData g_crates[CRATE_COUNT];
 void Crate_Load()
 {
     // Nothing to load from disk here — Profile handles persistence.
+    std::cout << "Crate_Load\n";
 }
 
 void Crate_Initialize()
@@ -113,6 +114,7 @@ void Crate_Initialize()
     {
         g_crates[0].isUnlocked = true;
         Profile_SetCrateUnlocked(0, true);
+        std::cout << "Crate migration: crate 0 force-unlocked (no crate data in save)\n";
     }
 
     // Ensure existing stocks don't exceed current max (safe for profile upgrades)
@@ -124,6 +126,11 @@ void Crate_Initialize()
             Profile_SetCrateFruitCount(i, g_crates[i].fruitCount);
         }
     }
+
+    std::cout << "Crate_Initialize: loaded from profile\n";
+    for (int i = 0; i < CRATE_COUNT; i++)
+        std::cout << "  Crate[" << i << "]: unlocked=" << g_crates[i].isUnlocked
+        << " stock=" << g_crates[i].fruitCount << "\n";
 
     //--------------------------------------------------------------------------------------
     // Create meshes for drawing 
@@ -505,6 +512,7 @@ void Crate_Draw()
       /*  if (AEInputCheckReleased(AEVK_LBUTTON)) {
             hello = !hello;
             crate2.fruitType = APPLE;
+            printf("Mouse click detected! Toggling fruit display. Current fruit type: %d\n", crate2.fruitType);
         }*/
 
         switch (crate2.fruitType) {
@@ -721,6 +729,7 @@ void Crate_Draw()
 
 void Crate_Free()
 {
+    std::cout << "Crate_Free\n";
 }
 
 // ---------------------------------------------------------------------------
@@ -738,6 +747,7 @@ void Crate_SetUnlocked(int crateIndex, bool unlocked)
     if (crateIndex < 0 || crateIndex >= CRATE_COUNT) return;
     g_crates[crateIndex].isUnlocked = unlocked;
     Profile_SetCrateUnlocked(crateIndex, unlocked); // persists immediately
+    std::cout << "Crate[" << crateIndex << "] unlocked=" << unlocked << "\n";
 }
 
 // ---------------------------------------------------------------------------
@@ -764,6 +774,7 @@ void Crate_SetMaxStock(int maxStock)
         }
     }
 
+    std::cout << "Crate max stock set to " << g_maxCrateStock << "\n";
 }
 
 // ---------------------------------------------------------------------------
@@ -807,6 +818,8 @@ bool Crate_AddFruit(int crateIndex, int amount)
     if (added)
     {
         Profile_SetCrateFruitCount(crateIndex, g_crates[crateIndex].fruitCount);
+        std::cout << "Crate[" << crateIndex << "] +fruit -> stock="
+            << g_crates[crateIndex].fruitCount << "\n";
     }
     return added;
 }
@@ -831,6 +844,9 @@ bool Crate_RemoveFruitAmount(int crateIndex, int amount)
 
     g_crates[crateIndex].fruitCount -= amount;
     Profile_SetCrateFruitCount(crateIndex, g_crates[crateIndex].fruitCount);
+
+    std::cout << "Crate[" << crateIndex << "] -" << amount << " fruit -> stock="
+        << g_crates[crateIndex].fruitCount << "\n";
     return true;
 }
 

@@ -292,6 +292,11 @@ void MainScreen_Load()
     AEGfxTriAdd(0.5f, -0.5f, 0xFFFFFFFF, 1.0f, 1.0f, 0.5f, 0.5f, 0xFFFFFFFF, 1.0f, 0.0f, -0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
     pMeshPauseQuad = AEGfxMeshEnd();
 
+    if (!pBackground) OutputDebugStringA("ERROR: Failed to load 'Assets/MainMenu_Background.png'.\n");
+    if (!pBaseStall)  OutputDebugStringA("ERROR: Failed to load 'Assets/base level 1 with apple.png'.\n");
+    if (!pTexApple)   OutputDebugStringA("ERROR: Failed to load 'Assets/Apple.png'.\n");
+    if (!pTexPear)    OutputDebugStringA("ERROR: Failed to load 'Assets/Pear.png'.\n");
+    if (!pTexBanana)  OutputDebugStringA("ERROR: Failed to load 'Assets/Banana.png'.\n");
 }
 
 void MainScreen_Initialize()
@@ -365,6 +370,7 @@ void MainScreen_Initialize()
 
     fontId = AEGfxCreateFont("Assets/Crayon pastel.otf", 26);
     if (fontId < 0)
+        OutputDebugStringA("ERROR: Failed to load 'Assets/Crayon pastel.otf'.\n");
 
     // Legend fonts — Nunito gives a clean, modern game-UI feel.
     g_legendFontKey = AEGfxCreateFont("Assets/Nunito-SemiBold.ttf", 28);
@@ -457,10 +463,12 @@ void MainScreen_Update()
         {
             if (UI_IsMenuOpen())
             {
+                OutputDebugStringA("PAUSE BLOCKED: UI menu is open\n");
             }
             else
             {
                 g_pauseOpen = !g_pauseOpen;
+                OutputDebugStringA(g_pauseOpen ? "PAUSE OPENED\n" : "PAUSE CLOSED\n");
             }
         }
         if (g_pauseOpen)
@@ -617,6 +625,7 @@ void MainScreen_Update()
     // Check if farm triggered rhythm
     if (Farm_ShouldStartRhythm())
     {
+        OutputDebugStringA("Farm requested rhythm game\n");
         Farm_ClearRhythmFlag();
         Rhythm_SetSeedType(Farm_GetRhythmSeedType());
         MainBGM_Stop();
@@ -1115,6 +1124,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                 Farm_OnRhythmResult(true);
                 Farm_ClearRhythmRequest();
                 nextState = GS_MAIN_SCREEN;
+                OutputDebugStringA("[DEBUG] Rhythm skipped via TAB\n");
             }
 #endif
 

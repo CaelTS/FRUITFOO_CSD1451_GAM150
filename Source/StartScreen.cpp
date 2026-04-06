@@ -424,6 +424,7 @@ void StartScreen_Load()
     Tutorial_Load();
 
     // Debug: Confirm Load was called
+    printf("[DEBUG] StartScreen_Load() called - loading audio\n");
 }
 void StartScreen_Init()
 {

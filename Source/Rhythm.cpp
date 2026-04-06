@@ -240,6 +240,9 @@ static void CreateRandomChart(float totalDuration) {
 
         currentTime += interval;
     }
+
+    printf("Generated %d random notes for %.1f second song (difficulty: %d)\n",
+        (int)g_notes.size(), totalDuration, (int)g_difficulty);
 }
 
 // ================= LIFECYCLE =================
@@ -255,6 +258,7 @@ void Rhythm_Load() {
 
     g_musicGroup = AEAudioCreateGroup();
     if (!IsValidGroup(g_musicGroup)) {
+        printf("WARNING: Failed to create audio group!\n");
     }
 
     // Square mesh (UV mapped)
@@ -298,15 +302,33 @@ void Rhythm_Load() {
     // !! END MODIFY !!
     // ---------------------------------------------------------------
 
+    for (int i = 0; i < 3; i++) {
+        if (!g_pTexFruitNotes[i])
+            printf("ERROR: Failed to load fruit note texture [%d]!\n", i);
+        if (!g_pTexSeedNotes[i])
+            printf("ERROR: Failed to load seed note texture [%d]!\n", i);
+    }
+    if (!g_pTexWateringCan) printf("ERROR: Failed to load watering can texture!\n");
+
     // ---------------------------------------------------------------
     // Load per-difficulty gameplay backgrounds from the config table
+    // (no changes needed here — edit the paths in DIFFICULTY_CONFIGS above)
     // ---------------------------------------------------------------
     for (int i = 0; i < 3; i++) {
         g_pTexGameplayBg[i] = AEGfxTextureLoad(DIFFICULTY_CONFIGS[i].backgroundFile);
+        if (!g_pTexGameplayBg[i]) {
+            printf("WARNING: Failed to load gameplay background for difficulty %d: %s\n",
+                i, DIFFICULTY_CONFIGS[i].backgroundFile);
+        }
     }
 
     // Load difficulty-select screen background
+    // (no changes needed here — edit DIFFICULTY_SELECT_BG_PATH above)
     g_pTexDiffSelectBg = AEGfxTextureLoad(DIFFICULTY_SELECT_BG_PATH);
+    if (!g_pTexDiffSelectBg) {
+        printf("WARNING: Failed to load difficulty select background: %s\n",
+            DIFFICULTY_SELECT_BG_PATH);
+    }
 
     g_fontId = AEGfxCreateFont("Assets/liberation-mono.ttf", 24);
 }
@@ -330,10 +352,17 @@ void Rhythm_Initialize() {
     g_wateringCanAnimTimer = 0.0f;
     g_wateringCanIsAnimating = false;
 
+    // FIX: Apply the correct fruit/seed textures here, AFTER Rhythm_Load() has
+    // finished loading all texture arrays. Calling Rhythm_SetSeedType() before
+    // the state transition meant Rhythm_Load() would overwrite it with apple.
     int seedType = Farm_GetRhythmSeedType();
     if (seedType < 0 || seedType > 2) seedType = 0;
     g_pTexNormalNote = g_pTexFruitNotes[seedType];
     g_pTexPremiumNote = g_pTexSeedNotes[seedType];
+    printf("Rhythm_Initialize: applied seedType=%d — normal=%s, premium=%s\n",
+        seedType,
+        g_pTexNormalNote ? "OK" : "NULL",
+        g_pTexPremiumNote ? "OK" : "NULL");
 }
 
 // Called internally once the player has chosen a difficulty.
@@ -352,7 +381,12 @@ static void StartGameplay() {
     }
 
     // Load the audio file specified for the selected difficulty
+    // (no changes needed here — edit the paths in DIFFICULTY_CONFIGS above)
     g_currentSong = AEAudioLoadMusic(g_difficultyConfig.audioFile);
+    if (!IsValidAudio(g_currentSong)) {
+        printf("ERROR: Failed to load audio for difficulty %d: %s\n",
+            (int)g_difficulty, g_difficultyConfig.audioFile);
+    }
 }
 
 void Rhythm_Update() {
@@ -389,6 +423,7 @@ void Rhythm_Update() {
             g_audioStarted = true;
             if (gMusicEnabled && IsValidAudio(g_currentSong) && IsValidGroup(g_musicGroup)) {
                 AEAudioPlay(g_currentSong, g_musicGroup, 1.0f, 1.0f, 0);
+                printf("Audio started playing\n");
             }
         }
     }
@@ -462,6 +497,8 @@ void Rhythm_Update() {
         if (!g_songFinished) {
             g_songFinished = true;
             g_phase = PHASE_FINISHED;
+            printf("Song finished! Final Score: %d, Max Combo: %d\n",
+                g_score.totalScore, g_score.maxCombo);
         }
     }
 }
@@ -844,4 +881,8 @@ void Rhythm_SetSeedType(int seedType)
     if (seedType < 0 || seedType > 2) seedType = 0;
     g_pTexNormalNote = g_pTexFruitNotes[seedType];
     g_pTexPremiumNote = g_pTexSeedNotes[seedType];
+    printf("Rhythm_SetSeedType: seedType=%d — normal=%s, premium=%s\n",
+        seedType,
+        g_pTexNormalNote ? "OK" : "NULL",
+        g_pTexPremiumNote ? "OK" : "NULL");
 }

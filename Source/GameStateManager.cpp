@@ -52,6 +52,7 @@ static void StartScreen_GSM_Unload() { StartScreen_Unload(); }
 
 void GSM_Update()
 {
+    std::cout << "Current state: " << currentState << "\n";
     switch (currentState)
     {
     case GS_SPLASH:
