@@ -1061,7 +1061,6 @@ void UI_UpdateButtons()
                 gInvConfirmOpen = false;
             }
         }
-        // 🔒 BLOCK ALL OTHER UI INPUT THIS FRAME
     }
 
     // -------------------------------------------------
@@ -3497,7 +3496,7 @@ static void DrawTooltipClampedAt(float cx, float cy, const char* text,
 
 void UI_DrawFruitBasketTooltips()
 {
-    if (cratePopupOpen) return; // hide tooltips if crate panel is open
+    if (cratePopupOpen || startScreenActive) return; // hide tooltips if crate panel is open
 
     UI_EnsureCrateCfg();
     const auto& C = UI_GetCrateLayoutConfig();
@@ -3510,8 +3509,11 @@ void UI_DrawFruitBasketTooltips()
     const float worldX = (float)mx - halfW;
     const float worldY = halfH - (float)my;
 
-    for (const auto& b : baskets)
+    // Use an index loop so we can figure out the crateID
+    for (int i = 0; i < (int)baskets.size(); ++i)
     {
+        const auto& b = baskets[i];
+
         const bool isHover =
             worldX >= b.x - b.width * 0.5f &&
             worldX <= b.x + b.width * 0.5f &&
@@ -3519,6 +3521,8 @@ void UI_DrawFruitBasketTooltips()
             worldY <= b.y + b.height * 0.5f;
 
         if (!isHover) continue;
+
+        int crateID = i; // The index is the crate ID
 
         // Tooltip panel position
         float tipX = C.tipCenterOnCrate ? b.x : (b.x - b.width * 0.5f + C.tipWidth * 0.5f);
@@ -3531,61 +3535,66 @@ void UI_DrawFruitBasketTooltips()
         // Panel background
         DrawTooltipClampedAt(tipX, tipY, "", C.tipWidth, C.tipHeight);
 
-        // --- Text for the fruit ---
-        const char* fruitName = "Unknown";
-        const char* stockText = "Stock: ?";
-        const char* inventoryText = "Inventory: ?";
-
-
+        // --- Text Setup ---
+        const char* fruitName = "";
+        const char* stockText = "";
         char stockBuf[32];
-        char invBuf[32];
 
-        // GET LIVE STOCK DATA FROM CRATE SYSTEM
-        int liveStock = Crate_GetFruitCount(b.fruitType);
+        bool isUnlocked = Crate_IsUnlocked(i); // <-- Change crateID to i
 
-
-        switch (b.fruitType)
+        if (!isUnlocked)
         {
-        case FRUIT_APPLE:
-            fruitName = "Apple";
-            snprintf(stockBuf, sizeof(stockBuf), "Stock: %d", liveStock);
-            snprintf(invBuf, sizeof(invBuf), "Inventory: %d", GetAppleCount());
-            break;
+            fruitName = "Crate Locked";
+        }
+        else
+        {
+            int typeInCrate = Crate_GetFruitType(i); // <-- Change crateID to i
+            int liveStock = Crate_GetFruitCount(i);  // <-- Change crateID to i
 
-        case FRUIT_PEAR:
-            fruitName = "Pear";
-            snprintf(stockBuf, sizeof(stockBuf), "Stock: %d", liveStock);
-            snprintf(invBuf, sizeof(invBuf), "Inventory: %d", GetPearCount());
-            break;
-
-        case FRUIT_BANANA:
-            fruitName = "Banana";
-            snprintf(stockBuf, sizeof(stockBuf), "Stock: %d", liveStock);
-            snprintf(invBuf, sizeof(invBuf), "Inventory: %d", GetBananaCount());
-            break;
+            if (liveStock > 0)
+            {
+                switch (typeInCrate)
+                {
+                case 0: // APPLE
+                    fruitName = "Apple";
+                    break;
+                case 1: // PEAR
+                    fruitName = "Pear";
+                    break;
+                case 2: // BANANA
+                    fruitName = "Banana";
+                    break;
+                default:
+                    fruitName = "Unknown Fruit";
+                    break;
+                }
+                snprintf(stockBuf, sizeof(stockBuf), "Stock: %d", liveStock);
+                stockText = stockBuf;
+            }
+            else
+            {
+                fruitName = "Empty Crate";
+                stockText = "Stock: 0";
+            }
         }
 
-        stockText = stockBuf;
-        inventoryText = invBuf;
-
-
         // --- Draw the text inside the panel ---
-        const float textStartY = tipY + C.tipHeight * 0.25f; // start a bit below top
+        // Center text vertically depending on if it's 1 or 2 lines
         const float lineSpacing = 25.0f;
+        float textStartY = tipY + (isUnlocked ? (lineSpacing * 0.5f) : 0.0f);
 
         const float xTextNorm = (tipX - C.tipWidth * 0.45f) / halfW;
 
-        // Fruit name at top
+        // Fruit name / Locked text at top
         const float yNameNorm = textStartY / halfH;
         AEGfxPrint(fontId, fruitName, xTextNorm, yNameNorm, 1.0f, 1, 1, 1, 1);
 
-        // Stock underneath
-        const float yStockNorm = (textStartY - lineSpacing) / halfH;
-        AEGfxPrint(fontId, stockText, xTextNorm, yStockNorm, 1.0f, 1, 1, 1, 1);
-
-        // Inventory underneath
-        const float yInvNorm = (textStartY - 2.0f * lineSpacing) / halfH;
-        AEGfxPrint(fontId, inventoryText, xTextNorm, yInvNorm, 1.0f, 1, 1, 1, 1);
+        // Stock underneath (only if unlocked)
+        if (isUnlocked)
+        {
+            const float yStockNorm = (textStartY - lineSpacing) / halfH;
+            AEGfxPrint(fontId, stockText, xTextNorm, yStockNorm, 1.0f, 1, 1, 1, 1);
+        }
 
         break; // only show one tooltip at a time
     }
